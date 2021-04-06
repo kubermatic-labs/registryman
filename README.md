@@ -1,3 +1,10 @@
+# Registryman
+
+Global Manager for serval registries, based on the Aquayman concept.
+
+
+
+-----
 # Aquayman
 
 Aquayman (**A Quay Man**ager) allows you to declare your teams, robots and repository permissions
