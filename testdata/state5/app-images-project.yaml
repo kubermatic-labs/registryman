@@ -1,0 +1,11 @@
+apiVersion: globalregistry.com/v1alpha1
+kind: Project
+metadata:
+  name: app-images
+spec:
+  type: Local
+  localRegistries:
+  - harbor-2
+  members:
+  - name: alpha
+    role: Maintainer
