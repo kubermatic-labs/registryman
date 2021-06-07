@@ -1,0 +1,11 @@
+apiVersion: globalregistry.com/v1alpha1
+kind: Project
+metadata:
+  name: os-images
+spec:
+  type: Global
+  members:
+  - name: alpha
+    role: Maintainer
+  - name: beta
+    role: Developer
