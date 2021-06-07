@@ -29,13 +29,8 @@ import (
 // swaggerCmd represents the swagger command
 var swaggerCmd = &cobra.Command{
 	Use:   "swagger",
-	Short: "A brief description of your command",
-	Long: `A longer description that spans multiple lines and likely contains examples
-and usage of using your command. For example:
-
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
+	Short: "Generate swagger schema",
+	Long:  `Generate a swagger schema of the resources used in the config files. The generated schema is in JSON format and is sent to the standard output.`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		config := &common.Config{
 			ProtocolList: []string{"http", "https"},
