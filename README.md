@@ -1,195 +1,125 @@
+-----
 # Registryman
 
-Global Manager for serval registries, based on the Aquayman concept.
-
-
-
------
-# Aquayman
-
-Aquayman (**A Quay Man**ager) allows you to declare your teams, robots and repository permissions
-in a declarative way (by virtue of a YAML file), which will then be applies to your Quay.io
-organization. This enables consistent, always up-to-date team members and access rules.
+Registryman (Registry Manager) allows you to declare your Docker registry
+projects, project members and project replication rules in a declarative way (by
+virtue of YAML files), which will then be applied to your Docker registries.
+This enables consistent, always up-to-date team members and access rules.
 
 ## Features
 
-* Manages organization teams, robots and repository permissions.
-* Exports the current state as a starter config file.
-* Previews any action taken, for greater peace of mind.
+* Managing replication rules and project membership on a project level.
+* Dry-runs of any action taken, for greater peace of mind.
 
 ## Installation
 
-We strongly recommend that you use an [official release][3] of Aquayman.
-
-_The code and sample YAML files in the master branch of are under active development and are not guaranteed to be stable. Use them at your own risk!_
+There is no official release yet.
 
 ## Build From Source
 
-This project uses Go 1.14 and Go modules for its dependencies. You can get it via `go get`:
+This project uses Go 1.16 and Go modules for its dependencies. You can get it via `go get`:
 
 ```bash
-GO111MODULE=on go get github.com/kubermatic-labs/aquayman
+GO111MODULE=on go get github.com/kubermatic-labs/registryman
 ```
 
-## Mode Of Operation
+## Concept
 
-Whenever Aquayman synchronizes an organization, it will perform these steps:
+Registryman parses the given directory for configuration (.yaml) files. The yaml
+files are defined as custom Kubernetes resources.
 
-1. Ensure only the robots defined in the configuration file exist and that their
-   description is up-to-date.
-2. Ensure only the teams defined in the configuration file exist. For each team,
-   adjust (add or remove) the members.
-3. List all existing repositories and for each
+Registryman supports two types of resources:
+  * Registry
+  * Project
+  
+The Registry resources describe the Docker registries of the system. Each
+registry configures the API endpoint and the credentials. From replication
+perspective you can configure up to 1 global and arbitrary number of local
+registries.
 
-   1. Find a matching repository configuration, based on the name. This can be
-      either an exact match, or a glob expression match.
-   2. If no configuration is found, delete the repository if Aquayman runs with
-      `-delete-repos`. Otherwise leave the repository alone.
-   3. Otherwise, adjust the assigned teams and individual users/robots.
+Currently, the following Registry providers are supported:
+- Harbor (https://goharbor.io)
+- Azure Container Registry (in progress)
 
-4. If running with `-create-repos`, list all configured repositories from the YAML
-   file. Create and initialize all not yet existing repositories.
+The Project resources describe the members of the project. Each member has a type
+(User, Group or Robot) and a Role. The role shows the capabilities for the given
+member, e.g. Guest, ProjectAdmin, etc.
+
+From replication point of view, a Project can be either local or global. While a
+global project is automatically provisioned in each registry, a local project is
+provisioned in the specified registries only.
+
+Replication rules are automatically provisioned for each project so that the
+repositories of a global project are synchronized from the global registry to
+the local registries.
+
+Registry and Project resources are declaratively configured as separate files.
+For examples, see the `testdata` directory.
 
 ## Usage
 
-You need an OAuth2 token to authenticate against the API. In your organization settings
-on Quay.io, you can create an application and for it you can then generate a token. Export
-it as the environment variable `AQUAYMAN_TOKEN`:
+### Applying the configuration
+
+Since Registryman works in a declarative way, first you describe the expected
+state as configuration (.yaml) files and then you apply them.
 
 ```bash
-export AQUAYMAN_TOKEN=thisisnotarealtokenbutjustanexample
+$ registryman apply <path-to-configuration-dir>
 ```
 
-### Configuration
+An example output of this run could be:
+```bash
+1.6230650316837864e+09	info	reading config files	{"dir": "testdata/state1/"}
+1.6230650316861527e+09	info	inspecting registry	{"registry_name": "harbor-1"}
+1.6230650320118732e+09	info	ACTIONS:
+1.623065032011928e+09	info	adding project os-images
+1.6230650321776721e+09	info	adding member alpha to os-images
+1.6230650322818873e+09	info	adding member beta to os-images
+1.623065032417013e+09	info	adding replication rule for os-images: harbor-2 [Push] on EventBased
+1.6230650325978034e+09	info	inspecting registry	{"registry_name": "harbor-2"}
+1.6230650328970125e+09	info	ACTIONS:
+1.6230650328970747e+09	info	removing project test
+1.6230650329916346e+09	info	adding project os-images
+1.6230650331280136e+09	info	adding member alpha to os-images
+1.6230650332148027e+09	info	adding member beta to os-images
+1.623065033302417e+09	info	adding project app-images
+1.6230650334264066e+09	info	adding member alpha to app-images
+1.6230650335348642e+09	info	adding member beta to app-images
+```
 
-Except for the OAuth2 token, all configuration happens in a YAML file. See the annotated
-`config.example.yaml` for more information or let Aquayman generate a config for you by
-exporting your current settings. See the next section for more information on this.
+You can see the registries which are configured by Registryman and for each
+registry you can see the performed action.
 
-### Validating
-
-It's possible to only validate a configuration file for syntactic correctness by running
-Aquayman with the `-validate` flag:
+With the `dry-run` flag you can simulate the operation without performing any
+action on the Docker registries, e.g.
 
 ```bash
-aquayman -config myconfig.yaml -validate
-2020/04/16 23:14:20 ✓ Configuration is valid.
+$ registryman apply <path-to-configuration-dir>
+
+1.623065212853344e+09	info	reading config files	{"dir": "testdata/init"}
+1.6230652128544164e+09	info	inspecting registry	{"registry_name": "harbor-1"}
+1.6230652131570046e+09	info	ACTIONS:
+1.623065213157117e+09	info	removing replication rule for os-images: harbor-2 [Push] on EventBased	{"dry-run": true}
+1.6230652131571586e+09	info	removing project os-images	{"dry-run": true}
+1.623065213157202e+09	info	inspecting registry	{"registry_name": "harbor-2"}
+1.6230652135110424e+09	info	ACTIONS:
+1.6230652135110905e+09	info	removing project app-images	{"dry-run": true}
+1.6230652135111215e+09	info	removing project os-images	{"dry-run": true}
 ```
 
-Aquayman exits with code 0 if the config is valid, otherwise with a non-zero code.
+# Development
 
-### Exporting
+## Generating the code
 
-To get started, Aquayman can export your existing Quay.io settings into a configuration file.
-For this to work, prepare a fresh configuration file and put your organisation name in it.
-You can skip everything else:
-
-```yaml
-organization: exampleorg
-```
-
-Now run Aquayman with the `-export` flag:
+Some of the source code is generated by tools. These tools are vendored, so
+before generating the source code first you have to reset the vendor directory:
 
 ```bash
-aquayman -config myconfig.yaml -export
-2020/04/16 23:14:38 ► Exporting organization exampleorg
-2020/04/16 23:14:38 ⇄ Exporting robots…
-2020/04/16 23:14:39   ⚛ mybot
-2020/04/16 23:14:39 ⇄ Exporting repositories…
-2020/04/16 23:14:40   ⚒ myapp
-2020/04/16 23:14:42 ⇄ Exporting teams…
-2020/04/16 23:14:42   ⚑ owners
-2020/04/16 23:14:43 ✓ Export successful.
+$ go mod vendor
 ```
 
-Depending on your teams and repositories this can take a few minutes to run. Afterwards the
-`myconfig.yaml` will have been updated to contain an exact representation of your settings:
-
-```yaml
-organisation: exampleorg
-teams:
-  - name: owners
-    role: admin
-    members:
-      - exampleorg+mybot
-repositories:
-  - name: myapp
-    teams:
-      owners: admin
-robots:
-  - name: mybot
-    description: Just an example bot.
-```
-
-### Synchronizing
-
-Synchronizing means updating Quay.io to match the given configuration file. It's as simple
-as running Aquayman:
+Then you can call the script that regenerates the source code files:
 
 ```bash
-aquayman -config myconfig.yaml
-2020/04/16 23:32:00 ► Updating organization exampleorg…
-2020/04/16 23:32:00 ⇄ Syncing robots…
-2020/04/16 23:32:00   ✎ ⚛ mybot
-2020/04/16 23:32:01   - ⚛ thisbotshouldnotexist
-2020/04/16 23:32:01 ⇄ Syncing teams…
-2020/04/16 23:32:01   ✎ ⚑ owners
-2020/04/16 23:32:01     + ♟ exampleorg+mybot
-2020/04/16 23:32:01 ⇄ Syncing repositories…
-2020/04/16 23:32:02 ⚠ Run again with -confirm to apply the changes above.
+$ hack/update-codegen.sh
 ```
-
-Aquayman by default only shows a preview of things it would do. Run it with `-confirm` to let
-the magic happen.
-
-```bash
-aquayman -config myconfig.yaml -confirm
-2020/04/16 23:32:10 ► Updating organization exampleorg…
-2020/04/16 23:32:10 ⇄ Syncing robots…
-2020/04/16 23:32:10   ✎ ⚛ mybot
-2020/04/16 23:32:11   - ⚛ thisbotshouldnotexist
-2020/04/16 23:32:11 ⇄ Syncing teams…
-2020/04/16 23:32:11   ✎ ⚑ owners
-2020/04/16 23:32:11     + ♟ exampleorg+mybot
-2020/04/16 23:32:11 ⇄ Syncing repositories…
-2020/04/16 23:32:12 ✓ Permissions successfully synchronized.
-```
-
-Note that repositories by default can freely exist without being configured in Aquayman.
-This is meant as a safe default, so introducing Aquayman in an existing organiztion is
-easier. To fully synchronize (delete dangling and create missing) repositories, run
-Aquayman with `-create-repos` and `-delete-repos`.
-
-## Troubleshooting
-
-If you encounter issues [file an issue][1] or talk to us on the [#kubermatic-labs channel][12] on the [Kubermatic Slack][15].
-
-## Contributing
-
-Thanks for taking the time to join our community and start contributing!
-
-Feedback and discussion are available on [the mailing list][11].
-
-### Before you start
-
-* Please familiarize yourself with the [Code of Conduct][4] before contributing.
-* See [CONTRIBUTING.md][2] for instructions on the developer certificate of origin that we require.
-* Read how [we're using ZenHub][13] for project and roadmap planning
-
-### Pull requests
-
-* We welcome pull requests. Feel free to dig through the [issues][1] and jump in.
-
-## Changelog
-
-See [the list of releases][3] to find out about feature changes.
-
-[1]: https://github.com/kubermatic-labs/aquayman/issues
-[2]: https://github.com/kubermatic-labs/aquayman/blob/master/CONTRIBUTING.md
-[3]: https://github.com/kubermatic-labs/aquayman/releases
-[4]: https://github.com/kubermatic-labs/aquayman/blob/master/CODE_OF_CONDUCT.md
-
-[11]: https://groups.google.com/forum/#!forum/kubermatic-dev
-[12]: https://kubermatic.slack.com/messages/kubermatic-labs
-[13]: https://github.com/kubermatic-labs/aquayman/blob/master/Zenhub.md
-[15]: http://slack.kubermatic.io/
