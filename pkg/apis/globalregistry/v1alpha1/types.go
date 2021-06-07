@@ -56,6 +56,8 @@ type RegistrySpec struct {
 	// etc.
 	Provider string `json:"provider"`
 
+	// +kubebuilder:validation:Pattern=`^(https?|ftp)://[^\s/$.?#].[^\s]*$`
+
 	// APIEndpoint identifies the registry API endpoint in a registry
 	// implementation specific way. It can be for example an HTTP endpoint,
 	// like "http://harbor.example.com:8080".
@@ -71,73 +73,11 @@ type RegistrySpec struct {
 
 	// +kubebuilder:default=Local
 	// +kubebuilder:validation:Optional
+	// +kubebuilder:validation:Enum=GlobalHub;Local
 
 	// Role specifies whether the registry is a Global Hub or a Local
 	// registry.
-	Role RegistryRole `json:"role"`
-}
-
-// +kubebuilder:validation:Type=string
-// +kubebuilder:validation:Enum=GlobalHub;Local
-
-// RegistryRole describes the role of the registry, whether it is a global hub
-// or a local registry.
-type RegistryRole int
-
-const (
-	// GlobalHubRegistryRole is a registry type that hosts all global
-	// projects which are then replicated to all registries of the
-	// LocalRegistryRole.
-	GlobalHubRegistryRole RegistryRole = iota
-	// LocalRegistryRole is a registry type that hosts selected local
-	// projects and all Global projects.
-	LocalRegistryRole
-)
-
-func (rt RegistryRole) string() (string, error) {
-	switch rt {
-	default:
-		return "", fmt.Errorf("unhandled RegistryRole (%d)", rt)
-	case GlobalHubRegistryRole:
-		return "GlobalHub", nil
-	case LocalRegistryRole:
-		return "Local", nil
-	}
-}
-
-// String method implements the Stringer interface
-func (rt RegistryRole) String() string {
-	s, err := rt.string()
-	if err != nil {
-		panic(err)
-	}
-	return s
-}
-
-// MarshalJSON implements the Marshaller interface
-func (rt RegistryRole) MarshalJSON() ([]byte, error) {
-	s, err := rt.string()
-	if err != nil {
-		return nil, err
-	}
-	return json.Marshal(s)
-}
-
-func (rt *RegistryRole) UnmarshalJSON(data []byte) error {
-	var s string
-	err := json.Unmarshal(data, &s)
-	if err != nil {
-		return err
-	}
-	switch s {
-	default:
-		return fmt.Errorf("failed unmarshalling %s to RegistryType", s)
-	case "GlobalHub":
-		*rt = GlobalHubRegistryRole
-	case "Local":
-		*rt = LocalRegistryRole
-	}
-	return nil
+	Role string `json:"role"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object

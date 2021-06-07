@@ -43,6 +43,7 @@ to quickly create a Cobra application.`,
 		fmt.Println("apply called")
 
 		logger.Info("reading config files", "dir", args[0])
+		config.SetLogger(logger)
 		manifests, err := config.ReadManifests(args[0])
 
 		if err != nil {

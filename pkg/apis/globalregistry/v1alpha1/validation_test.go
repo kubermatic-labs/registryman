@@ -26,6 +26,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/serializer/json"
 
 	"github.com/kubermatic-labs/registryman/pkg/apis/globalregistry/v1alpha1"
+	"k8s.io/kube-openapi/pkg/validation/errors"
 )
 
 var serializer *json.Serializer
@@ -102,5 +103,24 @@ var _ = Describe("Validation", func() {
 		// 	fmt.Fprintln(GinkgoWriter, results.AsError().Error())
 		// }
 		// Expect(results.HasErrorsOrWarnings()).To(BeFalse())
+	})
+
+	It("will fail for invalid Registry resources", func() {
+		registry, err := objectFromFile("testdata/registry-wrong-apiendpoint.yaml")
+		Expect(err).ToNot(HaveOccurred())
+
+		results := v1alpha1.RegistryValidator.Validate(registry)
+		if results.HasErrors() {
+			fmt.Fprintln(GinkgoWriter, results.AsError().Error())
+			c, ok := results.AsError().(*errors.CompositeError)
+			Expect(ok).To(BeTrue())
+			Expect(len(c.Errors)).Should(Equal(1))
+			for _, e := range c.Errors {
+				v := e.(*errors.Validation)
+				Expect(v.Name).To(Equal("spec.apiEndpoint"))
+				Expect(v.Code()).Should(Equal(int32(errors.PatternFailCode)))
+			}
+		}
+		Expect(results.HasErrorsOrWarnings()).To(BeTrue())
 	})
 })

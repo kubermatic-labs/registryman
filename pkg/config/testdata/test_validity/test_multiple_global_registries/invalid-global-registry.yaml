@@ -1,0 +1,10 @@
+apiVersion: globalregistry.com/v1alpha1
+kind: Registry
+metadata:
+  name: global-2
+spec:
+  provider: harbor
+  role: GlobalHub
+  apiEndpoint: http://core.harbor-2.demo
+  username: admin
+  password: admin

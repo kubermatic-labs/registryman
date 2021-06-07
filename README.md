@@ -31,7 +31,7 @@ files are defined as custom Kubernetes resources.
 Registryman supports two types of resources:
   * Registry
   * Project
-  
+
 The Registry resources describe the Docker registries of the system. Each
 registry configures the API endpoint and the credentials. From replication
 perspective you can configure up to 1 global and arbitrary number of local

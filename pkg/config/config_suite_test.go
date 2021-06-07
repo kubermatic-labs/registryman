@@ -18,9 +18,22 @@ package config_test
 import (
 	"testing"
 
+	"github.com/go-logr/zapr"
+	"github.com/kubermatic-labs/registryman/pkg/config"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	"go.uber.org/zap"
 )
+
+const (
+	testdataDir = "testdata/test_validity"
+)
+
+var _ = BeforeSuite(func() {
+	l, err := zap.NewDevelopment()
+	Expect(err).ToNot(HaveOccurred())
+	config.SetLogger(zapr.NewLogger(l))
+})
 
 func TestConfig(t *testing.T) {
 	RegisterFailHandler(Fail)
