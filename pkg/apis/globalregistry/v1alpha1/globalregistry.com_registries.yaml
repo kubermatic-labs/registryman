@@ -1,0 +1,82 @@
+
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: (devel)
+  creationTimestamp: null
+  name: registries.globalregistry.com
+spec:
+  group: globalregistry.com
+  names:
+    kind: Registry
+    listKind: RegistryList
+    plural: registries
+    singular: registry
+  scope: Cluster
+  versions:
+  - name: v1alpha1
+    schema:
+      openAPIV3Schema:
+        description: Registry describes the expected state of a registry Object
+        properties:
+          apiVersion:
+            description: 'APIVersion defines the versioned schema of this representation
+              of an object. Servers should convert recognized schemas to the latest
+              internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+            type: string
+          kind:
+            description: 'Kind is a string value representing the REST resource this
+              object represents. Servers may infer this from the endpoint the client
+              submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+            type: string
+          metadata:
+            type: object
+          spec:
+            description: Spec describes the Registry Specification.
+            properties:
+              apiEndpoint:
+                description: APIEndpoint identifies the registry API endpoint in a
+                  registry implementation specific way. It can be for example an HTTP
+                  endpoint, like "http://harbor.example.com:8080".
+                type: string
+              password:
+                description: Password is the password to be used during the authentication
+                  at the APIEndpoint interface.
+                type: string
+              provider:
+                description: Provider identifies the actual registry type, e.g. Harbor,
+                  Docker Hub, etc.
+                enum:
+                - harbor
+                type: string
+              role:
+                default: Local
+                description: Role specifies whether the registry is a Global Hub or
+                  a Local registry.
+                enum:
+                - GlobalHub
+                - Local
+                type: string
+              username:
+                description: Username is the user name to be used during the authentication
+                  at the APIEndpoint interface.
+                type: string
+            required:
+            - apiEndpoint
+            - password
+            - provider
+            - username
+            type: object
+        required:
+        - spec
+        type: object
+    served: true
+    storage: true
+status:
+  acceptedNames:
+    kind: ""
+    plural: ""
+  conditions: []
+  storedVersions: []
