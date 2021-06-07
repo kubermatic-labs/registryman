@@ -146,7 +146,7 @@ func (rt *RegistryRole) UnmarshalJSON(data []byte) error {
 type RegistryList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
-	Items           []Registry `json:"registries"`
+	Items           []Registry `json:"items"`
 }
 
 //
