@@ -107,6 +107,16 @@ $ registryman apply <path-to-configuration-dir>
 1.6230652135111215e+09	info	removing project os-images	{"dry-run": true}
 ```
 
+### Generating the Swagger API
+
+Registryman can generate the API definition in Swagger format using
+
+```bash
+$ registryman swagger
+```
+
+The Swagger schema is generated on the standard out in JSON format.
+
 # Development
 
 ## Generating the code
