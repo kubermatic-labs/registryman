@@ -18,6 +18,6 @@ http://www.apache.org/licenses/LICENSE-2.0
 
 // +k8s:openapi-gen=true
 // +k8s:deepcopy-gen=package,register
-// +groupName=globalregistry.com
+// +groupName=registryman.kubermatic.com
 // +versionName=v1alpha1
 package v1alpha1 // import "github.com/kubermatic-labs/registryman/pkg/apis/globalregistry/v1alpha1"

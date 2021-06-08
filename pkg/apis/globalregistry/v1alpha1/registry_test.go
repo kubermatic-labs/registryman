@@ -26,7 +26,7 @@ import (
 )
 
 const (
-	apiVersion   = "globalregistry.com/v1alpha1"
+	apiVersion   = "registryman.kubermatic.com/v1alpha1"
 	registryKind = "Registry"
 	testdataDir  = "testdata"
 )
