@@ -6,9 +6,9 @@ metadata:
   annotations:
     controller-gen.kubebuilder.io/version: (devel)
   creationTimestamp: null
-  name: registries.globalregistry.com
+  name: registries.registryman.kubermatic.com
 spec:
-  group: globalregistry.com
+  group: registryman.kubermatic.com
   names:
     kind: Registry
     listKind: RegistryList

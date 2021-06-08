@@ -27,10 +27,10 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/serializer/json"
 )
 
-//go:embed globalregistry.com_registries.yaml
+//go:embed registryman.kubermatic.com_registries.yaml
 var registryCRDYaml []byte
 
-//go:embed globalregistry.com_projects.yaml
+//go:embed registryman.kubermatic.com_projects.yaml
 var projectCRDYaml []byte
 
 // RegistryCRD is the CustomResourceDefinition representation of the generated

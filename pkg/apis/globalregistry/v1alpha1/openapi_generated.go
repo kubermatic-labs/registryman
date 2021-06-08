@@ -360,9 +360,9 @@ func schema_pkg_apis_globalregistry_v1alpha1_RegistrySpec(ref common.ReferenceCa
 					"role": {
 						SchemaProps: spec.SchemaProps{
 							Description: "Role specifies whether the registry is a Global Hub or a Local registry.",
-							Default:     0,
-							Type:        []string{"integer"},
-							Format:      "int32",
+							Default:     "",
+							Type:        []string{"string"},
+							Format:      "",
 						},
 					},
 				},

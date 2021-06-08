@@ -1,4 +1,4 @@
-apiVersion: globalregistry.com/v1alpha1
+apiVersion: registryman.kubermatic.com/v1alpha1
 kind: Registry
 metadata:
   name: global-2
