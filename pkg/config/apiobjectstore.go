@@ -23,6 +23,9 @@ import (
 	api "github.com/kubermatic-labs/registryman/pkg/apis/globalregistry/v1alpha1"
 	"github.com/kubermatic-labs/registryman/pkg/config/registry"
 	_ "github.com/kubermatic-labs/registryman/pkg/harbor"
+
+	_ "github.com/kubermatic-labs/registryman/pkg/acr"
+
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
