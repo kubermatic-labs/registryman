@@ -13,8 +13,20 @@ http://www.apache.org/licenses/LICENSE-2.0
    See the License for the specific language governing permissions and
    limitations under the License.
 */
-package globalregistry
+package config
 
-import "errors"
+import (
+	"github.com/go-logr/logr"
+	"github.com/go-logr/zapr"
+	"go.uber.org/zap"
+)
 
-var RecoverableError error = errors.New("recoverable error")
+var logger logr.Logger
+
+func init() {
+	logger = zapr.NewLogger(zap.NewNop())
+}
+
+func SetLogger(l logr.Logger) {
+	logger = l
+}

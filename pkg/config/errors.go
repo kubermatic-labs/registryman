@@ -13,8 +13,10 @@ http://www.apache.org/licenses/LICENSE-2.0
    See the License for the specific language governing permissions and
    limitations under the License.
 */
-package globalregistry
+package config
 
 import "errors"
 
-var RecoverableError error = errors.New("recoverable error")
+var ValidationErrorInvalidLocalRegistryInProject error = errors.New("validation error: project contains invalid registry name")
+
+var ValidationErrorMultipleGlobalRegistries error = errors.New("validation error: multiple global registries found")

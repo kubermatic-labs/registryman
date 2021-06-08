@@ -40,6 +40,7 @@ spec:
                 description: APIEndpoint identifies the registry API endpoint in a
                   registry implementation specific way. It can be for example an HTTP
                   endpoint, like "http://harbor.example.com:8080".
+                pattern: ^(https?|ftp)://[^\s/$.?#].[^\s]*$
                 type: string
               password:
                 description: Password is the password to be used during the authentication
