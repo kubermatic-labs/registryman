@@ -44,6 +44,8 @@ type Project interface {
 	GetName() string
 	GetRepositories() ([]Repository, error)
 	GetReplicationRules(*ReplicationTrigger, *ReplicationDirection) ([]ReplicationRule, error)
+	GetScanner() (Scanner, error)
+	AssignScanner(Scanner) error
 }
 
 type ProjectAPI interface {

@@ -90,3 +90,11 @@ func (proj *project) GetReplicationRules(trigger *globalregistry.ReplicationTrig
 	}
 	return rules, nil
 }
+
+func (p *project) GetScanner() (globalregistry.Scanner, error) {
+	panic("config.registry.project.GetScanner() not implemented")
+}
+
+func (p *project) AssignScanner(globalregistry.Scanner) error {
+	panic("config.registry.project.AssignScanner() not implemented")
+}

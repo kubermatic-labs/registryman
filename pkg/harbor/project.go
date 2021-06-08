@@ -240,3 +240,11 @@ func (p *project) GetReplicationRules(
 	}
 	return results, nil
 }
+
+func (p *project) GetScanner() (globalregistry.Scanner, error) {
+	return nil, fmt.Errorf("harbor.project.GetScanner() not implemented")
+}
+
+func (p *project) AssignScanner(globalregistry.Scanner) error {
+	return fmt.Errorf("harbor.project.AssignScanner() not implemented")
+}
