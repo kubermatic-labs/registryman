@@ -1,0 +1,10 @@
+apiVersion: globalregistry.com/v1alpha1
+kind: Registry
+metadata:
+  name: acr
+spec:
+  provider: acr
+  role: Local
+  apiEndpoint: https://origossglobalregistry.azurecr.io
+  username: 521c2065-a996-40d2-bcbe-861744a423db
+  password: "o_TKOSjiRf7.WkSoi-imyLoKwKhVOlg95o"

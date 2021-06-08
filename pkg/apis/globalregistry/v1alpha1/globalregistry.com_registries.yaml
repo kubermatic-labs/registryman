@@ -50,6 +50,7 @@ spec:
                   Docker Hub, etc.
                 enum:
                 - harbor
+                - acr
                 type: string
               role:
                 default: Local
