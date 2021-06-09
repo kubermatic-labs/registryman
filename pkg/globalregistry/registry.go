@@ -64,6 +64,7 @@ type Registry interface {
 	RegistryConfig
 	ReplicationAPI() ReplicationAPI
 	ProjectAPI() ProjectAPI
+	ScannerAPI() ScannerAPI
 }
 
 // New creates a provider specific Registry. The provider must be registered

@@ -26,6 +26,7 @@ type project struct {
 	id   int
 	api  *projectAPI
 	Name string
+	sApi *scannerAPI
 }
 
 func (p *project) GetName() string {
@@ -242,7 +243,7 @@ func (p *project) GetReplicationRules(
 }
 
 func (p *project) GetScanner() (globalregistry.Scanner, error) {
-	return nil, fmt.Errorf("harbor.project.GetScanner() not implemented")
+	return p.sApi.GetForProject(p.id)
 }
 
 func (p *project) AssignScanner(globalregistry.Scanner) error {

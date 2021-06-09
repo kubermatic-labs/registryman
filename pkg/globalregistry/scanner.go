@@ -8,5 +8,6 @@ type Scanner interface {
 type ScannerAPI interface {
 	Create(name string) (Scanner, error)
 	SetDefaultSystemScanner(Scanner) error
+	GetForProject(id int) (Scanner, error)
 	List() ([]Scanner, error)
 }
