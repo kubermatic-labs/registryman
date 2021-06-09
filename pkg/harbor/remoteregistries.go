@@ -57,6 +57,8 @@ func remoteRegistryStatusFromRegistry(reg globalregistry.RegistryConfig) *remote
 	switch reg.GetProvider() {
 	case "harbor":
 		regType = "harbor"
+	case "acr":
+		regType = "azure-acr"
 	default:
 		panic(fmt.Sprintf("provider %s not implemented", reg.GetProvider()))
 	}

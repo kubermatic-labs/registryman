@@ -42,7 +42,6 @@ type Project interface {
 	AssignReplicationRule(RegistryConfig, ReplicationTrigger, ReplicationDirection) (ReplicationRule, error)
 	Delete() error
 	GetName() string
-	GetRepositories() ([]Repository, error)
 	GetReplicationRules(*ReplicationTrigger, *ReplicationDirection) ([]ReplicationRule, error)
 }
 
