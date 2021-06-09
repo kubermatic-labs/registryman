@@ -132,7 +132,7 @@ func (r *replicationAPI) create(project globalregistry.Project, remoteReg global
 		UpdateTime:   now,
 		Enabled:      true,
 		Filters: []replicationFilter{
-			replicationFilter{
+			{
 				Type:  "name",
 				Value: fmt.Sprintf("%s/**", project.GetName()),
 			},

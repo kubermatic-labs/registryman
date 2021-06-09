@@ -6,9 +6,9 @@ metadata:
   annotations:
     controller-gen.kubebuilder.io/version: (devel)
   creationTimestamp: null
-  name: projects.globalregistry.com
+  name: projects.registryman.kubermatic.com
 spec:
-  group: globalregistry.com
+  group: registryman.kubermatic.com
   names:
     kind: Project
     listKind: ProjectList

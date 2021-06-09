@@ -66,3 +66,10 @@ go run \
    -i github.com/kubermatic-labs/registryman/pkg/apis/globalregistry/v1alpha1 \
    -p github.com/kubermatic-labs/registryman/pkg/apis/globalregistry/v1alpha1 \
    -h "${SCRIPT_ROOT}/hack/boilerplate.go.txt"
+
+echo "Generating OpenAPI"
+go run \
+   ${SCRIPT_ROOT}/vendor/k8s.io/code-generator/cmd/openapi-gen/main.go            \
+   -i github.com/kubermatic-labs/registryman/pkg/apis/globalregistry/v1alpha1,k8s.io/apimachinery/pkg/apis/meta/v1 \
+   -p github.com/kubermatic-labs/registryman/pkg/apis/globalregistry/v1alpha1 \
+   -h "${SCRIPT_ROOT}/hack/boilerplate.go.txt"

@@ -28,7 +28,7 @@ var _ = Describe("Configreader", func() {
 		Expect(m).To(BeNil())
 	})
 	It("gets the correct values for api/testdata", func() {
-		m, err := config.ReadManifests("../apis/globalregistry/v1alpha1/testdata")
+		m, err := config.ReadManifests("testdata")
 		Expect(err).ToNot(HaveOccurred())
 		Expect(m).ToNot(BeNil())
 		registry := m.ExpectedProvider().GetRegistries()

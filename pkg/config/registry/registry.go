@@ -72,7 +72,7 @@ func (reg *Registry) ToReal(logger logr.Logger) (globalregistry.Registry, error)
 
 func (reg *Registry) registryCapabilities() registryCapabilities {
 	return registryCapabilities{
-		isGlobal:                reg.Spec.Role == api.GlobalHubRegistryRole,
+		isGlobal:                reg.Spec.Role == "GlobalHub",
 		ReplicationCapabilities: globalregistry.GetReplicationCapability(reg.GetProvider()),
 	}
 }

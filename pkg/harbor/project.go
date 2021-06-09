@@ -28,12 +28,22 @@ type project struct {
 	Name string
 }
 
+// interface guard
+var _ globalregistry.Project = &project{}
+
 func (p *project) GetName() string {
 	return p.Name
 }
 
 // Delete removes the project from registry
 func (p *project) Delete() error {
+	repos, err := p.GetRepositories()
+	if err != nil {
+		return err
+	}
+	if len(repos) > 0 {
+		return fmt.Errorf("%s: repositories are present, please delete them before deleting the project, %w", p.Name, globalregistry.RecoverableError)
+	}
 	return p.api.delete(p.id)
 }
 
@@ -41,7 +51,7 @@ func robotRoleToAccess(role string) []access {
 	switch role {
 	case "PushOnly":
 		return []access{
-			access{
+			{
 				Action:   "push",
 				Resource: "repository",
 				// Effect:   "",
@@ -49,7 +59,7 @@ func robotRoleToAccess(role string) []access {
 		}
 	case "PullOnly":
 		return []access{
-			access{
+			{
 				Action:   "pull",
 				Resource: "repository",
 				// Effect:   "",
@@ -57,12 +67,12 @@ func robotRoleToAccess(role string) []access {
 		}
 	case "PullAndPush":
 		return []access{
-			access{
+			{
 				Action:   "pull",
 				Resource: "repository",
 				// Effect:   "",
 			},
-			access{
+			{
 				Action:   "push",
 				Resource: "repository",
 				// Effect:   "",
@@ -105,7 +115,7 @@ func (p *project) AssignMember(member globalregistry.ProjectMember) (*globalregi
 			// Duration:     0,
 			// Id:           0,
 			Permissions: []robotPermission{
-				robotPermission{
+				{
 					Access:    robotRoleToAccess(member.GetRole()),
 					Kind:      "project",
 					Namespace: p.GetName(),
