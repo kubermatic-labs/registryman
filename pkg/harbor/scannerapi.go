@@ -29,11 +29,26 @@ type scannerRegistration struct {
 	Name             string   `json:"name,omitempty"`
 }
 
+type scannerRegistrationRequest struct {
+	Name             string  `json:"name,omitempty"`
+	Url              url.URL `json:"url,omitempty"`
+	AccessCredential string  `json:"access_credential,omitempty"`
+	Auth             string  `json:"auth,omitempty"`
+	Disabled         bool    `json:"disabled,omitempty"`
+	UseInternalAddr  bool    `json:"use_internal_addr,omitempty"`
+	SkipCertVerify   bool    `json:"skip_cert_verify,omitempty"`
+	Description      string  `json:"description,omitempty"`
+}
+
+type projectScanner struct {
+	Uuid string `json:"uuid,omitempty"`
+}
 type scannerAPI struct {
 	reg *registry
 }
 
 var _ globalregistry.ScannerAPI = &scannerAPI{}
+var _ globalregistry.ScannerConfig = &scannerRegistrationRequest{}
 
 func newScannerAPI(reg *registry) (*scannerAPI, error) {
 	return &scannerAPI{
@@ -41,12 +56,49 @@ func newScannerAPI(reg *registry) (*scannerAPI, error) {
 	}, nil
 }
 
-func (s *scannerAPI) Create(name string) (globalregistry.Scanner, error) {
-	return nil, fmt.Errorf("scannerAPI.Create() is not implemented")
+func (s *scannerAPI) Create(config globalregistry.ScannerConfig) (*url.URL, error) {
+	s.reg.parsedUrl.Path = scannersPath
+
+	reqBodyBuf := bytes.NewBuffer(nil)
+	err := json.NewEncoder(reqBodyBuf).Encode(&scannerRegistrationRequest{
+		Name:             config.GetName(),
+		Url:              config.GetUrl(),
+		AccessCredential: config.GetCredential(),
+		Auth:             config.GetAuth(),
+		Description:      config.GetDescription(),
+	})
+	if err != nil {
+		return nil, err
+	}
+	req, err := http.NewRequest(http.MethodPost, s.reg.parsedUrl.String(), reqBodyBuf)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header["Content-Type"] = []string{"application/json"}
+	req.SetBasicAuth(s.reg.GetUsername(), s.reg.GetPassword())
+	resp, err := s.reg.do(req)
+	if err != nil {
+		return nil, err
+	}
+
+	defer resp.Body.Close()
+
+	if resp.StatusCode != 201 {
+		return nil, fmt.Errorf("scanner creation failed, %w", globalregistry.RecoverableError)
+	}
+
+	scannerUrl := resp.Header.Get("Location")
+	parsedUrl, err := url.Parse(scannerUrl)
+
+	if err != nil {
+		s.reg.logger.Error(err, "cannot parse scanner URL from response Location header",
+			"location-header", resp.Header.Get("Location"))
+		return nil, err
+	}
+	return parsedUrl, nil
 }
-func (s *scannerAPI) SetDefaultSystemScanner(globalregistry.Scanner) error {
-	return fmt.Errorf("scannerAPI.SetDefaultSystemScanner is not implemented")
-}
+
 func (s *scannerAPI) List() ([]globalregistry.Scanner, error) {
 	s.reg.parsedUrl.Path = scannersPath
 	req, err := http.NewRequest(http.MethodGet, s.reg.parsedUrl.String(), nil)
@@ -91,6 +143,35 @@ func (s *scannerAPI) List() ([]globalregistry.Scanner, error) {
 	return scanners, err
 }
 
+func (s *scannerAPI) SetForProject(projectID int, scannerID string) error {
+	s.reg.parsedUrl.Path = fmt.Sprintf("%s/%d/scanner", path, projectID)
+
+	reqBodyBuf := bytes.NewBuffer(nil)
+	err := json.NewEncoder(reqBodyBuf).Encode(&projectScanner{
+		Uuid: scannerID,
+	})
+	if err != nil {
+		return err
+	}
+	req, err := http.NewRequest(http.MethodPut, s.reg.parsedUrl.String(), reqBodyBuf)
+	if err != nil {
+		return err
+	}
+
+	req.SetBasicAuth(s.reg.GetUsername(), s.reg.GetPassword())
+	resp, err := s.reg.do(req)
+	if err != nil {
+		return err
+	}
+
+	defer resp.Body.Close()
+
+	if resp.StatusCode != 200 {
+		return fmt.Errorf("failed to set scanner for project-id:%d, %w", projectID, globalregistry.RecoverableError)
+	}
+	return err
+}
+
 func (s *scannerAPI) GetForProject(id int) (globalregistry.Scanner, error) {
 	s.reg.parsedUrl.Path = fmt.Sprintf("%s/%d/scanner", path, id)
 	req, err := http.NewRequest(http.MethodGet, s.reg.parsedUrl.String(), nil)
@@ -129,5 +210,49 @@ func (s *scannerAPI) GetForProject(id int) (globalregistry.Scanner, error) {
 }
 
 func (s *scannerAPI) delete(id string) error {
-	return fmt.Errorf("scannerAPI.delete() is not implemented")
+	s.reg.parsedUrl.Path = fmt.Sprintf("%s/%s", scannersPath, id)
+
+	req, err := http.NewRequest(http.MethodDelete, s.reg.parsedUrl.String(), nil)
+	if err != nil {
+		return err
+	}
+
+	req.Header["Content-Type"] = []string{"application/json"}
+	req.SetBasicAuth(s.reg.GetUsername(), s.reg.GetPassword())
+
+	resp, err := s.reg.do(req)
+	if err != nil {
+		return err
+	}
+
+	defer resp.Body.Close()
+
+	if resp.StatusCode != 200 {
+		return fmt.Errorf("failed to remove scanner, %w", globalregistry.RecoverableError)
+	}
+	return err
+}
+
+func (c *scannerRegistrationRequest) GetName() string {
+	return c.Name
+}
+
+func (c *scannerRegistrationRequest) GetAuth() string {
+	return c.Auth
+}
+
+func (c *scannerRegistrationRequest) GetCredential() string {
+	return c.AccessCredential
+}
+
+func (c *scannerRegistrationRequest) GetUrl() url.URL {
+	return c.Url
+}
+
+func (c *scannerRegistrationRequest) IsDisabled() bool {
+	return c.Disabled
+}
+
+func (c *scannerRegistrationRequest) GetDescription() string {
+	return c.Description
 }

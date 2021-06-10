@@ -16,6 +16,6 @@ func (s *scanner) Delete() error {
 	return s.api.delete(s.id)
 }
 
-func (s *scanner) GetRegistrationID() string {
+func (s *scanner) GetID() string {
 	return s.id
 }

@@ -246,6 +246,6 @@ func (p *project) GetScanner() (globalregistry.Scanner, error) {
 	return p.sApi.GetForProject(p.id)
 }
 
-func (p *project) AssignScanner(globalregistry.Scanner) error {
-	return fmt.Errorf("harbor.project.AssignScanner() not implemented")
+func (p *project) AssignScanner(scanner globalregistry.Scanner) error {
+	return p.sApi.SetForProject(p.id, scanner.GetID())
 }
