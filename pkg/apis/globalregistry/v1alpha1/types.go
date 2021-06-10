@@ -18,6 +18,7 @@ package v1alpha1
 import (
 	"encoding/json"
 	"fmt"
+	"net/url"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -418,4 +419,38 @@ func (mr *MemberRole) UnmarshalJSON(data []byte) error {
 		*mr = PullAndPushRole
 	}
 	return nil
+}
+
+// +kubebuilder:resource:path=registries,scope=Cluster,singular=registry
+// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+type Scanner struct {
+	metav1.TypeMeta   `json:",inline"`
+	metav1.ObjectMeta `json:"metadata,omitempty"`
+	// Spec describes the Registry Specification.
+	Spec *ScannerSpec `json:"spec"`
+}
+
+type ScannerSpec struct {
+
+	// The name of the scanner registration
+	Name string `json:"name,omitempty"`
+
+	// A base URL of the scanner adapter.
+	Url url.URL `json:"url,omitempty"`
+
+	// An optional value of the HTTP Authorization header sent with each request to the Scanner Adapter API.
+	AccessCredential string `json:"access_credential,omitempty"`
+
+	// Specify what authentication approach is adopted for the HTTP communications.
+	// Supported types Basic", "Bearer" and api key header "X-ScannerAdapter-API-Key"
+	Auth string `json:"auth,omitempty"`
+
+	// Indicate whether use internal registry addr for the scanner to pull content or not
+	UseInternalAddr bool `json:"use_internal_addr,omitempty"`
+
+	// Indicate if skip the certificate verification when sending HTTP requests
+	SkipCertVerify bool `json:"skip_cert_verify,omitempty"`
+
+	// An optional description of this registration.
+	Description string `json:"description,omitempty"`
 }
