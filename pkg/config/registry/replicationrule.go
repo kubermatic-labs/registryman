@@ -37,7 +37,7 @@ func calculateReplicationRule(local, remote registryCapabilities) calculatedRepl
 		panic("both local and remote are global")
 	}
 	if !local.isGlobal && !remote.isGlobal {
-		panic("both local and remote are local")
+		return noReplication
 	}
 	if remote.isGlobal && remote.CanPush() {
 		return noReplication

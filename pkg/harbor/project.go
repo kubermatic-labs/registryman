@@ -29,12 +29,22 @@ type project struct {
 	sApi *scannerAPI
 }
 
+// interface guard
+var _ globalregistry.Project = &project{}
+
 func (p *project) GetName() string {
 	return p.Name
 }
 
 // Delete removes the project from registry
 func (p *project) Delete() error {
+	repos, err := p.GetRepositories()
+	if err != nil {
+		return err
+	}
+	if len(repos) > 0 {
+		return fmt.Errorf("%s: repositories are present, please delete them before deleting the project, %w", p.Name, globalregistry.RecoverableError)
+	}
 	return p.api.delete(p.id)
 }
 
@@ -42,7 +52,7 @@ func robotRoleToAccess(role string) []access {
 	switch role {
 	case "PushOnly":
 		return []access{
-			access{
+			{
 				Action:   "push",
 				Resource: "repository",
 				// Effect:   "",
@@ -50,7 +60,7 @@ func robotRoleToAccess(role string) []access {
 		}
 	case "PullOnly":
 		return []access{
-			access{
+			{
 				Action:   "pull",
 				Resource: "repository",
 				// Effect:   "",
@@ -58,12 +68,12 @@ func robotRoleToAccess(role string) []access {
 		}
 	case "PullAndPush":
 		return []access{
-			access{
+			{
 				Action:   "pull",
 				Resource: "repository",
 				// Effect:   "",
 			},
-			access{
+			{
 				Action:   "push",
 				Resource: "repository",
 				// Effect:   "",
@@ -106,7 +116,7 @@ func (p *project) AssignMember(member globalregistry.ProjectMember) (*globalregi
 			// Duration:     0,
 			// Id:           0,
 			Permissions: []robotPermission{
-				robotPermission{
+				{
 					Access:    robotRoleToAccess(member.GetRole()),
 					Kind:      "project",
 					Namespace: p.GetName(),
@@ -203,10 +213,6 @@ func (p *project) UnassignMember(member globalregistry.ProjectMember) error {
 
 func (p *project) AssignReplicationRule(remoteReg globalregistry.RegistryConfig, trigger globalregistry.ReplicationTrigger, direction globalregistry.ReplicationDirection) (globalregistry.ReplicationRule, error) {
 	return p.api.reg.ReplicationAPI().(*replicationAPI).create(p, remoteReg, trigger, direction)
-}
-
-func (p *project) GetRepositories() ([]globalregistry.Repository, error) {
-	return p.api.listProjectRepositories(p)
 }
 
 func (p *project) GetReplicationRules(

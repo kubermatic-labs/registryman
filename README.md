@@ -31,7 +31,7 @@ files are defined as custom Kubernetes resources.
 Registryman supports two types of resources:
   * Registry
   * Project
-  
+
 The Registry resources describe the Docker registries of the system. Each
 registry configures the API endpoint and the credentials. From replication
 perspective you can configure up to 1 global and arbitrary number of local
@@ -106,6 +106,16 @@ $ registryman apply <path-to-configuration-dir>
 1.6230652135110905e+09	info	removing project app-images	{"dry-run": true}
 1.6230652135111215e+09	info	removing project os-images	{"dry-run": true}
 ```
+
+### Generating the Swagger API
+
+Registryman can generate the API definition in Swagger format using
+
+```bash
+$ registryman swagger
+```
+
+The Swagger schema is generated on the standard out in JSON format.
 
 # Development
 

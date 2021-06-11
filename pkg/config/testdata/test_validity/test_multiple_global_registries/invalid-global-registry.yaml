@@ -1,10 +1,10 @@
 apiVersion: registryman.kubermatic.com/v1alpha1
 kind: Registry
 metadata:
-  name: local
+  name: global-2
 spec:
   provider: harbor
-  role: Local
+  role: GlobalHub
   apiEndpoint: http://core.harbor-2.demo
   username: admin
   password: admin

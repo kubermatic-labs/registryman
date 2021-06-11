@@ -26,7 +26,7 @@ import (
 )
 
 const (
-	apiVersion   = "globalregistry.com/v1alpha1"
+	apiVersion   = "registryman.kubermatic.com/v1alpha1"
 	registryKind = "Registry"
 	testdataDir  = "testdata"
 )
@@ -64,7 +64,7 @@ var _ = Describe("Registry", func() {
 			Expect(ok).To(BeTrue())
 			Expect(r.GetName()).To(Equal("global"))
 			Expect(r.Spec.Provider).To(Equal("harbor"))
-			Expect(r.Spec.Role).To(Equal(api.GlobalHubRegistryRole))
+			Expect(r.Spec.Role).To(Equal("GlobalHub"))
 			Expect(r.Spec.APIEndpoint).To(Equal("http://core.harbor-1.demo"))
 			Expect(r.Spec.Username).To(Equal("admin"))
 			Expect(r.Spec.Password).To(Equal("admin"))

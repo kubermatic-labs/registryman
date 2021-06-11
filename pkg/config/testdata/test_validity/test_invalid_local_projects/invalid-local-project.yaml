@@ -1,9 +1,13 @@
 apiVersion: registryman.kubermatic.com/v1alpha1
 kind: Project
 metadata:
-  name: ubuntu
+  name: node
 spec:
-  type: Global
+  type: Local
+  localRegistries:
+  - local
+  - global
+  - global2
   members:
   - name: alpha
     role: Maintainer

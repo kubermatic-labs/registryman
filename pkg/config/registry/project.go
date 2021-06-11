@@ -53,10 +53,6 @@ func (proj *project) Delete() error {
 	panic("not implemented")
 }
 
-func (proj *project) GetRepositories() ([]globalregistry.Repository, error) {
-	panic("not implemented")
-}
-
 func (proj *project) GetReplicationRules(trigger *globalregistry.ReplicationTrigger, direction *globalregistry.ReplicationDirection) ([]globalregistry.ReplicationRule, error) {
 	rules := []globalregistry.ReplicationRule{}
 	switch proj.Spec.Type {

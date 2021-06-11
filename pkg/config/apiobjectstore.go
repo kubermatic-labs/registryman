@@ -16,6 +16,7 @@ http://www.apache.org/licenses/LICENSE-2.0
 package config
 
 import (
+	"fmt"
 	"io"
 	"os"
 	"path/filepath"
@@ -23,11 +24,15 @@ import (
 	api "github.com/kubermatic-labs/registryman/pkg/apis/globalregistry/v1alpha1"
 	"github.com/kubermatic-labs/registryman/pkg/config/registry"
 	_ "github.com/kubermatic-labs/registryman/pkg/harbor"
+
+	_ "github.com/kubermatic-labs/registryman/pkg/acr"
+
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/runtime/serializer/json"
+	"k8s.io/kube-openapi/pkg/validation/validate"
 )
 
 var (
@@ -95,6 +100,10 @@ func ReadManifests(path string) (*ApiObjectStore, error) {
 		if err != nil {
 			return nil, err
 		}
+		err = validateObjects(o, gvk)
+		if err != nil {
+			return nil, fmt.Errorf("validation error during inspecting %s:\n %w", entry.Name(), err)
+		}
 		objects, found := aos.store[*gvk]
 		if found {
 			aos.store[*gvk] = append(objects, o)
@@ -102,7 +111,101 @@ func ReadManifests(path string) (*ApiObjectStore, error) {
 			aos.store[*gvk] = []runtime.Object{o}
 		}
 	}
+	err = aos.Validate()
+	if err != nil {
+		return nil, fmt.Errorf("%w", err)
+	}
 	return aos, nil
+}
+
+func checkGlobalRegistryCount(registries []*api.Registry) error {
+	globalRegistries := make([]string, 0)
+	for _, registry := range registries {
+		if registry.Spec.Role == "GlobalHub" {
+			globalRegistries = append(globalRegistries, registry.Name)
+		}
+	}
+	if len(globalRegistries) >= 2 {
+		for _, registry := range globalRegistries {
+			logger.V(-2).Info("Multiple Global Registries found",
+				"registry_name", registry)
+		}
+		return fmt.Errorf("%w", ValidationErrorMultipleGlobalRegistries)
+	}
+	return nil
+}
+
+func checkLocalRegistryNamesInProjects(registries []*api.Registry, projects []*api.Project) error {
+	localRegistries := make([]string, 0)
+	for _, registry := range registries {
+		if registry.Spec.Role == "Local" {
+			localRegistries = append(localRegistries, registry.Name)
+		}
+	}
+	invalidProjects := make([]string, 0)
+	for _, project := range projects {
+		if project.Spec.Type == api.LocalProjectType {
+			localRegistryExists := false
+			for _, localRegistry := range project.Spec.LocalRegistries {
+				for _, registry := range localRegistries {
+					if localRegistry == registry {
+						localRegistryExists = true
+						break
+					}
+				}
+				if !localRegistryExists {
+					invalidProjects = append(invalidProjects, project.Name)
+					logger.V(-2).Info("Local registry not exists",
+						"project_name", project.Name,
+						"registry_name", localRegistry)
+				}
+				localRegistryExists = false
+			}
+		}
+	}
+
+	if len(invalidProjects) > 0 {
+		return fmt.Errorf("%w", ValidationErrorInvalidLocalRegistryInProject)
+	}
+	return nil
+}
+
+func (aos *ApiObjectStore) Validate() error {
+	provider := aos.ApiProvider()
+	registries := provider.GetRegistries()
+	projects := provider.GetProjects()
+
+	// Forcing maximum one Global registry
+	err := checkGlobalRegistryCount(registries)
+	if err != nil {
+		return err
+	}
+
+	// Checking local registry names in all local projects
+	err = checkLocalRegistryNamesInProjects(registries, projects)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func validateObjects(o runtime.Object, gvk *schema.GroupVersionKind) error {
+	var results *validate.Result
+
+	switch gvk.Kind {
+	case "Registry":
+		results = api.RegistryValidator.Validate(o)
+	case "Project":
+		results = api.ProjectValidator.Validate(o)
+	default:
+		return fmt.Errorf("%s Kind is not supported", gvk.Kind)
+	}
+
+	if results.HasErrors() {
+		return results.AsError()
+	}
+	return nil
 }
 
 type ApiProvider ApiObjectStore

@@ -1,2 +1,8 @@
 /registryman
 /vendor/
+/globalregistry
+/infra/harbor-1-kubeconfig.yaml
+/infra/harbor-2-kubeconfig.yaml
+*kubeconfig.yaml
+Makefile
+.golangci.yaml
