@@ -133,6 +133,7 @@ func (p *projectAPI) List() ([]globalregistry.Project, error) {
 			id:   pData.ProjectID,
 			api:  p,
 			Name: pData.Name,
+			sApi: newScannerAPI(p.reg),
 		}
 	}
 	return pStatus, err
@@ -142,6 +143,7 @@ func (p *projectAPI) Create(name string) (globalregistry.Project, error) {
 	proj := &project{
 		api:  p,
 		Name: name,
+		sApi: newScannerAPI(p.reg),
 	}
 
 	p.reg.parsedUrl.Path = path

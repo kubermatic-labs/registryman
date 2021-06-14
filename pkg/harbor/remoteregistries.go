@@ -89,10 +89,6 @@ func (reg *remoteRegistryStatus) ProjectAPI() globalregistry.ProjectAPI {
 	panic("not implemented") // TODO: Implement
 }
 
-func (reg *remoteRegistryStatus) ScannerAPI() globalregistry.ScannerAPI {
-	panic("not implemented") // TODO: Implement
-}
-
 func (reg *remoteRegistryStatus) GetAPIEndpoint() string {
 	return reg.Url
 }

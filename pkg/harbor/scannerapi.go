@@ -13,31 +13,31 @@ import (
 const scannersPath = "/api/v2.0/scanners"
 
 type scannerRegistration struct {
-	Disabled         bool     `json:"disabled,omitempty"`
-	Vendor           string   `json:"vendor,omitempty"`
-	Description      string   `json:"description,omitempty"`
-	Url              *url.URL `json:"url,omitempty"`
-	Adapter          string   `json:"adapter,omitempty"`
-	AccessCredential string   `json:"access_credential,omitempty"`
-	Uuid             string   `json:"uuid,omitempty"`
-	Auth             string   `json:"auth,omitempty"`
-	IsDefault        bool     `json:"is_default,omitempty"`
-	Version          string   `json:"version,omitempty"`
-	Health           string   `json:"health,omitempty"`
-	UseInternalAddr  bool     `json:"use_internal_addr,omitempty"`
-	SkipCertVerify   bool     `json:"skip_cert_verify,omitempty"`
-	Name             string   `json:"name,omitempty"`
+	Disabled         bool   `json:"disabled,omitempty"`
+	Vendor           string `json:"vendor,omitempty"`
+	Description      string `json:"description,omitempty"`
+	Url              string `json:"url,omitempty"`
+	Adapter          string `json:"adapter,omitempty"`
+	AccessCredential string `json:"access_credential,omitempty"`
+	Uuid             string `json:"uuid,omitempty"`
+	Auth             string `json:"auth,omitempty"`
+	IsDefault        bool   `json:"is_default,omitempty"`
+	Version          string `json:"version,omitempty"`
+	Health           string `json:"health,omitempty"`
+	UseInternalAddr  bool   `json:"use_internal_addr,omitempty"`
+	SkipCertVerify   bool   `json:"skip_cert_verify,omitempty"`
+	Name             string `json:"name,omitempty"`
 }
 
 type scannerRegistrationRequest struct {
-	Name             string  `json:"name,omitempty"`
-	Url              url.URL `json:"url,omitempty"`
-	AccessCredential string  `json:"access_credential,omitempty"`
-	Auth             string  `json:"auth,omitempty"`
-	Disabled         bool    `json:"disabled,omitempty"`
-	UseInternalAddr  bool    `json:"use_internal_addr,omitempty"`
-	SkipCertVerify   bool    `json:"skip_cert_verify,omitempty"`
-	Description      string  `json:"description,omitempty"`
+	Name             string `json:"name,omitempty"`
+	Url              string `json:"url,omitempty"`
+	AccessCredential string `json:"access_credential,omitempty"`
+	Auth             string `json:"auth,omitempty"`
+	Disabled         bool   `json:"disabled,omitempty"`
+	UseInternalAddr  bool   `json:"use_internal_addr,omitempty"`
+	SkipCertVerify   bool   `json:"skip_cert_verify,omitempty"`
+	Description      string `json:"description,omitempty"`
 }
 
 type projectScanner struct {
@@ -47,13 +47,12 @@ type scannerAPI struct {
 	reg *registry
 }
 
-var _ globalregistry.ScannerAPI = &scannerAPI{}
 var _ globalregistry.ScannerConfig = &scannerRegistrationRequest{}
 
-func newScannerAPI(reg *registry) (*scannerAPI, error) {
+func newScannerAPI(reg *registry) *scannerAPI {
 	return &scannerAPI{
 		reg: reg,
-	}, nil
+	}
 }
 
 func (s *scannerAPI) Create(config globalregistry.ScannerConfig) (*url.URL, error) {
@@ -99,6 +98,10 @@ func (s *scannerAPI) Create(config globalregistry.ScannerConfig) (*url.URL, erro
 	return parsedUrl, nil
 }
 
+func (s *scannerAPI) getScannerIDByName(name string) (string, error) {
+	panic("not implemented")
+}
+
 func (s *scannerAPI) List() ([]globalregistry.Scanner, error) {
 	s.reg.parsedUrl.Path = scannersPath
 	req, err := http.NewRequest(http.MethodGet, s.reg.parsedUrl.String(), nil)
@@ -137,7 +140,7 @@ func (s *scannerAPI) List() ([]globalregistry.Scanner, error) {
 		scanners = append(scanners, &scanner{
 			id:   scannerIterator.Uuid,
 			api:  s,
-			Name: scannerIterator.Name,
+			name: scannerIterator.Name,
 		})
 	}
 	return scanners, err
@@ -172,7 +175,7 @@ func (s *scannerAPI) SetForProject(projectID int, scannerID string) error {
 	return err
 }
 
-func (s *scannerAPI) GetForProject(id int) (globalregistry.Scanner, error) {
+func (s *scannerAPI) getForProject(id int) (globalregistry.Scanner, error) {
 	s.reg.parsedUrl.Path = fmt.Sprintf("%s/%d/scanner", path, id)
 	req, err := http.NewRequest(http.MethodGet, s.reg.parsedUrl.String(), nil)
 	if err != nil {
@@ -203,7 +206,8 @@ func (s *scannerAPI) GetForProject(id int) (globalregistry.Scanner, error) {
 	scanner := &scanner{
 		id:   scannerResult.Uuid,
 		api:  s,
-		Name: scannerResult.Name,
+		name: scannerResult.Name,
+		url:  scannerResult.Url,
 	}
 	return scanner, err
 
@@ -245,7 +249,7 @@ func (c *scannerRegistrationRequest) GetCredential() string {
 	return c.AccessCredential
 }
 
-func (c *scannerRegistrationRequest) GetUrl() url.URL {
+func (c *scannerRegistrationRequest) GetUrl() string {
 	return c.Url
 }
 

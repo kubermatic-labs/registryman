@@ -58,3 +58,11 @@ func (p *project) GetReplicationRules(
 
 	return nil, nil
 }
+
+func (p *project) AssignScanner(s globalregistry.Scanner) error {
+	return fmt.Errorf("method ACR.AssignScanner not implemented: %w", globalregistry.RecoverableError)
+}
+
+func (p *project) GetScanner() (globalregistry.Scanner, error) {
+	return nil, nil
+}

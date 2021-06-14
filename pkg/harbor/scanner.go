@@ -7,7 +7,8 @@ import (
 type scanner struct {
 	id   string
 	api  *scannerAPI
-	Name string
+	name string
+	url  string
 }
 
 var _ globalregistry.Scanner = &scanner{}
@@ -16,6 +17,14 @@ func (s *scanner) Delete() error {
 	return s.api.delete(s.id)
 }
 
-func (s *scanner) GetID() string {
-	return s.id
+func (s *scanner) GetName() string {
+	return s.name
 }
+
+func (s *scanner) GetURL() string {
+	return s.url
+}
+
+//func (s *scanner) GetID() string {
+//	return s.id
+//}

@@ -253,9 +253,13 @@ func (p *project) GetReplicationRules(
 }
 
 func (p *project) GetScanner() (globalregistry.Scanner, error) {
-	return p.sApi.GetForProject(p.id)
+	return p.sApi.getForProject(p.id)
 }
 
 func (p *project) AssignScanner(scanner globalregistry.Scanner) error {
-	return p.sApi.SetForProject(p.id, scanner.GetID())
+	scannerID, err := p.sApi.getScannerIDByName(scanner.GetName())
+	if err == nil {
+		return err
+	}
+	return p.sApi.SetForProject(p.id, scannerID)
 }
