@@ -24,6 +24,7 @@ import (
 type ApiProvider interface {
 	GetProjects() []*api.Project
 	GetRegistries() []*api.Registry
+	GetScanners() []*api.Scanner
 }
 
 type Registry struct {

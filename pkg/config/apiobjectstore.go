@@ -238,6 +238,18 @@ func (apip *ApiProvider) GetProjects() []*api.Project {
 	return projects
 }
 
+func (apip *ApiProvider) GetScanners() []*api.Scanner {
+	scannerObjects, found := apip.store[api.SchemeGroupVersion.WithKind("Scanner")]
+	if !found {
+		return []*api.Scanner{}
+	}
+	scanners := make([]*api.Scanner, len(scannerObjects))
+	for i, reg := range scannerObjects {
+		scanners[i] = reg.(*api.Scanner)
+	}
+	return scanners
+}
+
 type ExpectedProvider ApiObjectStore
 
 func (aos *ApiObjectStore) ExpectedProvider() *ExpectedProvider {
