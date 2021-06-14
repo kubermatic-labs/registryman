@@ -36,6 +36,8 @@ func GetOpenAPIDefinitions(ref common.ReferenceCallback) map[string]common.OpenA
 		"github.com/kubermatic-labs/registryman/pkg/apis/globalregistry/v1alpha1.Registry":      schema_pkg_apis_globalregistry_v1alpha1_Registry(ref),
 		"github.com/kubermatic-labs/registryman/pkg/apis/globalregistry/v1alpha1.RegistryList":  schema_pkg_apis_globalregistry_v1alpha1_RegistryList(ref),
 		"github.com/kubermatic-labs/registryman/pkg/apis/globalregistry/v1alpha1.RegistrySpec":  schema_pkg_apis_globalregistry_v1alpha1_RegistrySpec(ref),
+		"github.com/kubermatic-labs/registryman/pkg/apis/globalregistry/v1alpha1.Scanner":       schema_pkg_apis_globalregistry_v1alpha1_Scanner(ref),
+		"github.com/kubermatic-labs/registryman/pkg/apis/globalregistry/v1alpha1.ScannerSpec":   schema_pkg_apis_globalregistry_v1alpha1_ScannerSpec(ref),
 		"k8s.io/apimachinery/pkg/apis/meta/v1.APIGroup":                                         schema_pkg_apis_meta_v1_APIGroup(ref),
 		"k8s.io/apimachinery/pkg/apis/meta/v1.APIGroupList":                                     schema_pkg_apis_meta_v1_APIGroupList(ref),
 		"k8s.io/apimachinery/pkg/apis/meta/v1.APIResource":                                      schema_pkg_apis_meta_v1_APIResource(ref),
@@ -175,7 +177,6 @@ func schema_pkg_apis_globalregistry_v1alpha1_ProjectSpec(ref common.ReferenceCal
 					"type": {
 						SchemaProps: spec.SchemaProps{
 							Description: "Type selects whether the project is global or local.",
-							Default:     0,
 							Type:        []string{"integer"},
 							Format:      "int32",
 						},
@@ -218,8 +219,14 @@ func schema_pkg_apis_globalregistry_v1alpha1_ProjectSpec(ref common.ReferenceCal
 							},
 						},
 					},
+					"scanner": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Scanner specifies the name of the assigned scanner.",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
 				},
-				Required: []string{"type", "members"},
 			},
 		},
 		Dependencies: []string{
@@ -367,6 +374,73 @@ func schema_pkg_apis_globalregistry_v1alpha1_RegistrySpec(ref common.ReferenceCa
 					},
 				},
 				Required: []string{"provider", "apiEndpoint", "username", "password", "role"},
+			},
+		},
+	}
+}
+
+func schema_pkg_apis_globalregistry_v1alpha1_Scanner(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Type: []string{"object"},
+				Properties: map[string]spec.Schema{
+					"kind": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"apiVersion": {
+						SchemaProps: spec.SchemaProps{
+							Description: "APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"metadata": {
+						SchemaProps: spec.SchemaProps{
+							Default: map[string]interface{}{},
+							Ref:     ref("k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"),
+						},
+					},
+					"spec": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Spec describes the Registry Specification.",
+							Ref:         ref("github.com/kubermatic-labs/registryman/pkg/apis/globalregistry/v1alpha1.ScannerSpec"),
+						},
+					},
+				},
+				Required: []string{"spec"},
+			},
+		},
+		Dependencies: []string{
+			"github.com/kubermatic-labs/registryman/pkg/apis/globalregistry/v1alpha1.ScannerSpec", "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"},
+	}
+}
+
+func schema_pkg_apis_globalregistry_v1alpha1_ScannerSpec(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Type: []string{"object"},
+				Properties: map[string]spec.Schema{
+					"url": {
+						SchemaProps: spec.SchemaProps{
+							Description: "A base URL of the scanner adapter.",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"access_credential": {
+						SchemaProps: spec.SchemaProps{
+							Description: "An optional value of the HTTP Authorization header sent with each request to the Scanner Adapter API.",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+				},
 			},
 		},
 	}

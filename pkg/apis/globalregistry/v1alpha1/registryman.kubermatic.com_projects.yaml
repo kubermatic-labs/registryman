@@ -68,15 +68,15 @@ spec:
                   type: object
                 type: array
                 x-kubernetes-list-type: set
+              scanner:
+                description: Scanner specifies the name of the assigned scanner.
+                type: string
               type:
                 description: Type selects whether the project is global or local.
                 enum:
                 - Global
                 - Local
                 type: string
-            required:
-            - members
-            - type
             type: object
         required:
         - spec

@@ -10,8 +10,8 @@ metadata:
 spec:
   group: registryman.kubermatic.com
   names:
-    kind: Registry
-    listKind: RegistryList
+    kind: Scanner
+    listKind: ScannerList
     plural: registries
     singular: registry
   scope: Cluster
@@ -19,7 +19,6 @@ spec:
   - name: v1alpha1
     schema:
       openAPIV3Schema:
-        description: Registry describes the expected state of a registry Object
         properties:
           apiVersion:
             description: 'APIVersion defines the versioned schema of this representation
@@ -36,40 +35,14 @@ spec:
           spec:
             description: Spec describes the Registry Specification.
             properties:
-              apiEndpoint:
-                description: APIEndpoint identifies the registry API endpoint in a
-                  registry implementation specific way. It can be for example an HTTP
-                  endpoint, like "http://harbor.example.com:8080".
+              access_credential:
+                description: An optional value of the HTTP Authorization header sent
+                  with each request to the Scanner Adapter API.
+                type: string
+              url:
+                description: A base URL of the scanner adapter.
                 pattern: ^(https?|ftp)://[^\s/$.?#].[^\s]*$
                 type: string
-              password:
-                description: Password is the password to be used during the authentication
-                  at the APIEndpoint interface.
-                type: string
-              provider:
-                description: Provider identifies the actual registry type, e.g. Harbor,
-                  Docker Hub, etc.
-                enum:
-                - harbor
-                - acr
-                type: string
-              role:
-                default: Local
-                description: Role specifies whether the registry is a Global Hub or
-                  a Local registry.
-                enum:
-                - GlobalHub
-                - Local
-                type: string
-              username:
-                description: Username is the user name to be used during the authentication
-                  at the APIEndpoint interface.
-                type: string
-            required:
-            - apiEndpoint
-            - password
-            - provider
-            - username
             type: object
         required:
         - spec

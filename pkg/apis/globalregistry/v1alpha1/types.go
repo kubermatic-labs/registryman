@@ -18,7 +18,6 @@ package v1alpha1
 import (
 	"encoding/json"
 	"fmt"
-	"net/url"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -115,16 +114,21 @@ var _ runtime.Object = &Project{}
 // ProjectSpec describes the spec field of the Project resource
 type ProjectSpec struct {
 	// Type selects whether the project is global or local.
-	Type ProjectType `json:"type"`
+	Type ProjectType `json:"type,omitempty"`
 
 	// LocalRegistries lists the registry names at which the local project
 	// shall be provisioned at.
 	// +listType=set
+	// +kubebuilder:validation:Optional
 	LocalRegistries []string `json:"localRegistries,omitempty"`
 	// Members enumerates the project members and their capabilities
 	// provisioned for the specific registry.
 	// +listType=set
-	Members []*ProjectMember `json:"members"`
+	Members []*ProjectMember `json:"members,omitempty"`
+
+	// +kubebuilder:validation:Optional
+	// Scanner specifies the name of the assigned scanner.
+	Scanner string `json:"scanner,omitempty"`
 }
 
 //------------------------------------------------
@@ -371,26 +375,20 @@ type Scanner struct {
 }
 
 type ScannerSpec struct {
-
-	// The name of the scanner registration
-	Name string `json:"name,omitempty"`
-
+	// +kubebuilder:validation:Pattern=`^(https?|ftp)://[^\s/$.?#].[^\s]*$`
 	// A base URL of the scanner adapter.
-	Url url.URL `json:"url,omitempty"`
+	Url string `json:"url,omitempty"`
 
 	// An optional value of the HTTP Authorization header sent with each request to the Scanner Adapter API.
 	AccessCredential string `json:"access_credential,omitempty"`
 
-	// Specify what authentication approach is adopted for the HTTP communications.
-	// Supported types Basic", "Bearer" and api key header "X-ScannerAdapter-API-Key"
-	Auth string `json:"auth,omitempty"`
+	// // Specify what authentication approach is adopted for the HTTP communications.
+	// // Supported types Basic", "Bearer" and api key header "X-ScannerAdapter-API-Key"
+	// Auth string `json:"auth,omitempty"`
 
-	// Indicate whether use internal registry addr for the scanner to pull content or not
-	UseInternalAddr bool `json:"use_internal_addr,omitempty"`
+	// // Indicate whether use internal registry addr for the scanner to pull content or not
+	// UseInternalAddr bool `json:"use_internal_addr,omitempty"`
 
-	// Indicate if skip the certificate verification when sending HTTP requests
-	SkipCertVerify bool `json:"skip_cert_verify,omitempty"`
-
-	// An optional description of this registration.
-	Description string `json:"description,omitempty"`
+	// // Indicate if skip the certificate verification when sending HTTP requests
+	// SkipCertVerify bool `json:"skip_cert_verify,omitempty"`
 }
