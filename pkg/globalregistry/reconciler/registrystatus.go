@@ -87,9 +87,9 @@ func GetRegistryStatus(reg globalregistry.Registry) (*RegistryStatus, error) {
 			return nil, err
 		}
 		if projectScanner != nil {
-			projectStatuses[i].scannerStatus = &scannerStatus{
-				name: projectScanner.GetName(),
-				url:  projectScanner.GetURL(),
+			projectStatuses[i].ScannerStatus = ScannerStatus{
+				Name: projectScanner.GetName(),
+				Url:  projectScanner.GetURL(),
 			}
 		}
 	}

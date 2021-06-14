@@ -33,6 +33,9 @@ var registryCRDYaml []byte
 //go:embed registryman.kubermatic.com_projects.yaml
 var projectCRDYaml []byte
 
+//go:embed registryman.kubermatic.com_scanners.yaml
+var scannerCRDYaml []byte
+
 // RegistryCRD is the CustomResourceDefinition representation of the generated
 // Registry CRD yaml.
 var RegistryCRD *apiext.CustomResourceDefinition
@@ -41,8 +44,13 @@ var RegistryCRD *apiext.CustomResourceDefinition
 // Project CRD yaml.
 var ProjectCRD *apiext.CustomResourceDefinition
 
+// ScannerCRD is the CustomResourceDefinition representation of the generated
+// Scanner CRD yaml.
+var ScannerCRD *apiext.CustomResourceDefinition
+
 var RegistryValidator *validate.SchemaValidator
 var ProjectValidator *validate.SchemaValidator
+var ScannerValidator *validate.SchemaValidator
 
 func init() {
 	scheme := runtime.NewScheme()
@@ -91,12 +99,32 @@ func init() {
 		panic("project CRD yaml is not a valid CustomResourceDefinition")
 	}
 
+	scannerCRDv1, _, err := serializer.Decode(scannerCRDYaml, nil, nil)
+	if err != nil {
+		panic(err)
+	}
+
+	scannerCRD, err := scheme.ConvertToVersion(scannerCRDv1, apiext.SchemeGroupVersion)
+	if err != nil {
+		panic(err)
+	}
+
+	ScannerCRD, ok = scannerCRD.(*apiext.CustomResourceDefinition)
+	if !ok {
+		panic("scanner CRD yaml is not a valid CustomResourceDefinition")
+	}
+
 	RegistryValidator, _, err = validation.NewSchemaValidator(RegistryCRD.Spec.Validation)
 	if err != nil {
 		panic(err)
 	}
 
 	ProjectValidator, _, err = validation.NewSchemaValidator(ProjectCRD.Spec.Validation)
+	if err != nil {
+		panic(err)
+	}
+
+	ScannerValidator, _, err = validation.NewSchemaValidator(ScannerCRD.Spec.Validation)
 	if err != nil {
 		panic(err)
 	}

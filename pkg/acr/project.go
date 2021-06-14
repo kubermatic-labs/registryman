@@ -66,3 +66,7 @@ func (p *project) AssignScanner(s globalregistry.Scanner) error {
 func (p *project) GetScanner() (globalregistry.Scanner, error) {
 	return nil, nil
 }
+
+func (p *project) UnassignScanner(s globalregistry.Scanner) error {
+	return fmt.Errorf("method ACR.UnassignScanner not implemented: %w", globalregistry.RecoverableError)
+}

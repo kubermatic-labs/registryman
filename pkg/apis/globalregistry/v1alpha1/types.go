@@ -365,12 +365,12 @@ func (mr *MemberRole) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-// +kubebuilder:resource:path=registries,scope=Cluster,singular=registry
+// +kubebuilder:resource:path=scanners,scope=Cluster,singular=scanner
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 type Scanner struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
-	// Spec describes the Registry Specification.
+	// Spec describes the Scanner Specification.
 	Spec *ScannerSpec `json:"spec"`
 }
 

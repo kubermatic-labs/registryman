@@ -263,3 +263,7 @@ func (p *project) AssignScanner(scanner globalregistry.Scanner) error {
 	}
 	return p.sApi.SetForProject(p.id, scannerID)
 }
+
+func (p *project) UnassignScanner(scanner globalregistry.Scanner) error {
+	return fmt.Errorf("project member already exists, %w", globalregistry.RecoverableError)
+}

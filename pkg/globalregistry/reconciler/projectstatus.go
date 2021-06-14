@@ -26,7 +26,7 @@ type ProjectStatus struct {
 	Name             string
 	Members          []MemberStatus
 	ReplicationRules []ReplicationRuleStatus
-	*scannerStatus
+	ScannerStatus    ScannerStatus
 }
 
 type projectAddAction struct {
@@ -65,6 +65,11 @@ func (pa *projectRemoveAction) Perform(reg globalregistry.Registry) (SideEffect,
 	return nilEffect, project.Delete()
 }
 
+// {"Name":"os-images",
+//  "Members":[{"Name":"alpha","Type":"User","Role":"Maintainer"},{"Name":"beta","Type":"User","Role":"Developer"}],
+//	"ReplicationRules":[{"RemoteRegistryName":"harbor-2","Trigger":1,"Direction":1}],
+//  "ScannerStatus":{"Name":"Trivy","Url":"http://harbor-harbor-trivy:8080"}
+//  }
 func CompareProjectStatuses(store *config.ExpectedProvider, actual, expected []ProjectStatus) []Action {
 	same := make(map[string][2]ProjectStatus)
 	actualDiff := []ProjectStatus{}
@@ -114,7 +119,7 @@ ExpLoop:
 	}
 
 	// same contains the projects that are present in both actual and
-	// expected. They have to be checked for member and replication rule
+	// expected. They have to be checked for member, replication and scanner rule
 	// differences.
 	for projectName, projectPair := range same {
 		actions = append(actions,
@@ -128,8 +133,14 @@ ExpLoop:
 				projectPair[0].ReplicationRules,
 				projectPair[1].ReplicationRules)...,
 		)
+		actions = append(actions,
+			CompareScannerStatuses(
+				projectName,
+				projectPair[0].ScannerStatus,
+				projectPair[1].ScannerStatus)...,
+		)
 	}
-	// expectedClone contains the projects which are missing and thus they
+	// expectedDiff contains the projects which are missing and thus they
 	// shall be created
 	for _, exp := range expectedDiff {
 		actions = append(actions, &projectAddAction{
@@ -147,7 +158,12 @@ ExpLoop:
 				store:                 store,
 				projectName:           exp.Name,
 			})
-
+		}
+		if exp.ScannerStatus.Name != "" {
+			actions = append(actions, &scannerAssignAction{
+				projectName:   exp.Name,
+				ScannerStatus: &exp.ScannerStatus,
+			})
 		}
 	}
 

@@ -99,7 +99,16 @@ func (s *scannerAPI) Create(config globalregistry.ScannerConfig) (*url.URL, erro
 }
 
 func (s *scannerAPI) getScannerIDByName(name string) (string, error) {
-	panic("not implemented")
+	scanners, err := s.List()
+	if err != nil {
+		return "", err
+	}
+	for _, scanner := range scanners {
+		if scanner.GetName() == name {
+			return scanner.(*Scanner).getID(), err
+		}
+	}
+	return "", nil
 }
 
 func (s *scannerAPI) List() ([]globalregistry.Scanner, error) {
@@ -137,7 +146,7 @@ func (s *scannerAPI) List() ([]globalregistry.Scanner, error) {
 	}
 
 	for _, scannerIterator := range scannerResult {
-		scanners = append(scanners, &scanner{
+		scanners = append(scanners, &Scanner{
 			id:   scannerIterator.Uuid,
 			api:  s,
 			name: scannerIterator.Name,
@@ -203,7 +212,7 @@ func (s *scannerAPI) getForProject(id int) (globalregistry.Scanner, error) {
 		s.reg.logger.Info(b.String())
 	}
 
-	scanner := &scanner{
+	scanner := &Scanner{
 		id:   scannerResult.Uuid,
 		api:  s,
 		name: scannerResult.Name,

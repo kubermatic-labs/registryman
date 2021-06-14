@@ -198,6 +198,8 @@ func validateObjects(o runtime.Object, gvk *schema.GroupVersionKind) error {
 		results = api.RegistryValidator.Validate(o)
 	case "Project":
 		results = api.ProjectValidator.Validate(o)
+	case "Scanner":
+		results = api.ScannerValidator.Validate(o)
 	default:
 		return fmt.Errorf("%s Kind is not supported", gvk.Kind)
 	}
