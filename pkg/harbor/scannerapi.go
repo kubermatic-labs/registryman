@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"strings"
 
 	"github.com/kubermatic-labs/registryman/pkg/globalregistry"
 )
@@ -104,11 +105,11 @@ func (s *scannerAPI) getScannerIDByName(name string) (string, error) {
 		return "", err
 	}
 	for _, scanner := range scanners {
-		if scanner.GetName() == name {
+		if strings.EqualFold(scanner.GetName(), name) {
 			return scanner.(*Scanner).getID(), err
 		}
 	}
-	return "", fmt.Errorf("couldn't retrieve ScannerID for %s, %w", name, globalregistry.RecoverableError)
+	return "", fmt.Errorf("couldn't retrieve ScannerID for %s", name)
 }
 
 func (s *scannerAPI) List() ([]globalregistry.Scanner, error) {
