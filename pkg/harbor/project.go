@@ -258,12 +258,17 @@ func (p *project) GetScanner() (globalregistry.Scanner, error) {
 
 func (p *project) AssignScanner(scanner globalregistry.Scanner) error {
 	scannerID, err := p.sApi.getScannerIDByName(scanner.GetName())
-	if err == nil {
+	if err != nil {
 		return err
 	}
 	return p.sApi.SetForProject(p.id, scannerID)
 }
 
 func (p *project) UnassignScanner(scanner globalregistry.Scanner) error {
-	return fmt.Errorf("project member already exists, %w", globalregistry.RecoverableError)
+	defaultScanner := &Scanner{
+		name: "Trivy",
+		url:  "http://harbor-harbor-trivy:8080",
+	}
+
+	return p.AssignScanner(defaultScanner)
 }

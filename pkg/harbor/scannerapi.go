@@ -108,7 +108,7 @@ func (s *scannerAPI) getScannerIDByName(name string) (string, error) {
 			return scanner.(*Scanner).getID(), err
 		}
 	}
-	return "", nil
+	return "", fmt.Errorf("couldn't retrieve ScannerID for %s, %w", name, globalregistry.RecoverableError)
 }
 
 func (s *scannerAPI) List() ([]globalregistry.Scanner, error) {
