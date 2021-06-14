@@ -26,6 +26,7 @@ type ProjectStatus struct {
 	Name             string
 	Members          []MemberStatus
 	ReplicationRules []ReplicationRuleStatus
+	*scannerStatus
 }
 
 type projectAddAction struct {

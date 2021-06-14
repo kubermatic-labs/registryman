@@ -81,6 +81,17 @@ func GetRegistryStatus(reg globalregistry.Registry) (*RegistryStatus, error) {
 			projectStatuses[i].ReplicationRules[n].Trigger = rule.Trigger()
 			projectStatuses[i].ReplicationRules[n].Direction = rule.Direction()
 		}
+
+		projectScanner, err := project.GetScanner()
+		if err != nil {
+			return nil, err
+		}
+		if projectScanner != nil {
+			projectStatuses[i].scannerStatus = &scannerStatus{
+				name: projectScanner.GetName(),
+				url:  projectScanner.GetURL(),
+			}
+		}
 	}
 	return &RegistryStatus{
 		Projects: projectStatuses,
