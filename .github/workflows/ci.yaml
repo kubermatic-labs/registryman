@@ -42,7 +42,7 @@ jobs:
     - uses: actions/setup-go@v2
       with:
         go-version: ${{ env.golang-version }}
-    - run: go build .
+    - run: go build -v .
   checks:
     runs-on: ubuntu-latest
     name: Unit tests
@@ -51,7 +51,7 @@ jobs:
     - uses: actions/setup-go@v2
       with:
         go-version: ${{ env.golang-version }}
-    - run: go vet  -v ./... && go mod tidy && git diff --exit-code
+    - run: go vet -v ./... && go mod tidy && git diff --exit-code
   codegen:
     runs-on: ubuntu-latest
     name: Unit tests
