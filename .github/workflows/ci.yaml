@@ -30,12 +30,7 @@ jobs:
           version: v1.40.1
           args: --timeout 10m0s
   build:
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        os:
-          - macos-latest
-          - ubuntu-latest
+    runs-on: ubuntu-latest
     name: Build binary
     steps:
     - uses: actions/checkout@v2
