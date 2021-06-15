@@ -61,7 +61,6 @@ jobs:
     runs-on: ubuntu-latest
     name: Unit tests
     steps:
-    - name: Unit tests
     - uses: actions/checkout@v2
     - uses: actions/setup-go@v2
       with:
