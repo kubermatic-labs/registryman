@@ -57,5 +57,13 @@ jobs:
       run: go vet -v ./... && git diff --exit-code
     - name: Codegen
       run: go mod vendor && hack/update-codegen.sh && git diff --exit-code
+  unit-tests:
+    runs-on: ubuntu-latest
+    name: Unit tests
+    steps:
     - name: Unit tests
-      run: go test -v ./... -race
+    - uses: actions/checkout@v2
+    - uses: actions/setup-go@v2
+      with:
+        go-version: ${{ env.golang-version }}
+    - run: go test -v ./... -race
