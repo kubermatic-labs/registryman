@@ -51,9 +51,9 @@ jobs:
       uses: actions/checkout@v2
     - name: Setup Go
       uses: actions/setup-go@v2
-    - name: Go vet
       with:
         go-version: ${{ env.golang-version }}
+    - name: Go vet
       run: go vet -v ./... && git diff --exit-code
     - name: Codegen
       run: go mod vendor && hack/update-codegen.sh && git diff --exit-code
