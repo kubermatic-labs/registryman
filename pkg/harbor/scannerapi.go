@@ -99,17 +99,46 @@ func (s *scannerAPI) Create(config globalregistry.ScannerConfig) (*url.URL, erro
 	return parsedUrl, nil
 }
 
-func (s *scannerAPI) getScannerIDByName(name string) (string, error) {
+func (s *scannerAPI) getScannerIDByNameOrCreate(targetScanner globalregistry.Scanner) (string, error) {
+	retrievedID, err := s.checkScannerID(targetScanner)
+	if err == nil && len(retrievedID) > 0 {
+		return retrievedID, nil
+	}
+
+	s.reg.logger.Info("creating global scanner with name: %s", targetScanner.GetName())
+
+	newScannerConfig := &scannerRegistrationRequest{
+		Name:     targetScanner.GetName(),
+		Url:      targetScanner.GetURL(),
+		Disabled: false,
+	}
+
+	scannerUrl, err := s.Create(newScannerConfig)
+	if err != nil {
+		return "", err
+	}
+	fmt.Println(scannerUrl.String())
+
+	retrievedID, err = s.checkScannerID(targetScanner)
+	if err == nil && len(retrievedID) > 0 {
+		return retrievedID, nil
+	}
+
+	s.reg.logger.Info("couldn't find ScannerID for newly created scanner: %s, %w", targetScanner.GetName())
+	return "", err
+}
+
+func (s *scannerAPI) checkScannerID(targetScanner globalregistry.Scanner) (string, error) {
 	scanners, err := s.List()
 	if err != nil {
 		return "", err
 	}
-	for _, scanner := range scanners {
-		if strings.EqualFold(scanner.GetName(), name) {
-			return scanner.(*Scanner).getID(), err
+	for _, scannerIterator := range scanners {
+		if strings.EqualFold(scannerIterator.GetName(), targetScanner.GetName()) {
+			return scannerIterator.(*scanner).id, err
 		}
 	}
-	return "", fmt.Errorf("couldn't retrieve ScannerID for %s", name)
+	return "", fmt.Errorf("couldn't find ScannerID for %s, %w", targetScanner.GetName(), globalregistry.RecoverableError)
 }
 
 func (s *scannerAPI) List() ([]globalregistry.Scanner, error) {
@@ -147,10 +176,11 @@ func (s *scannerAPI) List() ([]globalregistry.Scanner, error) {
 	}
 
 	for _, scannerIterator := range scannerResult {
-		scanners = append(scanners, &Scanner{
-			id:   scannerIterator.Uuid,
-			api:  s,
-			name: scannerIterator.Name,
+		scanners = append(scanners, &scanner{
+			id:        scannerIterator.Uuid,
+			api:       s,
+			name:      scannerIterator.Name,
+			isDefault: scannerIterator.IsDefault,
 		})
 	}
 	return scanners, err
@@ -213,13 +243,13 @@ func (s *scannerAPI) getForProject(id int) (globalregistry.Scanner, error) {
 		s.reg.logger.Info(b.String())
 	}
 
-	scanner := &Scanner{
+	resultScanner := &scanner{
 		id:   scannerResult.Uuid,
 		api:  s,
 		name: scannerResult.Name,
 		url:  scannerResult.Url,
 	}
-	return scanner, err
+	return resultScanner, err
 
 }
 

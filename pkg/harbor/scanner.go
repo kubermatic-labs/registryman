@@ -4,27 +4,24 @@ import (
 	"github.com/kubermatic-labs/registryman/pkg/globalregistry"
 )
 
-type Scanner struct {
-	id   string
-	api  *scannerAPI
-	name string
-	url  string
+type scanner struct {
+	id        string
+	api       *scannerAPI
+	name      string
+	url       string
+	isDefault bool
 }
 
-var _ globalregistry.Scanner = &Scanner{}
+var _ globalregistry.Scanner = &scanner{}
 
-func (s *Scanner) Delete() error {
+func (s *scanner) Delete() error {
 	return s.api.delete(s.id)
 }
 
-func (s *Scanner) GetName() string {
+func (s *scanner) GetName() string {
 	return s.name
 }
 
-func (s *Scanner) GetURL() string {
+func (s *scanner) GetURL() string {
 	return s.url
-}
-
-func (s *Scanner) getID() string {
-	return s.id
 }

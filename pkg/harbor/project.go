@@ -257,17 +257,25 @@ func (p *project) GetScanner() (globalregistry.Scanner, error) {
 }
 
 func (p *project) AssignScanner(scanner globalregistry.Scanner) error {
-	scannerID, err := p.sApi.getScannerIDByName(scanner.GetName())
+	scannerID, err := p.sApi.getScannerIDByNameOrCreate(scanner)
 	if err != nil {
 		return err
 	}
 	return p.sApi.SetForProject(p.id, scannerID)
 }
 
-func (p *project) UnassignScanner(scanner globalregistry.Scanner) error {
-	defaultScanner := &Scanner{
-		name: "Trivy",
-		url:  "http://harbor-harbor-trivy:8080",
+func (p *project) UnassignScanner(globalregistry.Scanner) error {
+	var defaultScanner globalregistry.Scanner
+	currentScanners, err := p.sApi.List()
+
+	for _, s := range currentScanners {
+		if s.(*scanner).isDefault {
+			defaultScanner = s
+		}
+	}
+	if err != nil {
+		p.api.reg.logger.Error(err, "couldn't find default scanner for project %w", p)
+		return err
 	}
 
 	return p.AssignScanner(defaultScanner)
