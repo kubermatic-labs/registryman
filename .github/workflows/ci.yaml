@@ -45,28 +45,17 @@ jobs:
     - run: go build -v .
   checks:
     runs-on: ubuntu-latest
-    name: Unit tests
+    name: Go checks
     steps:
-    - uses: actions/checkout@v2
-    - uses: actions/setup-go@v2
+    - name: Check out repository
+      uses: actions/checkout@v2
+    - name: Setup Go
+      uses: actions/setup-go@v2
+    - name: Go vet
       with:
         go-version: ${{ env.golang-version }}
-    - run: go vet -v ./... && go mod tidy && git diff --exit-code
-  codegen:
-    runs-on: ubuntu-latest
-    name: Unit tests
-    steps:
-    - uses: actions/checkout@v2
-    - uses: actions/setup-go@v2
-      with:
-        go-version: ${{ env.golang-version }}
-    - run: go mod vendor && hack/update-codegen.sh && git diff --exit-code
-  unit-tests:
-    runs-on: ubuntu-latest
-    name: Unit tests
-    steps:
-    - uses: actions/checkout@v2
-    - uses: actions/setup-go@v2
-      with:
-        go-version: ${{ env.golang-version }}
-    - run: go test -v ./... -race
+      run: go vet -v ./... && git diff --exit-code
+    - name: Codegen
+      run: go mod vendor && hack/update-codegen.sh && git diff --exit-code
+    - name: Unit tests
+      run: go test -v ./... -race
