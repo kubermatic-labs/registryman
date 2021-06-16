@@ -70,6 +70,10 @@ func GetRegistryStatus(reg globalregistry.Registry) (*RegistryStatus, error) {
 			projectStatuses[i].Members[n].Name = member.GetName()
 			projectStatuses[i].Members[n].Type = member.GetType()
 			projectStatuses[i].Members[n].Role = member.GetRole()
+			switch m := member.(type) {
+			case globalregistry.LdapMember:
+				projectStatuses[i].Members[n].DN = m.GetDN()
+			}
 		}
 		replicationRules, err := project.GetReplicationRules(nil, nil)
 		if err != nil {

@@ -98,7 +98,7 @@ func (p *projectAPI) GetByName(name string) (globalregistry.Project, error) {
 }
 
 func (p *projectAPI) List() ([]globalregistry.Project, error) {
-
+	// FIX: thread unsafe handling of parsedUrl
 	p.reg.parsedUrl.Path = path
 	req, err := http.NewRequest(http.MethodGet, p.reg.parsedUrl.String(), nil)
 	if err != nil {
@@ -144,6 +144,7 @@ func (p *projectAPI) Create(name string) (globalregistry.Project, error) {
 		Name: name,
 	}
 
+	// FIX: thread unsafe handling of parsedUrl
 	p.reg.parsedUrl.Path = path
 	reqBodyBuf := bytes.NewBuffer(nil)
 	err := json.NewEncoder(reqBodyBuf).Encode(&projectCreateReqBody{
@@ -177,7 +178,7 @@ func (p *projectAPI) Create(name string) (globalregistry.Project, error) {
 	proj.id = projectID
 
 	// Removing default implicit admin user
-	members, err := p.getUserMembers(proj.id)
+	members, err := p.getMembers(proj.id)
 	if err != nil {
 		p.reg.logger.V(-1).Info("could not get project members", "error", err)
 		return proj, nil
@@ -193,7 +194,7 @@ func (p *projectAPI) Create(name string) (globalregistry.Project, error) {
 		p.reg.logger.V(-1).Info("could not find implicit admin member", "username", p.reg.GetUsername())
 		return proj, nil
 	}
-	err = p.deleteProjectUserMember(proj.id, m.Id)
+	err = p.deleteProjectMember(proj.id, m.Id)
 	if err != nil {
 		p.reg.logger.V(-1).Info("could not delete implicit admin member",
 			"username", p.reg.GetUsername(),
@@ -204,6 +205,7 @@ func (p *projectAPI) Create(name string) (globalregistry.Project, error) {
 }
 
 func (p *projectAPI) delete(id int) error {
+	// FIX: thread unsafe handling of parsedUrl
 	p.reg.parsedUrl.Path = fmt.Sprintf("%s/%d", path, id)
 	p.reg.logger.V(1).Info("creating new request", "parsedUrl", p.reg.parsedUrl.String())
 	req, err := http.NewRequest(http.MethodDelete, p.reg.parsedUrl.String(), nil)
@@ -241,6 +243,7 @@ func (prrb *projectRepositoryRespBody) Delete() error {
 }
 
 func (p *projectAPI) listProjectRepositories(proj *project) ([]globalregistry.Repository, error) {
+	// FIX: thread unsafe handling of parsedUrl
 	p.reg.parsedUrl.Path = fmt.Sprintf("%s/%s/repositories", path, proj.Name)
 	req, err := http.NewRequest(http.MethodGet, p.reg.parsedUrl.String(), nil)
 	if err != nil {
@@ -276,6 +279,7 @@ func (p *projectAPI) listProjectRepositories(proj *project) ([]globalregistry.Re
 }
 
 func (p *projectAPI) deleteProjectRepository(proj *project, repo globalregistry.Repository) error {
+	// FIX: thread unsafe handling of parsedUrl
 	p.reg.parsedUrl.Path = fmt.Sprintf("%s/%s/repositories/%s", path, proj.Name, repo.GetName())
 	req, err := http.NewRequest(http.MethodDelete, p.reg.parsedUrl.String(), nil)
 	if err != nil {

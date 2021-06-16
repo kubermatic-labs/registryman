@@ -50,6 +50,10 @@ spec:
                   description: ProjectMember reprensents a User, Group or Robot user
                     of a Project.
                   properties:
+                    dn:
+                      description: DN is optional distinguished name of the user.
+                        Used with LDAP integration.
+                      type: string
                     name:
                       description: Name of the project member
                       type: string

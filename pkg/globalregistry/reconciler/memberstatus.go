@@ -24,29 +24,63 @@ import (
 
 	"encoding/base64"
 
+	"path/filepath"
+
 	"github.com/kubermatic-labs/registryman/pkg/globalregistry"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/serializer/json"
-	"path/filepath"
 )
 
 type MemberStatus struct {
 	Name string
 	Type string
 	Role string
+	DN   string
 }
 
-func (ms *MemberStatus) GetName() string {
-	return ms.Name
+func (ms *MemberStatus) toProjectMember() globalregistry.ProjectMember {
+	if ms.DN == "" {
+		return (*projectMemberStatus)(ms)
+	} else {
+		return (*ldapStatus)(ms)
+	}
 }
 
-func (ms *MemberStatus) GetType() string {
-	return ms.Type
+type projectMemberStatus MemberStatus
+
+var _ globalregistry.ProjectMember = &projectMemberStatus{}
+
+func (m *projectMemberStatus) GetName() string {
+	return m.Name
 }
 
-func (ms *MemberStatus) GetRole() string {
-	return ms.Role
+func (m *projectMemberStatus) GetRole() string {
+	return m.Role
+}
+
+func (m *projectMemberStatus) GetType() string {
+	return m.Type
+}
+
+type ldapStatus MemberStatus
+
+var _ globalregistry.LdapMember = &ldapStatus{}
+
+func (m *ldapStatus) GetName() string {
+	return m.Name
+}
+
+func (m *ldapStatus) GetRole() string {
+	return m.Role
+}
+
+func (m *ldapStatus) GetType() string {
+	return m.Type
+}
+
+func (m *ldapStatus) GetDN() string {
+	return m.DN
 }
 
 type memberAddAction struct {
@@ -130,7 +164,11 @@ func (ma *memberAddAction) Perform(reg globalregistry.Registry) (SideEffect, err
 	if err != nil {
 		return nilEffect, err
 	}
-	creds, err := project.AssignMember(ma)
+	if project == nil {
+		// project not found
+		return nilEffect, fmt.Errorf("project %s not found", ma.projectName)
+	}
+	creds, err := project.AssignMember(ma.toProjectMember())
 	if err != nil {
 		return nilEffect, err
 	}
@@ -182,7 +220,7 @@ func (ma *memberRemoveAction) Perform(reg globalregistry.Registry) (SideEffect, 
 	if err != nil {
 		return nilEffect, err
 	}
-	err = project.UnassignMember(ma)
+	err = project.UnassignMember(ma.toProjectMember())
 	if err != nil {
 		return nilEffect, err
 	}

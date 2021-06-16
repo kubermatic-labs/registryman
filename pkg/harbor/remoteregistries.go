@@ -179,6 +179,7 @@ func (r *remoteRegistries) create(reg globalregistry.RegistryConfig) (*remoteReg
 }
 
 func (r *remoteRegistries) list() ([]*remoteRegistryStatus, error) {
+	// FIX: thread unsafe handling of parsedUrl
 	r.reg.parsedUrl.Path = registriesPath
 	r.reg.logger.V(1).Info("creating new request", "parsedUrl", r.reg.parsedUrl.String())
 	req, err := http.NewRequest(http.MethodGet, r.reg.parsedUrl.String(), nil)
