@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"net/url"
 	"strings"
 
 	"github.com/kubermatic-labs/registryman/pkg/globalregistry"
@@ -56,7 +55,7 @@ func newScannerAPI(reg *registry) *scannerAPI {
 	}
 }
 
-func (s *scannerAPI) Create(config globalregistry.ScannerConfig) (*url.URL, error) {
+func (s *scannerAPI) create(config globalregistry.ScannerConfig) (string, error) {
 	s.reg.parsedUrl.Path = scannersPath
 
 	reqBodyBuf := bytes.NewBuffer(nil)
@@ -68,44 +67,68 @@ func (s *scannerAPI) Create(config globalregistry.ScannerConfig) (*url.URL, erro
 		Description:      config.GetDescription(),
 	})
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 	req, err := http.NewRequest(http.MethodPost, s.reg.parsedUrl.String(), reqBodyBuf)
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 
 	req.Header["Content-Type"] = []string{"application/json"}
 	req.SetBasicAuth(s.reg.GetUsername(), s.reg.GetPassword())
 	resp, err := s.reg.do(req)
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 
 	defer resp.Body.Close()
 
 	if resp.StatusCode != 201 {
-		return nil, fmt.Errorf("scanner creation failed, %w", globalregistry.RecoverableError)
+		return "", fmt.Errorf("scanner creation failed, %w", globalregistry.RecoverableError)
 	}
 
-	scannerUrl := resp.Header.Get("Location")
-	parsedUrl, err := url.Parse(scannerUrl)
-
+	scannerID := strings.TrimPrefix(
+		resp.Header.Get("Location"),
+		fmt.Sprintf("%s/", scannersPath))
 	if err != nil {
 		s.reg.logger.Error(err, "cannot parse scanner URL from response Location header",
 			"location-header", resp.Header.Get("Location"))
-		return nil, err
+		return "", err
 	}
-	return parsedUrl, nil
+	return scannerID, nil
 }
 
 func (s *scannerAPI) getScannerIDByNameOrCreate(targetScanner globalregistry.Scanner) (string, error) {
-	retrievedID, err := s.checkScannerID(targetScanner)
-	if err == nil && len(retrievedID) > 0 {
+	retrievedID := ""
+	currentScanners, err := s.List()
+	if err != nil {
+		return "", err
+	}
+
+	for _, scannerIterator := range currentScanners {
+		if strings.EqualFold(scannerIterator.GetName(), targetScanner.GetName()) {
+			retrievedID = scannerIterator.(*scanner).id
+		}
+	}
+
+	if err == nil && retrievedID != "" {
 		return retrievedID, nil
 	}
 
-	s.reg.logger.Info("creating global scanner with name: %s", targetScanner.GetName())
+	s.reg.logger.Info("id not found, comparing with existing scanner registrations", "name", targetScanner.GetName())
+	for _, scannerIterator := range currentScanners {
+		if (strings.EqualFold(scannerIterator.GetName(), targetScanner.GetName()) ||
+			strings.EqualFold(scannerIterator.GetURL(), targetScanner.GetURL())) &&
+			!(strings.EqualFold(scannerIterator.GetName(), targetScanner.GetName()) &&
+				strings.EqualFold(scannerIterator.GetURL(), targetScanner.GetURL())) {
+
+			s.reg.logger.Info("updating existing scanner", scannerIterator.GetName(), targetScanner.GetName())
+			err = s.update(scannerIterator.(*scanner).id, targetScanner)
+			return scannerIterator.(*scanner).id, err
+		}
+	}
+
+	s.reg.logger.Info("creating global scanner", "name", targetScanner.GetName())
 
 	newScannerConfig := &scannerRegistrationRequest{
 		Name:     targetScanner.GetName(),
@@ -113,32 +136,7 @@ func (s *scannerAPI) getScannerIDByNameOrCreate(targetScanner globalregistry.Sca
 		Disabled: false,
 	}
 
-	scannerUrl, err := s.Create(newScannerConfig)
-	if err != nil {
-		return "", err
-	}
-	fmt.Println(scannerUrl.String())
-
-	retrievedID, err = s.checkScannerID(targetScanner)
-	if err == nil && len(retrievedID) > 0 {
-		return retrievedID, nil
-	}
-
-	s.reg.logger.Info("couldn't find ScannerID for newly created scanner: %s, %w", targetScanner.GetName())
-	return "", err
-}
-
-func (s *scannerAPI) checkScannerID(targetScanner globalregistry.Scanner) (string, error) {
-	scanners, err := s.List()
-	if err != nil {
-		return "", err
-	}
-	for _, scannerIterator := range scanners {
-		if strings.EqualFold(scannerIterator.GetName(), targetScanner.GetName()) {
-			return scannerIterator.(*scanner).id, err
-		}
-	}
-	return "", fmt.Errorf("couldn't find ScannerID for %s, %w", targetScanner.GetName(), globalregistry.RecoverableError)
+	return s.create(newScannerConfig)
 }
 
 func (s *scannerAPI) List() ([]globalregistry.Scanner, error) {
@@ -180,6 +178,7 @@ func (s *scannerAPI) List() ([]globalregistry.Scanner, error) {
 			id:        scannerIterator.Uuid,
 			api:       s,
 			name:      scannerIterator.Name,
+			url:       scannerIterator.Url,
 			isDefault: scannerIterator.IsDefault,
 		})
 	}
@@ -251,6 +250,39 @@ func (s *scannerAPI) getForProject(id int) (globalregistry.Scanner, error) {
 	}
 	return resultScanner, err
 
+}
+
+func (s *scannerAPI) update(id string, targetScanner globalregistry.Scanner) error {
+	s.reg.parsedUrl.Path = fmt.Sprintf("%s/%s", scannersPath, id)
+
+	reqBodyBuf := bytes.NewBuffer(nil)
+	err := json.NewEncoder(reqBodyBuf).Encode(&scannerRegistrationRequest{
+		Name: targetScanner.GetName(),
+		Url:  targetScanner.GetURL(),
+	})
+	if err != nil {
+		return err
+	}
+
+	req, err := http.NewRequest(http.MethodPut, s.reg.parsedUrl.String(), reqBodyBuf)
+	if err != nil {
+		return err
+	}
+
+	req.Header["Content-Type"] = []string{"application/json"}
+	req.SetBasicAuth(s.reg.GetUsername(), s.reg.GetPassword())
+
+	resp, err := s.reg.do(req)
+	if err != nil {
+		return err
+	}
+
+	defer resp.Body.Close()
+
+	if resp.StatusCode != 200 {
+		return fmt.Errorf("failed to update scanner, %w", globalregistry.RecoverableError)
+	}
+	return err
 }
 
 func (s *scannerAPI) delete(id string) error {

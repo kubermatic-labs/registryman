@@ -256,25 +256,34 @@ func (p *project) GetScanner() (globalregistry.Scanner, error) {
 	return p.sApi.getForProject(p.id)
 }
 
-func (p *project) AssignScanner(scanner globalregistry.Scanner) error {
-	scannerID, err := p.sApi.getScannerIDByNameOrCreate(scanner)
+// TODO: same endpoint with different names (UPDATE)
+func (p *project) AssignScanner(targetScanner globalregistry.Scanner) error {
+	scannerID, err := p.sApi.getScannerIDByNameOrCreate(targetScanner)
 	if err != nil {
 		return err
 	}
 	return p.sApi.SetForProject(p.id, scannerID)
 }
 
-func (p *project) UnassignScanner(globalregistry.Scanner) error {
+func (p *project) UnassignScanner(targetScanner globalregistry.Scanner) error {
 	var defaultScanner globalregistry.Scanner
 	currentScanners, err := p.sApi.List()
+
+	if err != nil {
+		return fmt.Errorf("couldn't list scanners for project, %w", err)
+	}
 
 	for _, s := range currentScanners {
 		if s.(*scanner).isDefault {
 			defaultScanner = s
 		}
 	}
-	if err != nil {
-		p.api.reg.logger.Error(err, "couldn't find default scanner for project %w", p)
+
+	if defaultScanner.GetName() == targetScanner.GetName() {
+		return nil
+	}
+	if defaultScanner.GetName() == "" {
+		p.api.reg.logger.Error(err, "couldn't find default scanner for project", p)
 		return err
 	}
 
