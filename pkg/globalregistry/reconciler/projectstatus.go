@@ -65,11 +65,6 @@ func (pa *projectRemoveAction) Perform(reg globalregistry.Registry) (SideEffect,
 	return nilEffect, project.Delete()
 }
 
-// {"Name":"os-images",
-//  "Members":[{"Name":"alpha","Type":"User","Role":"Maintainer"},{"Name":"beta","Type":"User","Role":"Developer"}],
-//	"ReplicationRules":[{"RemoteRegistryName":"harbor-2","Trigger":1,"Direction":1}],
-//  "ScannerStatus":{"Name":"Trivy","Url":"http://harbor-harbor-trivy:8080"}
-//  }
 func CompareProjectStatuses(store *config.ExpectedProvider, actual, expected []ProjectStatus) []Action {
 	same := make(map[string][2]ProjectStatus)
 	actualDiff := []ProjectStatus{}

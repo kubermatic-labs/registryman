@@ -256,7 +256,6 @@ func (p *project) GetScanner() (globalregistry.Scanner, error) {
 	return p.sApi.getForProject(p.id)
 }
 
-// TODO: same endpoint with different names (UPDATE)
 func (p *project) AssignScanner(targetScanner globalregistry.Scanner) error {
 	scannerID, err := p.sApi.getScannerIDByNameOrCreate(targetScanner)
 	if err != nil {

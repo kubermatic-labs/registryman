@@ -114,7 +114,7 @@ var _ runtime.Object = &Project{}
 // ProjectSpec describes the spec field of the Project resource
 type ProjectSpec struct {
 	// Type selects whether the project is global or local.
-	Type ProjectType `json:"type,omitempty"`
+	Type ProjectType `json:"type"`
 
 	// LocalRegistries lists the registry names at which the local project
 	// shall be provisioned at.

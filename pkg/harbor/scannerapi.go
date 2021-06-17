@@ -56,20 +56,18 @@ func newScannerAPI(reg *registry) *scannerAPI {
 }
 
 func (s *scannerAPI) create(config globalregistry.ScannerConfig) (string, error) {
-	s.reg.parsedUrl.Path = scannersPath
+	url := *s.reg.parsedUrl
+	url.Path = scannersPath
 
 	reqBodyBuf := bytes.NewBuffer(nil)
 	err := json.NewEncoder(reqBodyBuf).Encode(&scannerRegistrationRequest{
-		Name:             config.GetName(),
-		Url:              config.GetUrl(),
-		AccessCredential: config.GetCredential(),
-		Auth:             config.GetAuth(),
-		Description:      config.GetDescription(),
+		Name: config.GetName(),
+		Url:  config.GetUrl(),
 	})
 	if err != nil {
 		return "", err
 	}
-	req, err := http.NewRequest(http.MethodPost, s.reg.parsedUrl.String(), reqBodyBuf)
+	req, err := http.NewRequest(http.MethodPost, url.String(), reqBodyBuf)
 	if err != nil {
 		return "", err
 	}
@@ -115,20 +113,20 @@ func (s *scannerAPI) getScannerIDByNameOrCreate(targetScanner globalregistry.Sca
 		return retrievedID, nil
 	}
 
-	s.reg.logger.Info("id not found, comparing with existing scanner registrations", "name", targetScanner.GetName())
+	s.reg.logger.V(1).Info("id not found, comparing with existing scanner registrations", "name", targetScanner.GetName())
 	for _, scannerIterator := range currentScanners {
 		if (strings.EqualFold(scannerIterator.GetName(), targetScanner.GetName()) ||
 			strings.EqualFold(scannerIterator.GetURL(), targetScanner.GetURL())) &&
 			!(strings.EqualFold(scannerIterator.GetName(), targetScanner.GetName()) &&
 				strings.EqualFold(scannerIterator.GetURL(), targetScanner.GetURL())) {
 
-			s.reg.logger.Info("updating existing scanner", scannerIterator.GetName(), targetScanner.GetName())
+			s.reg.logger.V(1).Info("updating existing scanner", scannerIterator.GetName(), targetScanner.GetName())
 			err = s.update(scannerIterator.(*scanner).id, targetScanner)
 			return scannerIterator.(*scanner).id, err
 		}
 	}
 
-	s.reg.logger.Info("creating global scanner", "name", targetScanner.GetName())
+	s.reg.logger.V(1).Info("creating global scanner", "name", targetScanner.GetName())
 
 	newScannerConfig := &scannerRegistrationRequest{
 		Name:     targetScanner.GetName(),
@@ -140,8 +138,9 @@ func (s *scannerAPI) getScannerIDByNameOrCreate(targetScanner globalregistry.Sca
 }
 
 func (s *scannerAPI) List() ([]globalregistry.Scanner, error) {
-	s.reg.parsedUrl.Path = scannersPath
-	req, err := http.NewRequest(http.MethodGet, s.reg.parsedUrl.String(), nil)
+	url := *s.reg.parsedUrl
+	url.Path = scannersPath
+	req, err := http.NewRequest(http.MethodGet, url.String(), nil)
 	if err != nil {
 		return nil, err
 	}
@@ -186,7 +185,8 @@ func (s *scannerAPI) List() ([]globalregistry.Scanner, error) {
 }
 
 func (s *scannerAPI) SetForProject(projectID int, scannerID string) error {
-	s.reg.parsedUrl.Path = fmt.Sprintf("%s/%d/scanner", path, projectID)
+	url := *s.reg.parsedUrl
+	url.Path = fmt.Sprintf("%s/%d/scanner", path, projectID)
 
 	reqBodyBuf := bytes.NewBuffer(nil)
 	err := json.NewEncoder(reqBodyBuf).Encode(&projectScanner{
@@ -195,7 +195,7 @@ func (s *scannerAPI) SetForProject(projectID int, scannerID string) error {
 	if err != nil {
 		return err
 	}
-	req, err := http.NewRequest(http.MethodPut, s.reg.parsedUrl.String(), reqBodyBuf)
+	req, err := http.NewRequest(http.MethodPut, url.String(), reqBodyBuf)
 	if err != nil {
 		return err
 	}
@@ -215,8 +215,9 @@ func (s *scannerAPI) SetForProject(projectID int, scannerID string) error {
 }
 
 func (s *scannerAPI) getForProject(id int) (globalregistry.Scanner, error) {
-	s.reg.parsedUrl.Path = fmt.Sprintf("%s/%d/scanner", path, id)
-	req, err := http.NewRequest(http.MethodGet, s.reg.parsedUrl.String(), nil)
+	url := *s.reg.parsedUrl
+	url.Path = fmt.Sprintf("%s/%d/scanner", path, id)
+	req, err := http.NewRequest(http.MethodGet, url.String(), nil)
 	if err != nil {
 		return nil, err
 	}
@@ -253,7 +254,8 @@ func (s *scannerAPI) getForProject(id int) (globalregistry.Scanner, error) {
 }
 
 func (s *scannerAPI) update(id string, targetScanner globalregistry.Scanner) error {
-	s.reg.parsedUrl.Path = fmt.Sprintf("%s/%s", scannersPath, id)
+	url := *s.reg.parsedUrl
+	url.Path = fmt.Sprintf("%s/%s", scannersPath, id)
 
 	reqBodyBuf := bytes.NewBuffer(nil)
 	err := json.NewEncoder(reqBodyBuf).Encode(&scannerRegistrationRequest{
@@ -264,7 +266,7 @@ func (s *scannerAPI) update(id string, targetScanner globalregistry.Scanner) err
 		return err
 	}
 
-	req, err := http.NewRequest(http.MethodPut, s.reg.parsedUrl.String(), reqBodyBuf)
+	req, err := http.NewRequest(http.MethodPut, url.String(), reqBodyBuf)
 	if err != nil {
 		return err
 	}
@@ -286,9 +288,10 @@ func (s *scannerAPI) update(id string, targetScanner globalregistry.Scanner) err
 }
 
 func (s *scannerAPI) delete(id string) error {
-	s.reg.parsedUrl.Path = fmt.Sprintf("%s/%s", scannersPath, id)
+	url := *s.reg.parsedUrl
+	url.Path = fmt.Sprintf("%s/%s", scannersPath, id)
 
-	req, err := http.NewRequest(http.MethodDelete, s.reg.parsedUrl.String(), nil)
+	req, err := http.NewRequest(http.MethodDelete, url.String(), nil)
 	if err != nil {
 		return err
 	}
