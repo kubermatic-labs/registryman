@@ -1,0 +1,63 @@
+name: ci
+on:
+  pull_request:
+  push:
+    branches:
+      - 'release-*'
+      - 'master'
+      - 'main'
+      - 'basic-ci'
+    tags:
+      - 'v*'
+env:
+  golang-version: '1.16'
+jobs:
+  shellcheck:
+    name: Shellcheck
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: Run ShellCheck
+      uses: ludeeus/action-shellcheck@master
+  check-golang:
+    runs-on: ubuntu-latest
+    name: Golang linter
+    steps:
+      - uses: actions/checkout@v2
+      - name: golangci-lint
+        uses: golangci/golangci-lint-action@v2
+        with:
+          version: v1.40.1
+          args: --timeout 10m0s
+  build:
+    runs-on: ubuntu-latest
+    name: Build binary
+    steps:
+    - uses: actions/checkout@v2
+    - uses: actions/setup-go@v2
+      with:
+        go-version: ${{ env.golang-version }}
+    - run: go build -v .
+  checks:
+    runs-on: ubuntu-latest
+    name: Go checks
+    steps:
+    - name: Check out repository
+      uses: actions/checkout@v2
+    - name: Setup Go
+      uses: actions/setup-go@v2
+      with:
+        go-version: ${{ env.golang-version }}
+    - name: Go vet
+      run: go vet -v ./... && git diff --exit-code
+    - name: Codegen
+      run: go mod vendor && hack/update-codegen.sh && git diff --exit-code
+  unit-tests:
+    runs-on: ubuntu-latest
+    name: Unit tests
+    steps:
+    - uses: actions/checkout@v2
+    - uses: actions/setup-go@v2
+      with:
+        go-version: ${{ env.golang-version }}
+    - run: go test -v ./... -race
