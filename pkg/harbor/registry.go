@@ -177,7 +177,7 @@ func (r *registry) searchLdapGroup(ldapGroupName string) (string, error) {
 
 func (r *registry) getUserGroups() ([]*userGroup, error) {
 	r.logger.V(1).Info("listing usergroups")
-	url := r.parsedUrl
+	url := *r.parsedUrl
 	url.Path = "/api/v2.0/usergroups"
 	req, err := http.NewRequest(http.MethodGet, url.String(), nil)
 	if err != nil {
@@ -216,7 +216,7 @@ func (r *registry) createUserGroup(ug *userGroup) error {
 		"GroupType", ug.GroupType,
 	)
 
-	url := r.parsedUrl
+	url := *r.parsedUrl
 	url.Path = "/api/v2.0/usergroups"
 	reqBodyBuf := bytes.NewBuffer(nil)
 	err := json.NewEncoder(reqBodyBuf).Encode(ug)
@@ -254,7 +254,7 @@ func (r *registry) deleteUserGroup(ug *userGroup) error {
 		"GroupType", ug.GroupType,
 	)
 
-	url := r.parsedUrl
+	url := *r.parsedUrl
 	url.Path = fmt.Sprintf("/api/v2.0/usergroups/%d", ug.Id)
 	req, err := http.NewRequest(http.MethodDelete, url.String(), nil)
 	if err != nil {
