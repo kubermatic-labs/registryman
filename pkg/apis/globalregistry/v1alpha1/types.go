@@ -202,6 +202,10 @@ type ProjectMember struct {
 	//
 	// The possible values depend on the value of the Type field.
 	Role MemberRole `json:"role"`
+
+	// +kubebuilder:validation:Optional
+	// DN is optional distinguished name of the user. Used with LDAP integration.
+	DN string `json:"dn,omitempty"`
 }
 
 func (pm *ProjectMember) UnmarshalJSON(data []byte) error {

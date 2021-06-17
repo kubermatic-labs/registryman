@@ -48,7 +48,7 @@ func (r *robot) GetName() string {
 }
 
 func (r *robot) GetType() string {
-	return "Robot"
+	return robotType
 }
 
 func (r *robot) GetRole() string {
@@ -102,6 +102,7 @@ type robotCreated struct {
 }
 
 func (p *projectAPI) getRobotMembers(projectID int) ([]*robot, error) {
+	// FIX: thread unsafe handling of parsedUrl
 	p.reg.parsedUrl.Path = fmt.Sprintf("%s/%d/robots", path, projectID)
 	p.reg.logger.V(1).Info("creating new request", "parsedUrl", p.reg.parsedUrl.String())
 	req, err := http.NewRequest(http.MethodGet, p.reg.parsedUrl.String(), nil)
@@ -137,6 +138,7 @@ func (p *projectAPI) getRobotMembers(projectID int) ([]*robot, error) {
 }
 
 func (p *projectAPI) createProjectRobotMember(robotMember *robot) (*robotCreated, error) {
+	// FIX: thread unsafe handling of parsedUrl
 	p.reg.parsedUrl.Path = "/api/v2.0/robots"
 	reqBodyBuf := bytes.NewBuffer(nil)
 	err := json.NewEncoder(reqBodyBuf).Encode(robotMember)
@@ -175,6 +177,7 @@ func (p *projectAPI) createProjectRobotMember(robotMember *robot) (*robotCreated
 }
 
 func (p *projectAPI) deleteProjectRobotMember(projectID int, robotMemberID int) error {
+	// FIX: thread unsafe handling of parsedUrl
 	p.reg.parsedUrl.Path = fmt.Sprintf("%s/%d/robots/%d", path, projectID, robotMemberID)
 	p.reg.logger.V(1).Info("creating new request", "parsedUrl", p.reg.parsedUrl.String())
 	req, err := http.NewRequest(http.MethodDelete, p.reg.parsedUrl.String(), nil)

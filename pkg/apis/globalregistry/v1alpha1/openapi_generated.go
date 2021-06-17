@@ -158,6 +158,13 @@ func schema_pkg_apis_globalregistry_v1alpha1_ProjectMember(ref common.ReferenceC
 							Format:      "int32",
 						},
 					},
+					"dn": {
+						SchemaProps: spec.SchemaProps{
+							Description: "DN is optional distinguished name of the user. Used with LDAP integration.",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
 				},
 				Required: []string{"name", "role"},
 			},

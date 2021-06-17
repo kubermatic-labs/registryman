@@ -37,3 +37,13 @@ func (member *projectMember) GetType() string {
 func (member *projectMember) GetRole() string {
 	return member.ProjectMember.Role.String()
 }
+
+type ldapGroupMember struct {
+	*projectMember
+}
+
+var _ globalregistry.LdapMember = &ldapGroupMember{}
+
+func (member *ldapGroupMember) GetDN() string {
+	return member.DN
+}

@@ -32,14 +32,24 @@ var _ globalregistry.Project = &project{}
 func (proj *project) AssignMember(globalregistry.ProjectMember) (*globalregistry.ProjectMemberCredentials, error) {
 	panic("not implemented")
 }
+
 func (proj *project) UnassignMember(globalregistry.ProjectMember) error {
 	panic("not implemented")
 }
+
 func (proj *project) GetMembers() ([]globalregistry.ProjectMember, error) {
 	members := make([]globalregistry.ProjectMember, len(proj.Spec.Members))
 	for i, member := range proj.Spec.Members {
-		members[i] = &projectMember{
+		pMember := &projectMember{
 			ProjectMember: member,
+		}
+		if member.DN != "" {
+			fmt.Println("GROUP member")
+			members[i] = &ldapGroupMember{
+				pMember,
+			}
+		} else {
+			members[i] = pMember
 		}
 	}
 	return members, nil

@@ -27,6 +27,12 @@ import (
 	"github.com/kubermatic-labs/registryman/pkg/globalregistry"
 )
 
+const (
+	userType  = "User"
+	robotType = "Robot"
+	groupType = "Group"
+)
+
 type projectMemberEntity struct {
 	EntityId   int    `json:"entity_id"`
 	RoleName   string `json:"role_name"`
@@ -35,20 +41,56 @@ type projectMemberEntity struct {
 	ProjectId  int    `json:"project_id"`
 	Id         int    `json:"id"`
 	RoleId     role   `json:"role_id"`
+
+	// distinguished name for ldap groups
+	dn string
 }
 
-var _ globalregistry.ProjectMember = &projectMemberEntity{}
-
-func (pme *projectMemberEntity) GetName() string {
-	return pme.EntityName
+func (m *projectMemberEntity) toProjectMember() globalregistry.ProjectMember {
+	switch m.EntityType {
+	default:
+		panic(fmt.Sprintf("unhandled EntityType: %s", m.EntityType))
+	case "u":
+		return (*projectMember)(m)
+	case "g":
+		return (*ldapMember)(m)
+	}
 }
 
-func (pme *projectMemberEntity) GetType() string {
-	return "User"
+type projectMember projectMemberEntity
+
+var _ globalregistry.ProjectMember = &projectMember{}
+
+func (m *projectMember) GetName() string {
+	return m.EntityName
 }
 
-func (pme *projectMemberEntity) GetRole() string {
-	return pme.RoleId.String()
+func (m *projectMember) GetType() string {
+	return userType
+}
+
+func (m *projectMember) GetRole() string {
+	return m.RoleId.String()
+}
+
+type ldapMember projectMemberEntity
+
+var _ globalregistry.LdapMember = &ldapMember{}
+
+func (m *ldapMember) GetName() string {
+	return m.EntityName
+}
+
+func (m *ldapMember) GetType() string {
+	return groupType
+}
+
+func (m *ldapMember) GetRole() string {
+	return m.RoleId.String()
+}
+
+func (m *ldapMember) GetDN() string {
+	return m.dn
 }
 
 type userGroup struct {
@@ -70,20 +112,14 @@ type projectMemberRequestBody struct {
 	MemberUser  *userEntity `json:"member_user"`
 }
 
-// type projectUserMember struct {
-// 	Name      string
-// 	Role      role
-// 	projectId int
-// }
-
-func (p *projectAPI) getUserMembers(projectID int) ([]*projectMemberEntity, error) {
+func (p *projectAPI) getMembers(projectID int) ([]*projectMemberEntity, error) {
+	// FIX: thread unsafe handling of parsedUrl
 	p.reg.parsedUrl.Path = fmt.Sprintf("%s/%d/members", path, projectID)
 	p.reg.logger.V(1).Info("creating new request", "parsedUrl", p.reg.parsedUrl.String())
 	req, err := http.NewRequest(http.MethodGet, p.reg.parsedUrl.String(), nil)
 	if err != nil {
 		return nil, err
 	}
-	p.reg.logger.V(1).Info("sending HTTP request", "req-uri", req.RequestURI)
 
 	req.SetBasicAuth(p.reg.GetUsername(), p.reg.GetPassword())
 
@@ -107,10 +143,19 @@ func (p *projectAPI) getUserMembers(projectID int) ([]*projectMemberEntity, erro
 		p.reg.logger.Info(b.String())
 		fmt.Printf("body: %+v\n", b.String())
 	}
+	for _, member := range projectMembersResult {
+		if member.EntityType == "g" {
+			member.dn, err = p.reg.searchLdapGroup(member.EntityName)
+			if err != nil {
+				return nil, err
+			}
+		}
+	}
 	return projectMembersResult, err
 }
 
 func (p *projectAPI) createProjectMember(projectID int, projectMember *projectMemberRequestBody) (int, error) {
+	// FIX: thread unsafe handling of parsedUrl
 	p.reg.parsedUrl.Path = fmt.Sprintf("%s/%d/members", path, projectID)
 	reqBodyBuf := bytes.NewBuffer(nil)
 	err := json.NewEncoder(reqBodyBuf).Encode(projectMember)
@@ -147,7 +192,8 @@ func (p *projectAPI) createProjectMember(projectID int, projectMember *projectMe
 	return memberID, nil
 }
 
-func (p *projectAPI) deleteProjectUserMember(projectID int, memberId int) error {
+func (p *projectAPI) deleteProjectMember(projectID int, memberId int) error {
+	// FIX: thread unsafe handling of parsedUrl
 	p.reg.parsedUrl.Path = fmt.Sprintf("%s/%d/members/%d", path, projectID, memberId)
 	p.reg.logger.V(1).Info("creating new request", "parsedUrl", p.reg.parsedUrl.String())
 	req, err := http.NewRequest(http.MethodDelete, p.reg.parsedUrl.String(), nil)

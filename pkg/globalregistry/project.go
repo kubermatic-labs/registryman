@@ -21,6 +21,13 @@ type ProjectMember interface {
 	GetRole() string
 }
 
+// LdapMember is a ProjectMember that is stored in Ldap and as such it has a
+// distinguished name (DN).
+type LdapMember interface {
+	ProjectMember
+	GetDN() string
+}
+
 type Repository interface {
 	GetName() string
 	Delete() error

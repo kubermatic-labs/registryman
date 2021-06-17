@@ -36,7 +36,7 @@ func newProjectAPI(reg *registry) (*projectAPI, error) {
 }
 
 func (p *projectAPI) Create(name string) (globalregistry.Project, error) {
-	return nil, fmt.Errorf("not implemented")
+	return nil, fmt.Errorf("cannot create project in ACR: %w", globalregistry.RecoverableError)
 }
 
 func (p *projectAPI) GetByName(name string) (globalregistry.Project, error) {
