@@ -177,6 +177,7 @@ func schema_pkg_apis_globalregistry_v1alpha1_ProjectSpec(ref common.ReferenceCal
 					"type": {
 						SchemaProps: spec.SchemaProps{
 							Description: "Type selects whether the project is global or local.",
+							Default:     0,
 							Type:        []string{"integer"},
 							Format:      "int32",
 						},
@@ -227,6 +228,7 @@ func schema_pkg_apis_globalregistry_v1alpha1_ProjectSpec(ref common.ReferenceCal
 						},
 					},
 				},
+				Required: []string{"type"},
 			},
 		},
 		Dependencies: []string{
@@ -407,7 +409,7 @@ func schema_pkg_apis_globalregistry_v1alpha1_Scanner(ref common.ReferenceCallbac
 					},
 					"spec": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Spec describes the Registry Specification.",
+							Description: "Spec describes the Scanner Specification.",
 							Ref:         ref("github.com/kubermatic-labs/registryman/pkg/apis/globalregistry/v1alpha1.ScannerSpec"),
 						},
 					},
