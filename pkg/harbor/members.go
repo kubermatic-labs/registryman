@@ -177,7 +177,7 @@ func (p *projectAPI) createProjectMember(projectID int, projectMember *projectMe
 
 	defer resp.Body.Close()
 	if resp.StatusCode == 409 {
-		return 0, fmt.Errorf("project member already exists, %w", globalregistry.RecoverableError)
+		return 0, fmt.Errorf("project member cannot be added: %w", globalregistry.ErrAlreadyExists)
 	}
 
 	memberID, err := strconv.Atoi(strings.TrimPrefix(

@@ -26,25 +26,45 @@ type project struct {
 	api  *projectAPI
 }
 
+var _ globalregistry.Project = &project{}
+
 func (p *project) GetName() string {
 	return p.name
 }
 
+// Delete implements the globalregistry.Project interface. It succeeds of there
+// are no repos of the projects. Otherwise, it returns an error.
+//
 func (p *project) Delete() error {
-	return fmt.Errorf("project deletion on ACR is not implemented: %w", globalregistry.RecoverableError)
-	//	return p.api.delete(p.Name)
+	repoNames, err := p.api.getRepositories()
+	if err != nil {
+		return err
+	}
+	reposOfProject := p.api.collectReposOfProject(p.name, repoNames)
+	if len(reposOfProject) == 0 {
+		return nil
+	}
+	return fmt.Errorf("%s: repositories are present, please delete them before deleting the project, %w", p.name, globalregistry.ErrRecoverableError)
 }
 
+// AssignMember implements the globalregistry.Project interface. Currently, it
+// is not implemented.
 func (p *project) AssignMember(member globalregistry.ProjectMember) (*globalregistry.ProjectMemberCredentials, error) {
-	return nil, fmt.Errorf("method ACR.AssignMember not implemented: %w", globalregistry.RecoverableError)
+	return nil, fmt.Errorf("cannot assign member to a project in ACR: %w",
+		globalregistry.ErrNotImplemented)
 }
 
+// UnassignMember implements the globalregistry.Project interface. Currently, it
+// is not implemented.
 func (p *project) UnassignMember(member globalregistry.ProjectMember) error {
-	return globalregistry.RecoverableError
+	return fmt.Errorf("cannot assign member to a project in ACR: %w",
+		globalregistry.ErrNotImplemented)
 }
 
+// AssignReplicationRule implements the globalregistry.Project interface.
+// Currently, it is not implemented.
 func (p *project) AssignReplicationRule(remoteReg globalregistry.RegistryConfig, trigger globalregistry.ReplicationTrigger, direction globalregistry.ReplicationDirection) (globalregistry.ReplicationRule, error) {
-	return nil, globalregistry.RecoverableError
+	return nil, fmt.Errorf("cannot assign the replication rule to a project in ACR: %w", globalregistry.ErrNotImplemented)
 }
 
 func (p *project) GetMembers() ([]globalregistry.ProjectMember, error) {
@@ -57,4 +77,11 @@ func (p *project) GetReplicationRules(
 	direction *globalregistry.ReplicationDirection) ([]globalregistry.ReplicationRule, error) {
 
 	return nil, nil
+}
+
+// GetUsedStorage implements the globalregistry.Project interface. Currently, it
+// is not implemented.
+func (p *project) GetUsedStorage() (int, error) {
+	return -1, fmt.Errorf("cannot get used storage of a project in ACR: %w",
+		globalregistry.ErrNotImplemented)
 }

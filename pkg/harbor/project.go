@@ -42,7 +42,7 @@ func (p *project) Delete() error {
 		return err
 	}
 	if len(repos) > 0 {
-		return fmt.Errorf("%s: repositories are present, please delete them before deleting the project, %w", p.Name, globalregistry.RecoverableError)
+		return fmt.Errorf("%s: repositories are present, please delete them before deleting the project, %w", p.Name, globalregistry.ErrRecoverableError)
 	}
 	return p.api.delete(p.id)
 }
@@ -274,4 +274,11 @@ func (p *project) GetReplicationRules(
 		}
 	}
 	return results, nil
+}
+
+// GetUsedStorage implements the globalregistry.Project interface.
+func (p *project) GetUsedStorage() (int, error) {
+	panic("not implemented")
+	// return -1, fmt.Errorf("cannot get used storage of a project in ACR: %w",
+	// globalregistry.ErrNotImplemented)
 }

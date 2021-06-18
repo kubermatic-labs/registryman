@@ -108,7 +108,7 @@ ExpLoop:
 		}
 		// Then remove the project itself
 		actions = append(actions, &projectRemoveAction{
-			act,
+			ProjectStatus: act,
 		})
 	}
 

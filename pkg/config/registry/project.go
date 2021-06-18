@@ -96,3 +96,10 @@ func (proj *project) GetReplicationRules(trigger *globalregistry.ReplicationTrig
 	}
 	return rules, nil
 }
+
+// GetUsedStorage implements the globalregistry.Project interface. Currently, it
+// is not implemented.
+func (p *project) GetUsedStorage() (int, error) {
+	return -1, fmt.Errorf("cannot get used storage of an expected project: %w",
+		globalregistry.ErrNotImplemented)
+}

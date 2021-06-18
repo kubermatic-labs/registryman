@@ -50,6 +50,8 @@ type Project interface {
 	Delete() error
 	GetName() string
 	GetReplicationRules(*ReplicationTrigger, *ReplicationDirection) ([]ReplicationRule, error)
+
+	Storage
 }
 
 type ProjectAPI interface {
