@@ -41,10 +41,10 @@ func newReplicationAPI(reg *registry) *replicationAPI {
 }
 
 func (r *replicationAPI) List() ([]globalregistry.ReplicationRule, error) {
-	// FIX: thread unsafe handling of parsedUrl
-	r.reg.parsedUrl.Path = replicationPolicyPath
-	r.reg.logger.V(1).Info("creating new request", "parsedUrl", r.reg.parsedUrl.String())
-	req, err := http.NewRequest(http.MethodGet, r.reg.parsedUrl.String(), nil)
+	url := *r.reg.parsedUrl
+	url.Path = replicationPolicyPath
+	r.reg.logger.V(1).Info("creating new request", "url", url.String())
+	req, err := http.NewRequest(http.MethodGet, url.String(), nil)
 	if err != nil {
 		return nil, err
 	}
@@ -189,7 +189,7 @@ func (r *replicationAPI) create(project globalregistry.Project, remoteReg global
 		return nil, err
 	}
 	r.reg.logger.V(1).Info(reqBodyBuf.String())
-	url := r.reg.parsedUrl
+	url := *r.reg.parsedUrl
 	url.Path = replicationPolicyPath
 	req, err := http.NewRequest(http.MethodPost, url.String(), reqBodyBuf)
 	if err != nil {
@@ -225,10 +225,10 @@ func (r *replicationAPI) create(project globalregistry.Project, remoteReg global
 }
 
 func (r *replicationAPI) delete(id int) error {
-	// FIX: thread unsafe handling of parsedUrl
-	r.reg.parsedUrl.Path = fmt.Sprintf("%s/%d", replicationPolicyPath, id)
-	r.reg.logger.V(1).Info("creating new request", "parsedUrl", r.reg.parsedUrl.String())
-	req, err := http.NewRequest(http.MethodDelete, r.reg.parsedUrl.String(), nil)
+	url := *r.reg.parsedUrl
+	url.Path = fmt.Sprintf("%s/%d", replicationPolicyPath, id)
+	r.reg.logger.V(1).Info("creating new request", "url", url.String())
+	req, err := http.NewRequest(http.MethodDelete, url.String(), nil)
 	if err != nil {
 		return err
 	}

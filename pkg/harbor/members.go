@@ -113,10 +113,10 @@ type projectMemberRequestBody struct {
 }
 
 func (p *projectAPI) getMembers(projectID int) ([]*projectMemberEntity, error) {
-	// FIX: thread unsafe handling of parsedUrl
-	p.reg.parsedUrl.Path = fmt.Sprintf("%s/%d/members", path, projectID)
-	p.reg.logger.V(1).Info("creating new request", "parsedUrl", p.reg.parsedUrl.String())
-	req, err := http.NewRequest(http.MethodGet, p.reg.parsedUrl.String(), nil)
+	url := *p.reg.parsedUrl
+	url.Path = fmt.Sprintf("%s/%d/members", path, projectID)
+	p.reg.logger.V(1).Info("creating new request", "url", url.String())
+	req, err := http.NewRequest(http.MethodGet, url.String(), nil)
 	if err != nil {
 		return nil, err
 	}
@@ -155,14 +155,14 @@ func (p *projectAPI) getMembers(projectID int) ([]*projectMemberEntity, error) {
 }
 
 func (p *projectAPI) createProjectMember(projectID int, projectMember *projectMemberRequestBody) (int, error) {
-	// FIX: thread unsafe handling of parsedUrl
-	p.reg.parsedUrl.Path = fmt.Sprintf("%s/%d/members", path, projectID)
+	url := *p.reg.parsedUrl
+	url.Path = fmt.Sprintf("%s/%d/members", path, projectID)
 	reqBodyBuf := bytes.NewBuffer(nil)
 	err := json.NewEncoder(reqBodyBuf).Encode(projectMember)
 	if err != nil {
 		return 0, err
 	}
-	req, err := http.NewRequest(http.MethodPost, p.reg.parsedUrl.String(), reqBodyBuf)
+	req, err := http.NewRequest(http.MethodPost, url.String(), reqBodyBuf)
 	if err != nil {
 		return 0, err
 	}
@@ -193,10 +193,10 @@ func (p *projectAPI) createProjectMember(projectID int, projectMember *projectMe
 }
 
 func (p *projectAPI) deleteProjectMember(projectID int, memberId int) error {
-	// FIX: thread unsafe handling of parsedUrl
-	p.reg.parsedUrl.Path = fmt.Sprintf("%s/%d/members/%d", path, projectID, memberId)
-	p.reg.logger.V(1).Info("creating new request", "parsedUrl", p.reg.parsedUrl.String())
-	req, err := http.NewRequest(http.MethodDelete, p.reg.parsedUrl.String(), nil)
+	url := *p.reg.parsedUrl
+	url.Path = fmt.Sprintf("%s/%d/members/%d", path, projectID, memberId)
+	p.reg.logger.V(1).Info("creating new request", "url", url.String())
+	req, err := http.NewRequest(http.MethodDelete, url.String(), nil)
 	if err != nil {
 		return err
 	}

@@ -102,10 +102,10 @@ type robotCreated struct {
 }
 
 func (p *projectAPI) getRobotMembers(projectID int) ([]*robot, error) {
-	// FIX: thread unsafe handling of parsedUrl
-	p.reg.parsedUrl.Path = fmt.Sprintf("%s/%d/robots", path, projectID)
-	p.reg.logger.V(1).Info("creating new request", "parsedUrl", p.reg.parsedUrl.String())
-	req, err := http.NewRequest(http.MethodGet, p.reg.parsedUrl.String(), nil)
+	url := *p.reg.parsedUrl
+	url.Path = fmt.Sprintf("%s/%d/robots", path, projectID)
+	p.reg.logger.V(1).Info("creating new request", "url", url.String())
+	req, err := http.NewRequest(http.MethodGet, url.String(), nil)
 	if err != nil {
 		return nil, err
 	}
@@ -138,14 +138,14 @@ func (p *projectAPI) getRobotMembers(projectID int) ([]*robot, error) {
 }
 
 func (p *projectAPI) createProjectRobotMember(robotMember *robot) (*robotCreated, error) {
-	// FIX: thread unsafe handling of parsedUrl
-	p.reg.parsedUrl.Path = "/api/v2.0/robots"
+	url := *p.reg.parsedUrl
+	url.Path = "/api/v2.0/robots"
 	reqBodyBuf := bytes.NewBuffer(nil)
 	err := json.NewEncoder(reqBodyBuf).Encode(robotMember)
 	if err != nil {
 		return nil, err
 	}
-	req, err := http.NewRequest(http.MethodPost, p.reg.parsedUrl.String(), reqBodyBuf)
+	req, err := http.NewRequest(http.MethodPost, url.String(), reqBodyBuf)
 	if err != nil {
 		return nil, err
 	}
@@ -177,10 +177,10 @@ func (p *projectAPI) createProjectRobotMember(robotMember *robot) (*robotCreated
 }
 
 func (p *projectAPI) deleteProjectRobotMember(projectID int, robotMemberID int) error {
-	// FIX: thread unsafe handling of parsedUrl
-	p.reg.parsedUrl.Path = fmt.Sprintf("%s/%d/robots/%d", path, projectID, robotMemberID)
-	p.reg.logger.V(1).Info("creating new request", "parsedUrl", p.reg.parsedUrl.String())
-	req, err := http.NewRequest(http.MethodDelete, p.reg.parsedUrl.String(), nil)
+	url := *p.reg.parsedUrl
+	url.Path = fmt.Sprintf("%s/%d/robots/%d", path, projectID, robotMemberID)
+	p.reg.logger.V(1).Info("creating new request", "url", url.String())
+	req, err := http.NewRequest(http.MethodDelete, url.String(), nil)
 	if err != nil {
 		return err
 	}

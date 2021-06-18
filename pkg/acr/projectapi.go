@@ -89,8 +89,9 @@ func (s *registry) do(req *http.Request) (*http.Response, error) {
 }
 
 func (p *projectAPI) List() ([]globalregistry.Project, error) {
-	p.reg.parsedUrl.Path = path
-	req, err := http.NewRequest(http.MethodGet, p.reg.parsedUrl.String(), nil)
+	url := *p.reg.parsedUrl
+	url.Path = path
+	req, err := http.NewRequest(http.MethodGet, url.String(), nil)
 	if err != nil {
 		return nil, err
 	}
