@@ -17,6 +17,7 @@ package reconciler
 
 import (
 	"context"
+	"errors"
 
 	"github.com/kubermatic-labs/registryman/pkg/config"
 	"github.com/kubermatic-labs/registryman/pkg/globalregistry"
@@ -45,7 +46,7 @@ type Action interface {
 }
 
 type RegistryStatus struct {
-	Projects []ProjectStatus
+	Projects []ProjectStatus `json:"projects"`
 }
 
 func Compare(store *config.ExpectedProvider, actual, expected *RegistryStatus) []Action {
@@ -84,6 +85,16 @@ func GetRegistryStatus(reg globalregistry.Registry) (*RegistryStatus, error) {
 			projectStatuses[i].ReplicationRules[n].RemoteRegistryName = rule.RemoteRegistry().GetName()
 			projectStatuses[i].ReplicationRules[n].Trigger = rule.Trigger()
 			projectStatuses[i].ReplicationRules[n].Direction = rule.Direction()
+		}
+
+		storageUsed, err := project.GetUsedStorage()
+		switch {
+		case errors.Is(err, globalregistry.ErrNotImplemented):
+			// we use the default value, if GetUsedStorage is not implemented
+		case err == nil:
+			projectStatuses[i].StorageUsed = storageUsed
+		default:
+			return nil, err
 		}
 	}
 	return &RegistryStatus{

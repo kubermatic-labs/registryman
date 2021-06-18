@@ -107,6 +107,16 @@ $ registryman apply <path-to-configuration-dir>
 1.6230652135111215e+09	info	removing project os-images	{"dry-run": true}
 ```
 
+### Checking the actual registry state
+
+Registryman can generate the state of the managed registries using the `state`
+command. Similarly to apply, you have to specify the directory where the YAML
+files describing the registries reside.
+
+```bash
+$ registryman state <path-to-configuration-dir>
+```
+
 ### Generating the Swagger API
 
 Registryman can generate the API definition in Swagger format using

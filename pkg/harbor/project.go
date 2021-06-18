@@ -16,7 +16,10 @@ http://www.apache.org/licenses/LICENSE-2.0
 package harbor
 
 import (
+	"bytes"
+	"encoding/json"
 	"fmt"
+	"net/http"
 	"strings"
 
 	"github.com/kubermatic-labs/registryman/pkg/globalregistry"
@@ -276,9 +279,49 @@ func (p *project) GetReplicationRules(
 	return results, nil
 }
 
+type projectStatusQuotaUsed struct {
+	Storage int `json:"storage"`
+}
+type projectStatusQuota struct {
+	Used projectStatusQuotaUsed `json:"used"`
+}
+
+type projectStatusResponse struct {
+	Quota projectStatusQuota `json:"quota"`
+}
+
 // GetUsedStorage implements the globalregistry.Project interface.
 func (p *project) GetUsedStorage() (int, error) {
-	panic("not implemented")
-	// return -1, fmt.Errorf("cannot get used storage of a project in ACR: %w",
-	// globalregistry.ErrNotImplemented)
+	p.api.reg.logger.V(1).Info("getting storage usage of a project",
+		"projectName", p.Name,
+	)
+	url := *p.api.reg.parsedUrl
+	url.Path = fmt.Sprintf("/api/v2.0/projects/%d/summary", p.id)
+	req, err := http.NewRequest(http.MethodGet, url.String(), nil)
+	if err != nil {
+		return -1, err
+	}
+
+	req.SetBasicAuth(p.api.reg.GetUsername(), p.api.reg.GetPassword())
+
+	resp, err := p.api.reg.do(req)
+	if err != nil {
+		return -1, err
+	}
+
+	defer resp.Body.Close()
+
+	parsedResponse := &projectStatusResponse{}
+
+	err = json.NewDecoder(resp.Body).Decode(&parsedResponse)
+	if err != nil {
+		p.api.reg.logger.Error(err, "json decoding failed")
+		b := bytes.NewBuffer(nil)
+		_, err := b.ReadFrom(resp.Body)
+		if err != nil {
+			panic(err)
+		}
+		p.api.reg.logger.Info(b.String())
+	}
+	return parsedResponse.Quota.Used.Storage, nil
 }

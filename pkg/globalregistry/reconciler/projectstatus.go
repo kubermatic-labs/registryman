@@ -23,9 +23,10 @@ import (
 )
 
 type ProjectStatus struct {
-	Name             string
-	Members          []MemberStatus
-	ReplicationRules []ReplicationRuleStatus
+	Name             string                  `json:"name"`
+	Members          []MemberStatus          `json:"members"`
+	ReplicationRules []ReplicationRuleStatus `json:"replication-rules"`
+	StorageUsed      int                     `json:"storage-used"`
 }
 
 type projectAddAction struct {
