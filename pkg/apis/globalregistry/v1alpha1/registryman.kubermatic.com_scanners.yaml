@@ -33,7 +33,7 @@ spec:
           metadata:
             type: object
           spec:
-            description: Spec describes the Registry Specification.
+            description: Spec describes the Scanner Specification.
             properties:
               access_credential:
                 description: An optional value of the HTTP Authorization header sent

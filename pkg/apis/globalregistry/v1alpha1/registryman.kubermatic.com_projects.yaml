@@ -77,6 +77,8 @@ spec:
                 - Global
                 - Local
                 type: string
+            required:
+            - type
             type: object
         required:
         - spec
