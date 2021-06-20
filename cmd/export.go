@@ -19,6 +19,7 @@ import (
 	"fmt"
 
 	"github.com/kubermatic-labs/registryman/pkg/config"
+	"github.com/kubermatic-labs/registryman/pkg/docker"
 	"github.com/spf13/cobra"
 )
 
@@ -37,25 +38,26 @@ to quickly create a Cobra application.`,
 
 		// first arg: yaml describing which projects' repositories
 		// should be exported from which registries
-		// Also contains authentication data
+
 		logger.Info("reading export config", "dir", args[0])
 		// second arg: the directory where they will be exported
-		logger.Info("reading target directory", "dir", args[0])
+		// TODO: default
+		logger.Info("reading target directory", "dir", args[1])
+		destDir := args[1]
 
 		config.SetLogger(logger)
 
-		// Iterate over the repos inside the projects,
-		// List() on the specified projects and get repositories
-
-		// Authenticate with the provided data
-		// docker login $REGISTRY $AUTHDATA...
-
 		// Create the neccessary directory structure on the given storage
 		// according to the projects involved
+		// One tar.gz
 
 		// Export the images with the output set to the target directory
 		// docker image save -o $CONFIGTARGET/images.tar image1 [image2 ...]
-
+		// TODO: Use Go lib for Docker
+		docker.Test()
+		docker.TestExport(destDir)
+		// TODO: check if it works with remote images
+		// TODO: adding metadata to exported tars
 		return nil
 	},
 }
