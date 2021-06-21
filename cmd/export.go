@@ -26,38 +26,40 @@ import (
 // exportCmd represents the export command
 var exportCmd = &cobra.Command{
 	Use:   "export",
-	Short: "A brief description of your command",
-	Long: `A longer description that spans multiple lines and likely contains examples
-and usage of using your command. For example:
-
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
+	Short: "It saves the given repository in tar format",
+	Long: `The export command takes two arguments, the repository to be saved
+	and also the path/filename of the generated tar file.`,
+	Args: cobra.ExactArgs(2),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		fmt.Println("export called")
+		repository := args[0]
+		destinationPath := args[1]
 
-		// first arg: yaml describing which projects' repositories
-		// should be exported from which registries
+		// TODO: project arg instead of repository
+		logger.Info("repository to be exported", "name", repository)
 
-		logger.Info("reading export config", "dir", args[0])
-		// second arg: the directory where they will be exported
 		// TODO: default
-		logger.Info("reading target directory", "dir", args[1])
-		destDir := args[1]
+		logger.Info("target file name", "path", destinationPath)
 
 		config.SetLogger(logger)
 
 		// Create the neccessary directory structure on the given storage
 		// according to the projects involved
-		// One tar.gz
 
-		// Export the images with the output set to the target directory
-		// docker image save -o $CONFIGTARGET/images.tar image1 [image2 ...]
-		// TODO: Use Go lib for Docker
-		docker.Test()
-		docker.TestExport(destDir)
+		logger.Info("pulling image")
+		err := docker.PullImage(repository)
+		if err != nil {
+			return err
+		}
 		// TODO: check if it works with remote images
 		// TODO: adding metadata to exported tars
+		// Maybe using ImageTag()
+		logger.Info("exporting images")
+		err = docker.ExportImages(repository, destinationPath)
+		if err != nil {
+			return err
+		}
+		logger.Info("exporting finished", "result path", destinationPath)
 		return nil
 	},
 }
