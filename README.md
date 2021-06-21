@@ -54,7 +54,7 @@ repositories of a global project are synchronized from the global registry to
 the local registries.
 
 Registry and Project resources are declaratively configured as separate files.
-For examples, see the `testdata` directory.
+For examples, see the `examples` directory.
 
 ## Usage
 
