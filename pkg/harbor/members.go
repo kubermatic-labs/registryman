@@ -176,8 +176,20 @@ func (p *projectAPI) createProjectMember(projectID int, projectMember *projectMe
 	}
 
 	defer resp.Body.Close()
-	if resp.StatusCode == 409 {
-		return 0, fmt.Errorf("project member already exists, %w", globalregistry.RecoverableError)
+	switch resp.StatusCode {
+	case 409:
+		return 0, fmt.Errorf("project member cannot be added: %w", globalregistry.RecoverableError)
+	case 500:
+		switch {
+		case projectMember.MemberUser != nil:
+			name := projectMember.MemberUser.Username
+			return 0, fmt.Errorf("internal server error, invalid name? (%s)", name)
+		case projectMember.MemberGroup != nil:
+			name := projectMember.MemberGroup.LdapGroupDn
+			return 0, fmt.Errorf("internal server error, invalid DN? (%s)", name)
+		default:
+			panic("projectMember is neither user nor group")
+		}
 	}
 
 	memberID, err := strconv.Atoi(strings.TrimPrefix(

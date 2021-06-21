@@ -111,7 +111,7 @@ func (s *registry) do(req *http.Request) (*http.Response, error) {
 	resp.Body = buf
 
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
-		s.logger.V(-1).Info("HTTP response status code is not OK",
+		s.logger.V(1).Info("HTTP response status code is not OK",
 			"status-code", resp.StatusCode,
 			"resp-body-size", n,
 			"req-url", req.URL,
