@@ -25,25 +25,25 @@ func ExportImages(repo, destinationPath string) error {
 
 	imageIDs := []string{}
 	for _, image := range images {
-		fmt.Println(image.ID)
+		fmt.Println("image ID:", image.ID)
 		imageIDs = append(imageIDs, image.ID)
 	}
 
 	reader, err := cli.ImageSave(ctx, imageIDs)
 	if err != nil {
-		panic(err)
+		return err
 	}
 	defer reader.Close()
 
 	destination, err := os.Create(destinationPath)
 	if err != nil {
-		panic(err)
+		return err
 	}
 	defer destination.Close()
 
 	_, err = io.Copy(destination, reader)
 	if err != nil {
-		panic(err)
+		return err
 	}
 
 	return nil
