@@ -198,6 +198,8 @@ func validateObjects(o runtime.Object, gvk *schema.GroupVersionKind) error {
 		results = api.RegistryValidator.Validate(o)
 	case "Project":
 		results = api.ProjectValidator.Validate(o)
+	case "Scanner":
+		results = api.ScannerValidator.Validate(o)
 	default:
 		return fmt.Errorf("%s Kind is not supported", gvk.Kind)
 	}
@@ -236,6 +238,18 @@ func (apip *ApiProvider) GetProjects() []*api.Project {
 		projects[i] = reg.(*api.Project)
 	}
 	return projects
+}
+
+func (apip *ApiProvider) GetScanners() []*api.Scanner {
+	scannerObjects, found := apip.store[api.SchemeGroupVersion.WithKind("Scanner")]
+	if !found {
+		return []*api.Scanner{}
+	}
+	scanners := make([]*api.Scanner, len(scannerObjects))
+	for i, reg := range scannerObjects {
+		scanners[i] = reg.(*api.Scanner)
+	}
+	return scanners
 }
 
 type ExpectedProvider ApiObjectStore

@@ -52,6 +52,10 @@ type Project interface {
 	GetReplicationRules(*ReplicationTrigger, *ReplicationDirection) ([]ReplicationRule, error)
 
 	Storage
+
+	GetScanner() (Scanner, error)
+	AssignScanner(Scanner) error
+	UnassignScanner(Scanner) error
 }
 
 type ProjectAPI interface {

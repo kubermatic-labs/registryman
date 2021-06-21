@@ -106,11 +106,11 @@ var _ SideEffect = &persistMemberCredentials{}
 func (pmc *persistMemberCredentials) Perform(ctx context.Context) error {
 	path := ctx.Value(SideEffectPath)
 	if path == nil {
-		return fmt.Errorf("Context shall contain SideEffectPath")
+		return fmt.Errorf("context shall contain SideEffectPath")
 	}
 	serializer := ctx.Value(SideEffectSerializer)
 	if path == nil {
-		return fmt.Errorf("Context shall contain SideEffectSerializer")
+		return fmt.Errorf("context shall contain SideEffectSerializer")
 	}
 	ser := serializer.(*json.Serializer)
 	buf := bytes.NewBuffer(nil)
@@ -192,7 +192,7 @@ var _ SideEffect = &removeMemberCredentials{}
 func (rmc *removeMemberCredentials) Perform(ctx context.Context) error {
 	path := ctx.Value(SideEffectPath)
 	if path == nil {
-		return fmt.Errorf("Context shall contain SideEffectPath")
+		return fmt.Errorf("context shall contain SideEffectPath")
 	}
 
 	filename := filepath.Join(path.(string), fmt.Sprintf("%s_%s_%s_creds.yaml",
