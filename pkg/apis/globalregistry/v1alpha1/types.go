@@ -119,11 +119,16 @@ type ProjectSpec struct {
 	// LocalRegistries lists the registry names at which the local project
 	// shall be provisioned at.
 	// +listType=set
+	// +kubebuilder:validation:Optional
 	LocalRegistries []string `json:"localRegistries,omitempty"`
 	// Members enumerates the project members and their capabilities
 	// provisioned for the specific registry.
 	// +listType=set
-	Members []*ProjectMember `json:"members"`
+	Members []*ProjectMember `json:"members,omitempty"`
+
+	// +kubebuilder:validation:Optional
+	// Scanner specifies the name of the assigned scanner.
+	Scanner string `json:"scanner,omitempty"`
 }
 
 //------------------------------------------------
@@ -362,4 +367,32 @@ func (mr *MemberRole) UnmarshalJSON(data []byte) error {
 		*mr = PullAndPushRole
 	}
 	return nil
+}
+
+// +kubebuilder:resource:path=scanners,scope=Cluster,singular=scanner
+// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+type Scanner struct {
+	metav1.TypeMeta   `json:",inline"`
+	metav1.ObjectMeta `json:"metadata,omitempty"`
+	// Spec describes the Scanner Specification.
+	Spec *ScannerSpec `json:"spec"`
+}
+
+type ScannerSpec struct {
+	// +kubebuilder:validation:Pattern=`^(https?|ftp)://[^\s/$.?#].[^\s]*$`
+	// A base URL of the scanner adapter.
+	Url string `json:"url,omitempty"`
+
+	// An optional value of the HTTP Authorization header sent with each request to the Scanner Adapter API.
+	AccessCredential string `json:"access_credential,omitempty"`
+
+	// // Specify what authentication approach is adopted for the HTTP communications.
+	// // Supported types Basic", "Bearer" and api key header "X-ScannerAdapter-API-Key"
+	// Auth string `json:"auth,omitempty"`
+
+	// // Indicate whether use internal registry addr for the scanner to pull content or not
+	// UseInternalAddr bool `json:"use_internal_addr,omitempty"`
+
+	// // Indicate if skip the certificate verification when sending HTTP requests
+	// SkipCertVerify bool `json:"skip_cert_verify,omitempty"`
 }

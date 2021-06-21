@@ -45,6 +45,7 @@ type registry struct {
 	remoteRegistries *remoteRegistries
 	replications     *replicationAPI
 	parsedUrl        *url.URL
+	scanners         *scannerAPI
 }
 
 // registry type implements the globalregistry.Registry interface
@@ -68,6 +69,7 @@ func newRegistry(logger logr.Logger, config globalregistry.RegistryConfig) (glob
 	if err != nil {
 		return nil, err
 	}
+	c.scanners = newScannerAPI(c)
 	return c, nil
 }
 
