@@ -6,3 +6,4 @@
 *kubeconfig.yaml
 Makefile
 .golangci.yaml
+*.tar
