@@ -26,6 +26,7 @@ type ProjectStatus struct {
 	Name             string
 	Members          []MemberStatus
 	ReplicationRules []ReplicationRuleStatus
+	ScannerStatus    ScannerStatus
 }
 
 type projectAddAction struct {
@@ -113,7 +114,7 @@ ExpLoop:
 	}
 
 	// same contains the projects that are present in both actual and
-	// expected. They have to be checked for member and replication rule
+	// expected. They have to be checked for member, replication and scanner rule
 	// differences.
 	for projectName, projectPair := range same {
 		actions = append(actions,
@@ -127,8 +128,14 @@ ExpLoop:
 				projectPair[0].ReplicationRules,
 				projectPair[1].ReplicationRules)...,
 		)
+		actions = append(actions,
+			CompareScannerStatuses(
+				projectName,
+				projectPair[0].ScannerStatus,
+				projectPair[1].ScannerStatus)...,
+		)
 	}
-	// expectedClone contains the projects which are missing and thus they
+	// expectedDiff contains the projects which are missing and thus they
 	// shall be created
 	for _, exp := range expectedDiff {
 		actions = append(actions, &projectAddAction{
@@ -146,7 +153,12 @@ ExpLoop:
 				store:                 store,
 				projectName:           exp.Name,
 			})
-
+		}
+		if exp.ScannerStatus.Name != "" {
+			actions = append(actions, &scannerAssignAction{
+				projectName:   exp.Name,
+				ScannerStatus: &exp.ScannerStatus,
+			})
 		}
 	}
 

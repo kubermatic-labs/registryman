@@ -96,3 +96,24 @@ func (proj *project) GetReplicationRules(trigger *globalregistry.ReplicationTrig
 	}
 	return rules, nil
 }
+
+func (p *project) GetScanner() (globalregistry.Scanner, error) {
+	if p.Spec.Scanner == "" {
+		return nil, nil
+	}
+	scanners := p.registry.GetScanners()
+	for _, s := range scanners {
+		if s.GetName() == p.Spec.Scanner {
+			return &scanner{s}, nil
+		}
+	}
+	return nil, fmt.Errorf("project %s has invalid scanner configuration (%s)", p.GetName(), p.Spec.Scanner)
+}
+
+func (p *project) AssignScanner(globalregistry.Scanner) error {
+	panic("config.registry.project.AssignScanner() not implemented")
+}
+
+func (p *project) UnassignScanner(globalregistry.Scanner) error {
+	panic("config.registry.project.UnassignScanner() not implemented")
+}

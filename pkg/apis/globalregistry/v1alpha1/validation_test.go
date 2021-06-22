@@ -110,6 +110,7 @@ var _ = Describe("Validation", func() {
 		Expect(err).ToNot(HaveOccurred())
 
 		results := v1alpha1.RegistryValidator.Validate(registry)
+		Expect(results.HasErrorsOrWarnings()).To(BeTrue())
 		if results.HasErrors() {
 			fmt.Fprintln(GinkgoWriter, results.AsError().Error())
 			c, ok := results.AsError().(*errors.CompositeError)
@@ -121,6 +122,5 @@ var _ = Describe("Validation", func() {
 				Expect(v.Code()).Should(Equal(int32(errors.PatternFailCode)))
 			}
 		}
-		Expect(results.HasErrorsOrWarnings()).To(BeTrue())
 	})
 })
