@@ -126,47 +126,4 @@ var _ = Describe("ScannerStatus", func() {
 			"assigning scanner scanner-new to project proj",
 		}))
 	})
-
-	// It("can detect surplus users", func() {
-	// 	act := []reconciler.MemberStatus{
-	// 		alpha,
-	// 	}
-	// 	exp := []reconciler.MemberStatus{}
-	// 	actions := reconciler.CompareMemberStatuses("proj", act, exp)
-	// 	Expect(actions).ToNot(BeNil())
-	// 	Expect(len(actions)).To(Equal(1))
-	// 	Expect(actionsToStrings(actions)).To(Equal([]string{
-	// 		"removing member alpha from proj",
-	// 	}))
-
-	// 	act = []reconciler.MemberStatus{
-	// 		alpha,
-	// 		beta,
-	// 	}
-	// 	exp = []reconciler.MemberStatus{
-	// 		beta,
-	// 	}
-	// 	actions = reconciler.CompareMemberStatuses("proj", act, exp)
-	// 	Expect(actions).ToNot(BeNil())
-	// 	Expect(len(actions)).To(Equal(1))
-	// 	Expect(actionsToStrings(actions)).To(Equal([]string{
-	// 		"removing member alpha from proj",
-	// 	}))
-	// })
-
-	// It("can detect different users", func() {
-	// 	act := []reconciler.MemberStatus{
-	// 		alpha,
-	// 	}
-	// 	exp := []reconciler.MemberStatus{
-	// 		alphaPrime,
-	// 	}
-	// 	actions := reconciler.CompareMemberStatuses("proj", act, exp)
-	// 	Expect(actions).ToNot(BeNil())
-	// 	Expect(len(actions)).To(Equal(2))
-	// 	Expect(actionsToStrings(actions)).To(Equal([]string{
-	// 		"removing member alpha from proj",
-	// 		"adding member alpha to proj",
-	// 	}))
-	// })
 })

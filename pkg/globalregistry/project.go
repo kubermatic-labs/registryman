@@ -50,6 +50,9 @@ type Project interface {
 	Delete() error
 	GetName() string
 	GetReplicationRules(*ReplicationTrigger, *ReplicationDirection) ([]ReplicationRule, error)
+
+	Storage
+
 	GetScanner() (Scanner, error)
 	AssignScanner(Scanner) error
 	UnassignScanner(Scanner) error

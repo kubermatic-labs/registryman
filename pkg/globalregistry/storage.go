@@ -13,22 +13,13 @@ http://www.apache.org/licenses/LICENSE-2.0
    See the License for the specific language governing permissions and
    limitations under the License.
 */
+
 package globalregistry
 
-import (
-	"errors"
-)
-
-var (
-	//ErrRecoverableError is an error value that indicates that the error
-	//shall be logged to the user but the operation can continue.
-	ErrRecoverableError error = errors.New("recoverable error")
-
-	//ErrNotImplemented is an error value that indicates that a method is
-	//not implemented by a registry provider.
-	ErrNotImplemented error = errors.New("not implemented")
-
-	//ErrAlreadyExists is an error value that indicates that the resource to
-	//be created exists already.
-	ErrAlreadyExists error = errors.New("already exists")
-)
+// Storage interface contains the methods that we use for storage related
+// operations. If the provider does not implement the GetUsedStorage, it shall
+// return -1, ErrNotImplemented.
+type Storage interface {
+	// GetUsedStorage returns the used storage in bytes.
+	GetUsedStorage() (int, error)
+}

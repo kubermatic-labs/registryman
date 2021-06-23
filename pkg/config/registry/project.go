@@ -117,3 +117,10 @@ func (p *project) AssignScanner(globalregistry.Scanner) error {
 func (p *project) UnassignScanner(globalregistry.Scanner) error {
 	panic("config.registry.project.UnassignScanner() not implemented")
 }
+
+// GetUsedStorage implements the globalregistry.Project interface. Currently, it
+// is not implemented.
+func (p *project) GetUsedStorage() (int, error) {
+	return -1, fmt.Errorf("cannot get used storage of an expected project: %w",
+		globalregistry.ErrNotImplemented)
+}

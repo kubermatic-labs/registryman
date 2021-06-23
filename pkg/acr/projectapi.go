@@ -29,14 +29,18 @@ type projectAPI struct {
 	reg *registry
 }
 
+var _ globalregistry.ProjectAPI = &projectAPI{}
+
 func newProjectAPI(reg *registry) (*projectAPI, error) {
 	return &projectAPI{
 		reg: reg,
 	}, nil
 }
 
+// Create implements the globalregistry.ProjectAPI interface. Currently, it is
+// not implemented.
 func (p *projectAPI) Create(name string) (globalregistry.Project, error) {
-	return nil, fmt.Errorf("cannot create project in ACR: %w", globalregistry.RecoverableError)
+	return nil, fmt.Errorf("cannot create project in ACR: %w", globalregistry.ErrNotImplemented)
 }
 
 func (p *projectAPI) GetByName(name string) (globalregistry.Project, error) {
@@ -88,10 +92,9 @@ func (s *registry) do(req *http.Request) (*http.Response, error) {
 	return resp, nil
 }
 
-func (p *projectAPI) List() ([]globalregistry.Project, error) {
-	url := *p.reg.parsedUrl
-	url.Path = path
-	req, err := http.NewRequest(http.MethodGet, url.String(), nil)
+func (p *projectAPI) getRepositories() ([]string, error) {
+	p.reg.parsedUrl.Path = path
+	req, err := http.NewRequest(http.MethodGet, p.reg.parsedUrl.String(), nil)
 	if err != nil {
 		return nil, err
 	}
@@ -105,10 +108,9 @@ func (p *projectAPI) List() ([]globalregistry.Project, error) {
 
 	defer resp.Body.Close()
 
-	projectData := &repositories{}
+	repos := &repositories{}
 
-	fmt.Println(resp.Body)
-	err = json.NewDecoder(resp.Body).Decode(projectData)
+	err = json.NewDecoder(resp.Body).Decode(repos)
 	if err != nil {
 		p.reg.logger.Error(err, "json decoding failed")
 		b := bytes.NewBuffer(nil)
@@ -118,19 +120,29 @@ func (p *projectAPI) List() ([]globalregistry.Project, error) {
 		}
 		p.reg.logger.Info(b.String())
 	}
+	return repos.Repositories, nil
+}
 
-	fmt.Println(*projectData)
-	pStatus := p.collectProjectNamesFromRepos(projectData.Repositories)
+func (p *projectAPI) List() ([]globalregistry.Project, error) {
+	repositories, err := p.getRepositories()
+	if err != nil {
+		return nil, err
+	}
+	pStatus := p.collectProjectNamesFromRepos(repositories)
 
 	return pStatus, err
+}
+
+func projectNameFromRepoName(repoName string) string {
+	return strings.Split(repoName, "/")[0]
 }
 
 func (p *projectAPI) collectProjectNamesFromRepos(repoNames []string) []globalregistry.Project {
 	projectNames := make(map[string]struct{})
 
-	for _, pData := range repoNames {
-		pName := strings.Split(pData, "/")[0]
-		projectNames[pName] = struct{}{}
+	for _, repoName := range repoNames {
+		projectName := projectNameFromRepoName(repoName)
+		projectNames[projectName] = struct{}{}
 	}
 	pStatus := make([]globalregistry.Project, len(projectNames))
 
@@ -145,10 +157,12 @@ func (p *projectAPI) collectProjectNamesFromRepos(repoNames []string) []globalre
 	return pStatus
 }
 
-//func (p *projectAPI) delete(name string) error {
-//	return fmt.Errorf("not implemented")
-//}
-
-//func (p *projectAPI) listProjectRepositories(proj *project) ([]globalregistry.Repository, error) {
-//	return nil, fmt.Errorf("not implemented")
-//}
+func (p *projectAPI) collectReposOfProject(projectName string, repoNames []string) []string {
+	reposOfProject := []string{}
+	for _, repoName := range repoNames {
+		if projectNameFromRepoName(repoName) == projectName {
+			reposOfProject = append(reposOfProject, repoName)
+		}
+	}
+	return reposOfProject
+}

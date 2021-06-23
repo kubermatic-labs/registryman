@@ -23,9 +23,9 @@ import (
 )
 
 type ReplicationRuleStatus struct {
-	RemoteRegistryName string
-	Trigger            globalregistry.ReplicationTrigger
-	Direction          globalregistry.ReplicationDirection
+	RemoteRegistryName string                              `json:"name"`
+	Trigger            globalregistry.ReplicationTrigger   `json:"trigger"`
+	Direction          globalregistry.ReplicationDirection `json:"direction"`
 }
 
 type rRuleAddAction struct {

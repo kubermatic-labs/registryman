@@ -82,7 +82,7 @@ func (s *scannerAPI) create(config globalregistry.ScannerConfig) (string, error)
 	defer resp.Body.Close()
 
 	if resp.StatusCode != 201 {
-		return "", fmt.Errorf("scanner creation failed, %w", globalregistry.RecoverableError)
+		return "", fmt.Errorf("scanner creation failed, %w", globalregistry.ErrRecoverableError)
 	}
 
 	scannerID := strings.TrimPrefix(
@@ -209,7 +209,7 @@ func (s *scannerAPI) SetForProject(projectID int, scannerID string) error {
 	defer resp.Body.Close()
 
 	if resp.StatusCode != 200 {
-		return fmt.Errorf("failed to set scanner for project-id:%d, %w", projectID, globalregistry.RecoverableError)
+		return fmt.Errorf("failed to set scanner for project-id:%d, %w", projectID, globalregistry.ErrRecoverableError)
 	}
 	return err
 }
@@ -282,7 +282,7 @@ func (s *scannerAPI) update(id string, targetScanner globalregistry.Scanner) err
 	defer resp.Body.Close()
 
 	if resp.StatusCode != 200 {
-		return fmt.Errorf("failed to update scanner, %w", globalregistry.RecoverableError)
+		return fmt.Errorf("failed to update scanner, %w", globalregistry.ErrRecoverableError)
 	}
 	return err
 }
@@ -307,7 +307,7 @@ func (s *scannerAPI) delete(id string) error {
 	defer resp.Body.Close()
 
 	if resp.StatusCode != 200 {
-		return fmt.Errorf("failed to remove scanner, %w", globalregistry.RecoverableError)
+		return fmt.Errorf("failed to remove scanner, %w", globalregistry.ErrRecoverableError)
 	}
 	return err
 }
