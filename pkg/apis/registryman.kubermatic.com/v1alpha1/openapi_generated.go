@@ -190,11 +190,6 @@ func schema_pkg_apis_registrymankubermaticcom_v1alpha1_ProjectSpec(ref common.Re
 						},
 					},
 					"localRegistries": {
-						VendorExtensible: spec.VendorExtensible{
-							Extensions: spec.Extensions{
-								"x-kubernetes-list-type": "set",
-							},
-						},
 						SchemaProps: spec.SchemaProps{
 							Description: "LocalRegistries lists the registry names at which the local project shall be provisioned at.",
 							Type:        []string{"array"},
@@ -210,11 +205,6 @@ func schema_pkg_apis_registrymankubermaticcom_v1alpha1_ProjectSpec(ref common.Re
 						},
 					},
 					"members": {
-						VendorExtensible: spec.VendorExtensible{
-							Extensions: spec.Extensions{
-								"x-kubernetes-list-type": "set",
-							},
-						},
 						SchemaProps: spec.SchemaProps{
 							Description: "Members enumerates the project members and their capabilities provisioned for the specific registry.",
 							Type:        []string{"array"},
@@ -392,7 +382,8 @@ func schema_pkg_apis_registrymankubermaticcom_v1alpha1_Scanner(ref common.Refere
 	return common.OpenAPIDefinition{
 		Schema: spec.Schema{
 			SchemaProps: spec.SchemaProps{
-				Type: []string{"object"},
+				Description: "Scanner resource describes the configuration of an external vulnerability scanner.",
+				Type:        []string{"object"},
 				Properties: map[string]spec.Schema{
 					"kind": {
 						SchemaProps: spec.SchemaProps{

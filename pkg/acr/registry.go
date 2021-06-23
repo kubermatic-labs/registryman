@@ -14,6 +14,8 @@
    limitations under the License.
 */
 
+// acr package implements the globalregistry.Registry interface for the registry
+// provider Azure Container Registry.
 package acr
 
 import (

@@ -14,6 +14,8 @@
    limitations under the License.
 */
 
+// package registry implements the globalregistry.Registry interface based on
+// the registryman.kubermatic.com/v1alpha1 API objects.
 package registry
 
 import (

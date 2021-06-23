@@ -21,15 +21,15 @@ import (
 )
 
 var (
-	//ErrRecoverableError is an error value that indicates that the error
-	//shall be logged to the user but the operation can continue.
+	// ErrRecoverableError is an error value that indicates that the error
+	// shall be logged to the user but the operation can continue.
 	ErrRecoverableError error = errors.New("recoverable error")
 
-	//ErrNotImplemented is an error value that indicates that a method is
-	//not implemented by a registry provider.
+	// ErrNotImplemented is an error value that indicates that a method is
+	// not implemented by a registry provider.
 	ErrNotImplemented error = errors.New("not implemented")
 
-	//ErrAlreadyExists is an error value that indicates that the resource to
-	//be created exists already.
+	// ErrAlreadyExists is an error value that indicates that the resource
+	// to be created exists already.
 	ErrAlreadyExists error = errors.New("already exists")
 )

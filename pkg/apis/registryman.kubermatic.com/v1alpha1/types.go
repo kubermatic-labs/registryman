@@ -297,6 +297,7 @@ func (mt *MemberType) UnmarshalJSON(data []byte) error {
 
 // +kubebuilder:validation:Type=string
 
+// MemberRole shows the capabilities, the role of the member within the project.
 type MemberRole int
 
 const (
@@ -377,6 +378,12 @@ func (mr *MemberRole) UnmarshalJSON(data []byte) error {
 	}
 	return nil
 }
+
+//  ____
+// / ___|  ___ __ _ _ __  _ __   ___ _ __
+// \___ \ / __/ _` | '_ \| '_ \ / _ \ '__|
+//  ___) | (_| (_| | | | | | | |  __/ |
+// |____/ \___\__,_|_| |_|_| |_|\___|_|
 
 // +kubebuilder:resource:path=scanners,scope=Cluster,singular=scanner
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
