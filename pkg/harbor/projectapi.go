@@ -98,9 +98,9 @@ func (p *projectAPI) GetByName(name string) (globalregistry.Project, error) {
 }
 
 func (p *projectAPI) List() ([]globalregistry.Project, error) {
-	// FIX: thread unsafe handling of parsedUrl
-	p.reg.parsedUrl.Path = path
-	req, err := http.NewRequest(http.MethodGet, p.reg.parsedUrl.String(), nil)
+	url := *p.reg.parsedUrl
+	url.Path = path
+	req, err := http.NewRequest(http.MethodGet, url.String(), nil)
 	if err != nil {
 		return nil, err
 	}
@@ -133,6 +133,7 @@ func (p *projectAPI) List() ([]globalregistry.Project, error) {
 			id:   pData.ProjectID,
 			api:  p,
 			Name: pData.Name,
+			sApi: newScannerAPI(p.reg),
 		}
 	}
 	return pStatus, err
@@ -142,10 +143,11 @@ func (p *projectAPI) Create(name string) (globalregistry.Project, error) {
 	proj := &project{
 		api:  p,
 		Name: name,
+		sApi: newScannerAPI(p.reg),
 	}
 
-	// FIX: thread unsafe handling of parsedUrl
-	p.reg.parsedUrl.Path = path
+	url := *p.reg.parsedUrl
+	url.Path = path
 	reqBodyBuf := bytes.NewBuffer(nil)
 	err := json.NewEncoder(reqBodyBuf).Encode(&projectCreateReqBody{
 		Name: proj.Name,
@@ -153,7 +155,7 @@ func (p *projectAPI) Create(name string) (globalregistry.Project, error) {
 	if err != nil {
 		return nil, err
 	}
-	req, err := http.NewRequest(http.MethodPost, p.reg.parsedUrl.String(), reqBodyBuf)
+	req, err := http.NewRequest(http.MethodPost, url.String(), reqBodyBuf)
 	if err != nil {
 		return nil, err
 	}
@@ -205,10 +207,10 @@ func (p *projectAPI) Create(name string) (globalregistry.Project, error) {
 }
 
 func (p *projectAPI) delete(id int) error {
-	// FIX: thread unsafe handling of parsedUrl
-	p.reg.parsedUrl.Path = fmt.Sprintf("%s/%d", path, id)
-	p.reg.logger.V(1).Info("creating new request", "parsedUrl", p.reg.parsedUrl.String())
-	req, err := http.NewRequest(http.MethodDelete, p.reg.parsedUrl.String(), nil)
+	url := *p.reg.parsedUrl
+	url.Path = fmt.Sprintf("%s/%d", path, id)
+	p.reg.logger.V(1).Info("creating new request", "url", url.String())
+	req, err := http.NewRequest(http.MethodDelete, url.String(), nil)
 	if err != nil {
 		return err
 	}
@@ -243,9 +245,9 @@ func (prrb *projectRepositoryRespBody) Delete() error {
 }
 
 func (p *projectAPI) listProjectRepositories(proj *project) ([]globalregistry.Repository, error) {
-	// FIX: thread unsafe handling of parsedUrl
-	p.reg.parsedUrl.Path = fmt.Sprintf("%s/%s/repositories", path, proj.Name)
-	req, err := http.NewRequest(http.MethodGet, p.reg.parsedUrl.String(), nil)
+	url := *p.reg.parsedUrl
+	url.Path = fmt.Sprintf("%s/%s/repositories", path, proj.Name)
+	req, err := http.NewRequest(http.MethodGet, url.String(), nil)
 	if err != nil {
 		return nil, err
 	}
@@ -279,9 +281,9 @@ func (p *projectAPI) listProjectRepositories(proj *project) ([]globalregistry.Re
 }
 
 func (p *projectAPI) deleteProjectRepository(proj *project, repo globalregistry.Repository) error {
-	// FIX: thread unsafe handling of parsedUrl
-	p.reg.parsedUrl.Path = fmt.Sprintf("%s/%s/repositories/%s", path, proj.Name, repo.GetName())
-	req, err := http.NewRequest(http.MethodDelete, p.reg.parsedUrl.String(), nil)
+	url := *p.reg.parsedUrl
+	url.Path = fmt.Sprintf("%s/%s/repositories/%s", path, proj.Name, repo.GetName())
+	req, err := http.NewRequest(http.MethodDelete, url.String(), nil)
 	if err != nil {
 		return err
 	}

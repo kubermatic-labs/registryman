@@ -45,6 +45,7 @@ type registry struct {
 	remoteRegistries *remoteRegistries
 	replications     *replicationAPI
 	parsedUrl        *url.URL
+	scanners         *scannerAPI
 }
 
 // registry type implements the globalregistry.Registry interface
@@ -68,6 +69,7 @@ func newRegistry(logger logr.Logger, config globalregistry.RegistryConfig) (glob
 	if err != nil {
 		return nil, err
 	}
+	c.scanners = newScannerAPI(c)
 	return c, nil
 }
 
@@ -109,7 +111,7 @@ func (s *registry) do(req *http.Request) (*http.Response, error) {
 	resp.Body = buf
 
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
-		s.logger.V(-1).Info("HTTP response status code is not OK",
+		s.logger.V(1).Info("HTTP response status code is not OK",
 			"status-code", resp.StatusCode,
 			"resp-body-size", n,
 			"req-url", req.URL,

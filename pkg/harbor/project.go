@@ -26,6 +26,7 @@ type project struct {
 	id   int
 	api  *projectAPI
 	Name string
+	sApi *scannerAPI
 }
 
 // interface guard
@@ -274,4 +275,41 @@ func (p *project) GetReplicationRules(
 		}
 	}
 	return results, nil
+}
+
+func (p *project) GetScanner() (globalregistry.Scanner, error) {
+	return p.sApi.getForProject(p.id)
+}
+
+func (p *project) AssignScanner(targetScanner globalregistry.Scanner) error {
+	scannerID, err := p.sApi.getScannerIDByNameOrCreate(targetScanner)
+	if err != nil {
+		return err
+	}
+	return p.sApi.SetForProject(p.id, scannerID)
+}
+
+func (p *project) UnassignScanner(targetScanner globalregistry.Scanner) error {
+	var defaultScanner globalregistry.Scanner
+	currentScanners, err := p.sApi.List()
+
+	if err != nil {
+		return fmt.Errorf("couldn't list scanners for project, %w", err)
+	}
+
+	for _, s := range currentScanners {
+		if s.(*scanner).isDefault {
+			defaultScanner = s
+		}
+	}
+
+	if defaultScanner.GetName() == targetScanner.GetName() {
+		return nil
+	}
+	if defaultScanner.GetName() == "" {
+		p.api.reg.logger.Error(err, "couldn't find default scanner for project", p)
+		return err
+	}
+
+	return p.AssignScanner(defaultScanner)
 }

@@ -28,9 +28,10 @@ GO111MODULE=on go get github.com/kubermatic-labs/registryman
 Registryman parses the given directory for configuration (.yaml) files. The yaml
 files are defined as custom Kubernetes resources.
 
-Registryman supports two types of resources:
+Registryman supports three types of resources:
   * Registry
   * Project
+  * Scanner
 
 The Registry resources describe the Docker registries of the system. Each
 registry configures the API endpoint and the credentials. From replication
@@ -52,6 +53,9 @@ provisioned in the specified registries only.
 Replication rules are automatically provisioned for each project so that the
 repositories of a global project are synchronized from the global registry to
 the local registries.
+
+Scanner describes an external vulnerability scanner that can be assigned to a
+project.
 
 Registry and Project resources are declaratively configured as separate files.
 For examples, see the `examples` directory.
