@@ -81,7 +81,7 @@ type Project interface {
 	// AssignScanner assigns a scanner to the project.
 	AssignScanner(Scanner) error
 
-	// AssignScanner removes a scanner from the project.
+	// UnassignScanner removes a scanner from the project.
 	UnassignScanner(Scanner) error
 
 	Storage
