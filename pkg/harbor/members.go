@@ -178,7 +178,7 @@ func (p *projectAPI) createProjectMember(projectID int, projectMember *projectMe
 	defer resp.Body.Close()
 	switch resp.StatusCode {
 	case 409:
-		return 0, fmt.Errorf("project member cannot be added: %w", globalregistry.RecoverableError)
+		return 0, fmt.Errorf("project member cannot be added: %w", globalregistry.ErrAlreadyExists)
 	case 500:
 		switch {
 		case projectMember.MemberUser != nil:

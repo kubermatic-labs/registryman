@@ -23,10 +23,11 @@ import (
 )
 
 type ProjectStatus struct {
-	Name             string
-	Members          []MemberStatus
-	ReplicationRules []ReplicationRuleStatus
-	ScannerStatus    ScannerStatus
+	Name             string                  `json:"name"`
+	Members          []MemberStatus          `json:"members"`
+	ReplicationRules []ReplicationRuleStatus `json:"replication-rules"`
+	StorageUsed      int                     `json:"storage-used"`
+	ScannerStatus    ScannerStatus           `json:"scanner-status"`
 }
 
 type projectAddAction struct {
@@ -109,7 +110,7 @@ ExpLoop:
 		}
 		// Then remove the project itself
 		actions = append(actions, &projectRemoveAction{
-			act,
+			ProjectStatus: act,
 		})
 	}
 

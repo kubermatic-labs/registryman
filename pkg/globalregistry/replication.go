@@ -26,15 +26,29 @@ const (
 	PushReplication
 )
 
-func (rt ReplicationDirection) String() string {
-	switch rt {
+func (rd ReplicationDirection) string() (string, error) {
+	switch rd {
 	case PullReplication:
-		return "Pull"
+		return "Pull", nil
 	case PushReplication:
-		return "Push"
+		return "Push", nil
 	default:
-		return fmt.Sprintf("*unknown ReplicationType: %d*", int(rt))
+		return "", fmt.Errorf("unknown ReplicationType: %d", int(rd))
 	}
+}
+
+func (rd ReplicationDirection) String() string {
+	s, err := rd.string()
+	if err != nil {
+		panic(err.Error())
+	}
+	return s
+}
+
+// MarshalText method implements the encoding.TextMarshaler interface.
+func (rd ReplicationDirection) MarshalText() ([]byte, error) {
+	s, err := rd.string()
+	return []byte(s), err
 }
 
 type ReplicationTrigger int
@@ -44,15 +58,29 @@ const (
 	EventReplicationTrigger
 )
 
-func (rt ReplicationTrigger) String() string {
+func (rt ReplicationTrigger) string() (string, error) {
 	switch rt {
 	case ManualReplicationTrigger:
-		return "Manual"
+		return "Manual", nil
 	case EventReplicationTrigger:
-		return "EventBased"
+		return "EventBased", nil
 	default:
-		panic("unhandled ReplicationTrigger value")
+		return "", fmt.Errorf("unhandled ReplicationTrigger value: %d", rt)
 	}
+}
+
+func (rt ReplicationTrigger) String() string {
+	s, err := rt.string()
+	if err != nil {
+		panic(err.Error())
+	}
+	return s
+}
+
+// MarshalText method implements the encoding.TextMarshaler interface.
+func (rt ReplicationTrigger) MarshalText() ([]byte, error) {
+	s, err := rt.string()
+	return []byte(s), err
 }
 
 type ReplicationRule interface {

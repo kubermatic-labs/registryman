@@ -7,8 +7,8 @@ import (
 )
 
 type ScannerStatus struct {
-	Name string
-	Url  string
+	Name string `json:"name"`
+	Url  string `json:"url"`
 }
 
 var _ globalregistry.Scanner = &ScannerStatus{}
