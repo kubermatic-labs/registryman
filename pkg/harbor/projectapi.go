@@ -235,16 +235,6 @@ type projectRepositoryRespBody struct {
 	proj *project
 }
 
-// func (prrb *projectRepositoryRespBody) GetName() string {
-// 	return prrb.Name
-// }
-
-// func (prrb *projectRepositoryRespBody) Delete() error {
-// 	return prrb.proj.api.deleteProjectRepository(
-// 		prrb.proj,
-// 		prrb)
-// }
-
 func (p *projectAPI) listProjectRepositories(proj *project) ([]*projectRepositoryRespBody, error) {
 	url := *p.reg.parsedUrl
 	url.Path = fmt.Sprintf("%s/%s/repositories", path, proj.Name)
