@@ -5,7 +5,7 @@
    you may not use this file except in compliance with the License.
    You may obtain a copy of the License at
 
-http://www.apache.org/licenses/LICENSE-2.0
+   http://www.apache.org/licenses/LICENSE-2.0
 
    Unless required by applicable law or agreed to in writing, software
    distributed under the License is distributed on an "AS IS" BASIS,
@@ -13,10 +13,11 @@ http://www.apache.org/licenses/LICENSE-2.0
    See the License for the specific language governing permissions and
    limitations under the License.
 */
+
 package registry
 
 import (
-	api "github.com/kubermatic-labs/registryman/pkg/apis/globalregistry/v1alpha1"
+	api "github.com/kubermatic-labs/registryman/pkg/apis/registryman.kubermatic.com/v1alpha1"
 	"github.com/kubermatic-labs/registryman/pkg/globalregistry"
 )
 
@@ -31,7 +32,7 @@ func (papi *projectAPI) Create(string) (globalregistry.Project, error) {
 }
 
 func (papi *projectAPI) GetByName(name string) (globalregistry.Project, error) {
-	projects := papi.registry.GetProjects()
+	projects := papi.registry.apiProvider.GetProjects()
 	for _, proj := range projects {
 		// projectApi, ok := project.(*api.Project)
 		// if !ok {
@@ -48,7 +49,7 @@ func (papi *projectAPI) GetByName(name string) (globalregistry.Project, error) {
 }
 
 func (papi *projectAPI) List() ([]globalregistry.Project, error) {
-	projects := papi.registry.GetProjects()
+	projects := papi.registry.apiProvider.GetProjects()
 	result := make([]globalregistry.Project, 0)
 	for _, proj := range projects {
 		// projectApi, ok := project.(*api.Project)

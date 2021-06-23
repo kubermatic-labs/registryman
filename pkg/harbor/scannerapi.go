@@ -47,7 +47,7 @@ type scannerAPI struct {
 	reg *registry
 }
 
-var _ globalregistry.ScannerConfig = &scannerRegistrationRequest{}
+var _ globalregistry.Scanner = &scannerRegistrationRequest{}
 
 func newScannerAPI(reg *registry) *scannerAPI {
 	return &scannerAPI{
@@ -55,14 +55,14 @@ func newScannerAPI(reg *registry) *scannerAPI {
 	}
 }
 
-func (s *scannerAPI) create(config globalregistry.ScannerConfig) (string, error) {
+func (s *scannerAPI) create(config globalregistry.Scanner) (string, error) {
 	url := *s.reg.parsedUrl
 	url.Path = scannersPath
 
 	reqBodyBuf := bytes.NewBuffer(nil)
 	err := json.NewEncoder(reqBodyBuf).Encode(&scannerRegistrationRequest{
 		Name: config.GetName(),
-		Url:  config.GetUrl(),
+		Url:  config.GetURL(),
 	})
 	if err != nil {
 		return "", err
@@ -324,7 +324,7 @@ func (c *scannerRegistrationRequest) GetCredential() string {
 	return c.AccessCredential
 }
 
-func (c *scannerRegistrationRequest) GetUrl() string {
+func (c *scannerRegistrationRequest) GetURL() string {
 	return c.Url
 }
 

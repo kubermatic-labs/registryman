@@ -240,7 +240,7 @@ func (p *project) AssignReplicationRule(remoteReg globalregistry.RegistryConfig,
 	return p.api.reg.ReplicationAPI().(*replicationAPI).create(p, remoteReg, trigger, direction)
 }
 
-func (p *project) getRepositories() ([]globalregistry.Repository, error) {
+func (p *project) getRepositories() ([]*projectRepositoryRespBody, error) {
 	return p.api.listProjectRepositories(p)
 }
 

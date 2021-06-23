@@ -5,7 +5,7 @@
    you may not use this file except in compliance with the License.
    You may obtain a copy of the License at
 
-http://www.apache.org/licenses/LICENSE-2.0
+   http://www.apache.org/licenses/LICENSE-2.0
 
    Unless required by applicable law or agreed to in writing, software
    distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,31 @@ http://www.apache.org/licenses/LICENSE-2.0
    limitations under the License.
 */
 
-// Package v1alpha1 is the v1alpha1 version of the API.
+package reconciler
 
-// +k8s:openapi-gen=true
-// +k8s:deepcopy-gen=package,register
-// +groupName=registryman.kubermatic.com
-// +versionName=v1alpha1
-package v1alpha1 // import "github.com/kubermatic-labs/registryman/pkg/apis/globalregistry/v1alpha1"
+import (
+	"context"
+
+	"github.com/kubermatic-labs/registryman/pkg/globalregistry"
+)
+
+type nilSideEffect struct{}
+
+func (se nilSideEffect) Perform(context.Context) error {
+	return nil
+}
+
+var nilEffect = nilSideEffect{}
+
+type SideEffectContextKey string
+
+var SideEffectManifestManipulator = SideEffectContextKey("sideeffect-manipulator")
+
+type SideEffect interface {
+	Perform(ctx context.Context) error
+}
+
+type Action interface {
+	String() string
+	Perform(globalregistry.Registry) (SideEffect, error)
+}

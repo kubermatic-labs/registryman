@@ -234,17 +234,17 @@ type projectRepositoryRespBody struct {
 	proj *project
 }
 
-func (prrb *projectRepositoryRespBody) GetName() string {
-	return prrb.Name
-}
+// func (prrb *projectRepositoryRespBody) GetName() string {
+// 	return prrb.Name
+// }
 
-func (prrb *projectRepositoryRespBody) Delete() error {
-	return prrb.proj.api.deleteProjectRepository(
-		prrb.proj,
-		prrb)
-}
+// func (prrb *projectRepositoryRespBody) Delete() error {
+// 	return prrb.proj.api.deleteProjectRepository(
+// 		prrb.proj,
+// 		prrb)
+// }
 
-func (p *projectAPI) listProjectRepositories(proj *project) ([]globalregistry.Repository, error) {
+func (p *projectAPI) listProjectRepositories(proj *project) ([]*projectRepositoryRespBody, error) {
 	url := *p.reg.parsedUrl
 	url.Path = fmt.Sprintf("%s/%s/repositories", path, proj.Name)
 	req, err := http.NewRequest(http.MethodGet, url.String(), nil)
@@ -269,33 +269,11 @@ func (p *projectAPI) listProjectRepositories(proj *project) ([]globalregistry.Re
 		p.reg.logger.Error(err, "json decoding failed")
 		p.reg.logger.Info(buf.String())
 	}
-	repos := make([]globalregistry.Repository, len(repositories))
-	for i, rep := range repositories {
+	for _, rep := range repositories {
 		rep.proj = proj
 		rep.Name = strings.TrimPrefix(
 			rep.Name,
 			proj.Name+"/")
-		repos[i] = rep
 	}
-	return repos, err
-}
-
-func (p *projectAPI) deleteProjectRepository(proj *project, repo globalregistry.Repository) error {
-	url := *p.reg.parsedUrl
-	url.Path = fmt.Sprintf("%s/%s/repositories/%s", path, proj.Name, repo.GetName())
-	req, err := http.NewRequest(http.MethodDelete, url.String(), nil)
-	if err != nil {
-		return err
-	}
-
-	req.SetBasicAuth(p.reg.GetUsername(), p.reg.GetPassword())
-
-	resp, err := p.reg.do(req)
-	if err != nil {
-		return err
-	}
-
-	defer resp.Body.Close()
-
-	return nil
+	return repositories, err
 }

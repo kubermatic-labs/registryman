@@ -5,7 +5,7 @@
    you may not use this file except in compliance with the License.
    You may obtain a copy of the License at
 
-http://www.apache.org/licenses/LICENSE-2.0
+   http://www.apache.org/licenses/LICENSE-2.0
 
    Unless required by applicable law or agreed to in writing, software
    distributed under the License is distributed on an "AS IS" BASIS,
@@ -13,6 +13,7 @@ http://www.apache.org/licenses/LICENSE-2.0
    See the License for the specific language governing permissions and
    limitations under the License.
 */
+
 package globalregistry
 
 import (
@@ -34,11 +35,15 @@ func init() {
 	registeredReplicationCapabilities = make(map[string]ReplicationCapabilities)
 }
 
+// ReplicationCapabilities interface defines the methods that show the
+// replication capabilities of a registry provider.
 type ReplicationCapabilities interface {
 	CanPull() bool
 	CanPush() bool
 }
 
+// GetReplicationCapability function returns the ReplicationCapabilities of a
+// registered registry provider.
 func GetReplicationCapability(provider string) ReplicationCapabilities {
 	cap, found := registeredReplicationCapabilities[provider]
 	if !found {
@@ -64,7 +69,6 @@ type Registry interface {
 	RegistryConfig
 	ReplicationAPI() ReplicationAPI
 	ProjectAPI() ProjectAPI
-	// ScannerAPI() ScannerAPI
 }
 
 // New creates a provider specific Registry. The provider must be registered
@@ -84,21 +88,8 @@ func New(logger logr.Logger, config RegistryConfig) (Registry, error) {
 // function is registered, a new Registry can be created using the New function.
 func RegisterProviderImplementation(providerName string,
 	constructor RegistryCreator,
-	// transformer RegistryTransformer,
 	repCap ReplicationCapabilities,
 ) {
 	registeredRegistryCreators[providerName] = constructor
-	// registeredRegistryTransformers[providerName] = transformer
 	registeredReplicationCapabilities[providerName] = repCap
-}
-
-// RegisteredRegistryTypes returns the registered registry types.
-func RegisteredRegistryTypes() []string {
-	names := make([]string, len(registeredRegistryCreators))
-	i := 0
-	for name := range registeredRegistryCreators {
-		names[i] = name
-		i++
-	}
-	return names
 }

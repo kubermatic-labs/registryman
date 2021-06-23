@@ -14,14 +14,35 @@
    limitations under the License.
 */
 
-package config
+// +kubebuilder:skip
 
-import "errors"
+package v1alpha1_test
 
-// ErrValidationInvalidLocalRegistryInProject error indicates that a local
-// project refers to a non-existing registry.
-var ErrValidationInvalidLocalRegistryInProject error = errors.New("validation error: project contains invalid registry name")
+import (
+	"os"
+	"path/filepath"
+	"testing"
 
-// ErrValidationMultipleGlobalRegistries error indicates that there are multiple
-// global registries configured.
-var ErrValidationMultipleGlobalRegistries error = errors.New("validation error: multiple global registries found")
+	"io"
+
+	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/gomega"
+)
+
+func openTestFile(name string) ([]byte, error) {
+	f, err := os.Open(filepath.Join(testdataDir, name))
+	if err != nil {
+		return nil, err
+	}
+	defer f.Close()
+	b, err := io.ReadAll(f)
+	if err != nil {
+		return nil, err
+	}
+	return b, nil
+}
+
+func TestV1alpha1(t *testing.T) {
+	RegisterFailHandler(Fail)
+	RunSpecs(t, "V1alpha1 Suite")
+}

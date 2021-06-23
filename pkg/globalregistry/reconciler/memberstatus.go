@@ -20,16 +20,12 @@ import (
 	"context"
 	"fmt"
 
-	"os"
-
 	"encoding/base64"
-
-	"path/filepath"
 
 	"github.com/kubermatic-labs/registryman/pkg/globalregistry"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/runtime/serializer/json"
+	"k8s.io/apimachinery/pkg/runtime"
 )
 
 type MemberStatus struct {
@@ -103,16 +99,20 @@ type persistMemberCredentials struct {
 
 var _ SideEffect = &persistMemberCredentials{}
 
+type manifestManipulator interface {
+	WriteManifest(filename string, obj runtime.Object) error
+	RemoveManifest(filename string) error
+}
+
 func (pmc *persistMemberCredentials) Perform(ctx context.Context) error {
-	path := ctx.Value(SideEffectPath)
-	if path == nil {
-		return fmt.Errorf("context shall contain SideEffectPath")
+	sideEffectManipulatorCtx := ctx.Value(SideEffectManifestManipulator)
+	if sideEffectManipulatorCtx == nil {
+		return fmt.Errorf("contaxt shall contain SideEffectManifestManipulator")
 	}
-	serializer := ctx.Value(SideEffectSerializer)
-	if path == nil {
-		return fmt.Errorf("context shall contain SideEffectSerializer")
+	manifestManipulator, ok := sideEffectManipulatorCtx.(manifestManipulator)
+	if !ok {
+		return fmt.Errorf("SideEffectManifestManipulator is not a proper manifestManipulator")
 	}
-	ser := serializer.(*json.Serializer)
 	buf := bytes.NewBuffer(nil)
 	encoder := base64.NewEncoder(base64.StdEncoding, buf)
 	_, err := fmt.Fprintf(encoder, "%s:%s",
@@ -141,22 +141,12 @@ func (pmc *persistMemberCredentials) Perform(ctx context.Context) error {
 		"globalregistry.org/registry-name": pmc.registry.GetName(),
 	})
 
-	filename := filepath.Join(path.(string), fmt.Sprintf("%s_%s_%s_creds.yaml",
+	filename := fmt.Sprintf("%s_%s_%s_creds.yaml",
 		pmc.registry.GetName(),
 		pmc.action.projectName,
 		pmc.action.Name,
-	))
-	f, err := os.Create(filename)
-	if err != nil {
-		return err
-	}
-	defer f.Close()
-
-	err = ser.Encode(secret, f)
-	if err != nil {
-		return err
-	}
-	return nil
+	)
+	return manifestManipulator.WriteManifest(filename, secret)
 }
 
 func (ma *memberAddAction) Perform(reg globalregistry.Registry) (SideEffect, error) {
@@ -190,17 +180,21 @@ type removeMemberCredentials struct {
 var _ SideEffect = &removeMemberCredentials{}
 
 func (rmc *removeMemberCredentials) Perform(ctx context.Context) error {
-	path := ctx.Value(SideEffectPath)
-	if path == nil {
-		return fmt.Errorf("context shall contain SideEffectPath")
+	sideEffectManipulatorCtx := ctx.Value(SideEffectManifestManipulator)
+	if sideEffectManipulatorCtx == nil {
+		return fmt.Errorf("contaxt shall contain SideEffectManifestManipulator")
+	}
+	manifestManipulator, ok := sideEffectManipulatorCtx.(manifestManipulator)
+	if !ok {
+		return fmt.Errorf("SideEffectManifestManipulator is not a proper manifestManipulator")
 	}
 
-	filename := filepath.Join(path.(string), fmt.Sprintf("%s_%s_%s_creds.yaml",
+	filename := fmt.Sprintf("%s_%s_%s_creds.yaml",
 		rmc.registry.GetName(),
 		rmc.action.projectName,
 		rmc.action.Name,
-	))
-	return os.Remove(filename)
+	)
+	return manifestManipulator.RemoveManifest(filename)
 }
 
 type memberRemoveAction struct {

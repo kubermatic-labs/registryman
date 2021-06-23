@@ -5,7 +5,7 @@
    you may not use this file except in compliance with the License.
    You may obtain a copy of the License at
 
-http://www.apache.org/licenses/LICENSE-2.0
+   http://www.apache.org/licenses/LICENSE-2.0
 
    Unless required by applicable law or agreed to in writing, software
    distributed under the License is distributed on an "AS IS" BASIS,
@@ -13,6 +13,7 @@ http://www.apache.org/licenses/LICENSE-2.0
    See the License for the specific language governing permissions and
    limitations under the License.
 */
+
 package v1alpha1
 
 import (
@@ -36,20 +37,16 @@ var projectCRDYaml []byte
 //go:embed registryman.kubermatic.com_scanners.yaml
 var scannerCRDYaml []byte
 
-// RegistryCRD is the CustomResourceDefinition representation of the generated
-// Registry CRD yaml.
-var RegistryCRD *apiext.CustomResourceDefinition
-
-// ProjectCRD is the CustomResourceDefinition representation of the generated
-// Project CRD yaml.
-var ProjectCRD *apiext.CustomResourceDefinition
-
-// ScannerCRD is the CustomResourceDefinition representation of the generated
-// Scanner CRD yaml.
-var ScannerCRD *apiext.CustomResourceDefinition
-
+// RegistryValidator can validate a resource against the CRD validation rules of
+// a Registry resource.
 var RegistryValidator *validate.SchemaValidator
+
+// ProjectValidator can validate a resource against the CRD validation rules of
+// a Project resource.
 var ProjectValidator *validate.SchemaValidator
+
+// ScannerValidator can validate a resource against the CRD validation rules of
+// a Scanner resource.
 var ScannerValidator *validate.SchemaValidator
 
 func init() {
@@ -73,13 +70,13 @@ func init() {
 		panic(err)
 	}
 
-	registryCRD, err := scheme.ConvertToVersion(registryCRDv1, apiext.SchemeGroupVersion)
+	registryCRDObject, err := scheme.ConvertToVersion(registryCRDv1, apiext.SchemeGroupVersion)
 	if err != nil {
 		panic(err)
 	}
 
 	var ok bool
-	RegistryCRD, ok = registryCRD.(*apiext.CustomResourceDefinition)
+	registryCRD, ok := registryCRDObject.(*apiext.CustomResourceDefinition)
 	if !ok {
 		panic("registry CRD yaml is not a valid CustomResourceDefinition")
 	}
@@ -89,12 +86,12 @@ func init() {
 		panic(err)
 	}
 
-	projectCRD, err := scheme.ConvertToVersion(projectCRDv1, apiext.SchemeGroupVersion)
+	projectCRDObject, err := scheme.ConvertToVersion(projectCRDv1, apiext.SchemeGroupVersion)
 	if err != nil {
 		panic(err)
 	}
 
-	ProjectCRD, ok = projectCRD.(*apiext.CustomResourceDefinition)
+	projectCRD, ok := projectCRDObject.(*apiext.CustomResourceDefinition)
 	if !ok {
 		panic("project CRD yaml is not a valid CustomResourceDefinition")
 	}
@@ -104,27 +101,27 @@ func init() {
 		panic(err)
 	}
 
-	scannerCRD, err := scheme.ConvertToVersion(scannerCRDv1, apiext.SchemeGroupVersion)
+	scannerCRDObject, err := scheme.ConvertToVersion(scannerCRDv1, apiext.SchemeGroupVersion)
 	if err != nil {
 		panic(err)
 	}
 
-	ScannerCRD, ok = scannerCRD.(*apiext.CustomResourceDefinition)
+	scannerCRD, ok := scannerCRDObject.(*apiext.CustomResourceDefinition)
 	if !ok {
 		panic("scanner CRD yaml is not a valid CustomResourceDefinition")
 	}
 
-	RegistryValidator, _, err = validation.NewSchemaValidator(RegistryCRD.Spec.Validation)
+	RegistryValidator, _, err = validation.NewSchemaValidator(registryCRD.Spec.Validation)
 	if err != nil {
 		panic(err)
 	}
 
-	ProjectValidator, _, err = validation.NewSchemaValidator(ProjectCRD.Spec.Validation)
+	ProjectValidator, _, err = validation.NewSchemaValidator(projectCRD.Spec.Validation)
 	if err != nil {
 		panic(err)
 	}
 
-	ScannerValidator, _, err = validation.NewSchemaValidator(ScannerCRD.Spec.Validation)
+	ScannerValidator, _, err = validation.NewSchemaValidator(scannerCRD.Spec.Validation)
 	if err != nil {
 		panic(err)
 	}
