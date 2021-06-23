@@ -29,10 +29,10 @@ import (
 )
 
 type MemberStatus struct {
-	Name string
-	Type string
-	Role string
-	DN   string
+	Name string `json:"name"`
+	Type string `json:"type"`
+	Role string `json:"role"`
+	DN   string `json:"dn,omitempty"`
 }
 
 func (ms *MemberStatus) toProjectMember() globalregistry.ProjectMember {

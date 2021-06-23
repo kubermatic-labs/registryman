@@ -76,7 +76,7 @@ to quickly create a Cobra application.`,
 					logger.Info(action.String())
 					sideEffect, err := action.Perform(actualRegistry)
 					if err != nil {
-						if errors.Is(err, globalregistry.RecoverableError) {
+						if errors.Is(err, globalregistry.ErrRecoverableError) {
 							logger.V(-1).Info(err.Error())
 						} else {
 							return err

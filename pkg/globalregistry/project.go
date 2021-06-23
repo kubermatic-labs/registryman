@@ -83,6 +83,8 @@ type Project interface {
 
 	// AssignScanner removes a scanner from the project.
 	UnassignScanner(Scanner) error
+
+	Storage
 }
 
 // ProjectAPI interface defines the methods of a registry which are related to
