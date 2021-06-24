@@ -160,7 +160,7 @@ func checkGlobalRegistryCount(registries []*api.Registry) error {
 			logger.V(-2).Info("Multiple Global Registries found",
 				"registry_name", registry)
 		}
-		return fmt.Errorf("%w", ErrValidationMultipleGlobalRegistries)
+		return ErrValidationMultipleGlobalRegistries
 	}
 	return nil
 }
@@ -197,7 +197,24 @@ func checkLocalRegistryNamesInProjects(registries []*api.Registry, projects []*a
 	}
 
 	if len(invalidProjects) > 0 {
-		return fmt.Errorf("%w", ErrValidationInvalidLocalRegistryInProject)
+		return ErrValidationInvalidLocalRegistryInProject
+	}
+	return nil
+}
+
+// checkScannerNameUniqueness checks that there are no 2 scanners with the same
+// name.
+func checkScannerNameUniqueness(scanners []*api.Scanner) error {
+	scannerNames := map[string]*api.Scanner{}
+	for _, scanner := range scanners {
+		scannerName := scanner.GetName()
+		if scannerNames[scannerName] != nil {
+			logger.V(-2).Info("Multiple scanners configured with the same name",
+				"scanner_name", scannerName,
+			)
+			return ErrValidationScannerNameNotUnique
+		}
+		scannerNames[scannerName] = scanner
 	}
 	return nil
 }
@@ -207,6 +224,7 @@ func checkLocalRegistryNamesInProjects(registries []*api.Registry, projects []*a
 func (aos *ApiObjectStore) validate() error {
 	registries := aos.GetRegistries()
 	projects := aos.GetProjects()
+	scanners := aos.GetScanners()
 
 	// Forcing maximum one Global registry
 	err := checkGlobalRegistryCount(registries)
@@ -216,6 +234,12 @@ func (aos *ApiObjectStore) validate() error {
 
 	// Checking local registry names in all local projects
 	err = checkLocalRegistryNamesInProjects(registries, projects)
+	if err != nil {
+		return err
+	}
+
+	// Checking scanner name uniqueness
+	err = checkScannerNameUniqueness(scanners)
 	if err != nil {
 		return err
 	}

@@ -25,3 +25,7 @@ var ErrValidationInvalidLocalRegistryInProject error = errors.New("validation er
 // ErrValidationMultipleGlobalRegistries error indicates that there are multiple
 // global registries configured.
 var ErrValidationMultipleGlobalRegistries error = errors.New("validation error: multiple global registries found")
+
+// ErrValidationScannerNameNotUnique error indicates that there are multiple
+// scanners configured with the same name.
+var ErrValidationScannerNameNotUnique error = errors.New("validation error: multiple scanners present with the same name")
