@@ -5,7 +5,7 @@
    you may not use this file except in compliance with the License.
    You may obtain a copy of the License at
 
-http://www.apache.org/licenses/LICENSE-2.0
+   http://www.apache.org/licenses/LICENSE-2.0
 
    Unless required by applicable law or agreed to in writing, software
    distributed under the License is distributed on an "AS IS" BASIS,
@@ -13,6 +13,7 @@ http://www.apache.org/licenses/LICENSE-2.0
    See the License for the specific language governing permissions and
    limitations under the License.
 */
+
 package reconciler_test
 
 import (
@@ -26,11 +27,11 @@ var _ = Describe("ScannerStatus", func() {
 	It("returns no action for the same ScannerStatus values", func() {
 		act := reconciler.ScannerStatus{
 			Name: "scanner",
-			Url:  "http://scanner.com",
+			URL:  "http://scanner.com",
 		}
 		exp := reconciler.ScannerStatus{
 			Name: "scanner",
-			Url:  "http://scanner.com",
+			URL:  "http://scanner.com",
 		}
 		actions := reconciler.CompareScannerStatuses("proj", act, exp)
 		Expect(actions).ToNot(BeNil())
@@ -49,7 +50,7 @@ var _ = Describe("ScannerStatus", func() {
 		act := reconciler.ScannerStatus{}
 		exp := reconciler.ScannerStatus{
 			Name: "scanner",
-			Url:  "http://scanner.com",
+			URL:  "http://scanner.com",
 		}
 		actions := reconciler.CompareScannerStatuses("proj", act, exp)
 		Expect(actions).ToNot(BeNil())
@@ -62,7 +63,7 @@ var _ = Describe("ScannerStatus", func() {
 	It("can remove scanner configuration", func() {
 		act := reconciler.ScannerStatus{
 			Name: "scanner",
-			Url:  "http://scanner.com",
+			URL:  "http://scanner.com",
 		}
 		exp := reconciler.ScannerStatus{}
 
@@ -77,11 +78,11 @@ var _ = Describe("ScannerStatus", func() {
 	It("can detect scanner misconfiguration", func() {
 		act := reconciler.ScannerStatus{
 			Name: "scanner",
-			Url:  "http://scanner.com",
+			URL:  "http://scanner.com",
 		}
 		exp := reconciler.ScannerStatus{
 			Name: "scanner",
-			Url:  "http://scanner-new.com",
+			URL:  "http://scanner-new.com",
 		}
 
 		actions := reconciler.CompareScannerStatuses("proj", act, exp)
@@ -94,11 +95,11 @@ var _ = Describe("ScannerStatus", func() {
 
 		act = reconciler.ScannerStatus{
 			Name: "scanner",
-			Url:  "http://scanner.com",
+			URL:  "http://scanner.com",
 		}
 		exp = reconciler.ScannerStatus{
 			Name: "scanner-new",
-			Url:  "http://scanner.com",
+			URL:  "http://scanner.com",
 		}
 
 		actions = reconciler.CompareScannerStatuses("proj", act, exp)
@@ -111,11 +112,11 @@ var _ = Describe("ScannerStatus", func() {
 
 		act = reconciler.ScannerStatus{
 			Name: "scanner",
-			Url:  "http://scanner.com",
+			URL:  "http://scanner.com",
 		}
 		exp = reconciler.ScannerStatus{
 			Name: "scanner-new",
-			Url:  "http://scanner-new.com",
+			URL:  "http://scanner-new.com",
 		}
 
 		actions = reconciler.CompareScannerStatuses("proj", act, exp)

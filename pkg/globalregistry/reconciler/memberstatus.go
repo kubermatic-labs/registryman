@@ -5,7 +5,7 @@
    you may not use this file except in compliance with the License.
    You may obtain a copy of the License at
 
-http://www.apache.org/licenses/LICENSE-2.0
+   http://www.apache.org/licenses/LICENSE-2.0
 
    Unless required by applicable law or agreed to in writing, software
    distributed under the License is distributed on an "AS IS" BASIS,
@@ -13,6 +13,7 @@ http://www.apache.org/licenses/LICENSE-2.0
    See the License for the specific language governing permissions and
    limitations under the License.
 */
+
 package reconciler
 
 import (
@@ -28,11 +29,20 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 )
 
+// MemberStatus specifies the status of a project member.
 type MemberStatus struct {
+
+	// Name of the project member.
 	Name string `json:"name"`
+
+	// Type of the project membership, like user, group, robot.
 	Type string `json:"type"`
+
+	// Role of the project member, like admin, developer, maintainer, etc.
 	Role string `json:"role"`
-	DN   string `json:"dn,omitempty"`
+
+	// Distinguished name of the project member. Empty when omitted.
+	DN string `json:"dn,omitempty"`
 }
 
 func (ms *MemberStatus) toProjectMember() globalregistry.ProjectMember {
@@ -227,6 +237,9 @@ func (ma *memberRemoveAction) Perform(reg globalregistry.Registry) (SideEffect, 
 	return nilEffect, nil
 }
 
+// CompareMemberStatuses compares the actual and expected status of the members
+// of a project. The function returns the actions that are needed to synchronize
+// the actual state to the expected state.
 func CompareMemberStatuses(projectName string, actual, expected []MemberStatus) []Action {
 	actualDiff := []MemberStatus{}
 	expectedDiff := []MemberStatus{}

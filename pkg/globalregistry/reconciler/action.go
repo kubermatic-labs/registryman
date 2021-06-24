@@ -32,12 +32,27 @@ var nilEffect = nilSideEffect{}
 
 type SideEffectContextKey string
 
+// SideEffectManifestManipulator is a context key that may be parsed by a
+// SideEffect. The value can be used by the SideEffect to create or to remove
+// manifest files.
+//
+// The value shall implement the following interface:
+//   type manifestManipulator interface {
+//	WriteManifest(filename string, obj runtime.Object) error
+//	RemoveManifest(filename string) error
+//   }
 var SideEffectManifestManipulator = SideEffectContextKey("sideeffect-manipulator")
 
+// SideEffect interface contains the methods that a sideeffect needs to
+// implement. SideEffects are optional operations that are performed after
+// Actions. SideEffect can be used for e.g. file manipulations at the local
+// filesystem.
 type SideEffect interface {
 	Perform(ctx context.Context) error
 }
 
+// Action interface contains the methods that a reconciliation action needs to
+// implement.
 type Action interface {
 	String() string
 	Perform(globalregistry.Registry) (SideEffect, error)
