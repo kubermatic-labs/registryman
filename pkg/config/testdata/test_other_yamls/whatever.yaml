@@ -1,0 +1,9 @@
+this:
+  is:
+    a: yaml-file
+  but:
+  - it
+  - should
+  - not
+  - cause
+  - problem

@@ -21,6 +21,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"strings"
 
 	_ "github.com/kubermatic-labs/registryman/pkg/acr"
 	api "github.com/kubermatic-labs/registryman/pkg/apis/registryman.kubermatic.com/v1alpha1"
@@ -115,6 +116,10 @@ func ReadManifests(path string) (*ApiObjectStore, error) {
 		if !entry.Type().IsRegular() {
 			continue
 		}
+		if !strings.HasSuffix(entry.Name(), ".yaml") {
+			// skip the non-yaml files
+			continue
+		}
 		f, err := os.Open(filepath.Join(path, entry.Name()))
 		if err != nil {
 			return nil, err
@@ -126,7 +131,12 @@ func ReadManifests(path string) (*ApiObjectStore, error) {
 		}
 		o, gvk, err := aos.serializer.Decode(b, nil, nil)
 		if err != nil {
-			return nil, err
+			// This is not a valid Kubernetes resource. Let's skip it.
+			logger.V(-1).Info("file is not a valid resource",
+				"error", err.Error(),
+				"filename", entry.Name(),
+			)
+			continue
 		}
 		err = validateObjects(o, gvk)
 		if err != nil {
@@ -235,7 +245,9 @@ func validateObjects(o runtime.Object, gvk *schema.GroupVersionKind) error {
 	case "Scanner":
 		results = api.ScannerValidator.Validate(o)
 	default:
-		return fmt.Errorf("%s Kind is not supported", gvk.Kind)
+		// We have parsed a Kubernetes resource which is not our kind.
+		// Don't validate it.
+		return nil
 	}
 
 	if results.HasErrors() {
