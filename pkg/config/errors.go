@@ -41,3 +41,7 @@ var ErrValidationRegistryNameNotUnique error = errors.New("validation error: mul
 // ErrValidationScannerNameReference error indicates that a project refers to a
 // non-existing Scanner.
 var ErrValidationScannerNameReference error = errors.New("validation error: multiple registries present with the same name")
+
+// ErrValidationScannerNameReference error indicates that a project refers to a
+// non-existing Scanner.
+var ErrValidationGroupWithoutDN error = errors.New("validation error: project group member with missing DN field")

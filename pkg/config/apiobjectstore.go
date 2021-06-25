@@ -141,7 +141,7 @@ func ReadManifests(path string) (*ApiObjectStore, error) {
 	}
 	err = aos.validate()
 	if err != nil {
-		return nil, fmt.Errorf("%w", err)
+		return nil, err
 	}
 	return aos, nil
 }
@@ -323,6 +323,18 @@ func (aos *ApiObjectStore) validate() error {
 	return nil
 }
 
+// checkProject checks the validation rules of the project resources. This
+// function contains the checks that can be performed on a single Project
+// resource.
+func checkProject(project *api.Project) error {
+	for _, member := range project.Spec.Members {
+		if member.Type == api.GroupMemberType && member.DN == "" {
+			return ErrValidationGroupWithoutDN
+		}
+	}
+	return nil
+}
+
 // validateObjects perform the CRD level validation on each object.
 func validateObjects(o runtime.Object, gvk *schema.GroupVersionKind) error {
 	var results *validate.Result
@@ -341,7 +353,12 @@ func validateObjects(o runtime.Object, gvk *schema.GroupVersionKind) error {
 	if results.HasErrors() {
 		return results.AsError()
 	}
-	return nil
+	switch gvk.Kind {
+	case "Project":
+		return checkProject(o.(*api.Project))
+	default:
+		return nil
+	}
 }
 
 // GetRegistries returns the parsed registries as API objects.
