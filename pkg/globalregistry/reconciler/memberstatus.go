@@ -117,7 +117,7 @@ type manifestManipulator interface {
 func (pmc *persistMemberCredentials) Perform(ctx context.Context) error {
 	sideEffectManipulatorCtx := ctx.Value(SideEffectManifestManipulator)
 	if sideEffectManipulatorCtx == nil {
-		return fmt.Errorf("contaxt shall contain SideEffectManifestManipulator")
+		return fmt.Errorf("context shall contain SideEffectManifestManipulator")
 	}
 	manifestManipulator, ok := sideEffectManipulatorCtx.(manifestManipulator)
 	if !ok {
@@ -192,7 +192,7 @@ var _ SideEffect = &removeMemberCredentials{}
 func (rmc *removeMemberCredentials) Perform(ctx context.Context) error {
 	sideEffectManipulatorCtx := ctx.Value(SideEffectManifestManipulator)
 	if sideEffectManipulatorCtx == nil {
-		return fmt.Errorf("contaxt shall contain SideEffectManifestManipulator")
+		return fmt.Errorf("context shall contain SideEffectManifestManipulator")
 	}
 	manifestManipulator, ok := sideEffectManipulatorCtx.(manifestManipulator)
 	if !ok {
