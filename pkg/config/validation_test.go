@@ -58,4 +58,12 @@ var _ = Describe("Validation", func() {
 			Expect(manifests).To(BeNil())
 		})
 	})
+	Context("when there are multiple registries with the same name", func() {
+		It("should error", func() {
+			testDir := fmt.Sprintf("%s/test_registryname_unique", testdataDir)
+			manifests, err := config.ReadManifests(testDir)
+			Expect(err).Should(MatchError(config.ErrValidationRegistryNameNotUnique))
+			Expect(manifests).To(BeNil())
+		})
+	})
 })

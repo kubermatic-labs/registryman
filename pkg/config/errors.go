@@ -33,3 +33,7 @@ var ErrValidationScannerNameNotUnique error = errors.New("validation error: mult
 // ErrValidationProjectNameNotUnique error indicates that there are multiple
 // projects configured with the same name.
 var ErrValidationProjectNameNotUnique error = errors.New("validation error: multiple projects present with the same name")
+
+// ErrValidationRegistryNameNotUnique error indicates that there are multiple
+// registries configured with the same name.
+var ErrValidationRegistryNameNotUnique error = errors.New("validation error: multiple registries present with the same name")

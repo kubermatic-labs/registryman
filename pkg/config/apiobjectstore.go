@@ -236,6 +236,23 @@ func checkProjectNameUniqueness(projects []*api.Project) error {
 	return nil
 }
 
+// checkRegistryNameUniqueness checks that there are no 2 registries with the
+// same name.
+func checkRegistryNameUniqueness(registries []*api.Registry) error {
+	registryNames := map[string]*api.Registry{}
+	for _, registry := range registries {
+		registryName := registry.GetName()
+		if registryNames[registryName] != nil {
+			logger.V(-2).Info("Multiple registries configured with the same name",
+				"registry_name", registryName,
+			)
+			return ErrValidationRegistryNameNotUnique
+		}
+		registryNames[registryName] = registry
+	}
+	return nil
+}
+
 // validate performs all validations that require the full context, i.e. all
 // resources parsed.
 func (aos *ApiObjectStore) validate() error {
@@ -263,6 +280,12 @@ func (aos *ApiObjectStore) validate() error {
 
 	// Checking project name uniqueness
 	err = checkProjectNameUniqueness(projects)
+	if err != nil {
+		return err
+	}
+
+	// Checking registry name uniqueness
+	err = checkRegistryNameUniqueness(registries)
 	if err != nil {
 		return err
 	}
