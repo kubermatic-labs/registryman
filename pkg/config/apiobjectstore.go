@@ -219,6 +219,23 @@ func checkScannerNameUniqueness(scanners []*api.Scanner) error {
 	return nil
 }
 
+// checkProjectNameUniqueness checks that there are no 2 projects with the same
+// name.
+func checkProjectNameUniqueness(projects []*api.Project) error {
+	projectNames := map[string]*api.Project{}
+	for _, project := range projects {
+		projectName := project.GetName()
+		if projectNames[projectName] != nil {
+			logger.V(-2).Info("Multiple projects configured with the same name",
+				"project_name", projectName,
+			)
+			return ErrValidationProjectNameNotUnique
+		}
+		projectNames[projectName] = project
+	}
+	return nil
+}
+
 // validate performs all validations that require the full context, i.e. all
 // resources parsed.
 func (aos *ApiObjectStore) validate() error {
@@ -244,6 +261,11 @@ func (aos *ApiObjectStore) validate() error {
 		return err
 	}
 
+	// Checking project name uniqueness
+	err = checkProjectNameUniqueness(projects)
+	if err != nil {
+		return err
+	}
 	return nil
 }
 

@@ -50,4 +50,12 @@ var _ = Describe("Validation", func() {
 			Expect(manifests).To(BeNil())
 		})
 	})
+	Context("when there are multiple projects with the same name", func() {
+		It("should error", func() {
+			testDir := fmt.Sprintf("%s/test_projectname_unique", testdataDir)
+			manifests, err := config.ReadManifests(testDir)
+			Expect(err).Should(MatchError(config.ErrValidationProjectNameNotUnique))
+			Expect(manifests).To(BeNil())
+		})
+	})
 })

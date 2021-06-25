@@ -29,3 +29,7 @@ var ErrValidationMultipleGlobalRegistries error = errors.New("validation error: 
 // ErrValidationScannerNameNotUnique error indicates that there are multiple
 // scanners configured with the same name.
 var ErrValidationScannerNameNotUnique error = errors.New("validation error: multiple scanners present with the same name")
+
+// ErrValidationProjectNameNotUnique error indicates that there are multiple
+// projects configured with the same name.
+var ErrValidationProjectNameNotUnique error = errors.New("validation error: multiple projects present with the same name")
