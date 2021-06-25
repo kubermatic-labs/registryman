@@ -66,4 +66,12 @@ var _ = Describe("Validation", func() {
 			Expect(manifests).To(BeNil())
 		})
 	})
+	Context("when a project refers to a non-existing scanner", func() {
+		It("should error", func() {
+			testDir := fmt.Sprintf("%s/test_scannername_valid", testdataDir)
+			manifests, err := config.ReadManifests(testDir)
+			Expect(err).Should(MatchError(config.ErrValidationScannerNameReference))
+			Expect(manifests).To(BeNil())
+		})
+	})
 })

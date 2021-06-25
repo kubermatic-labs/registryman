@@ -202,6 +202,31 @@ func checkLocalRegistryNamesInProjects(registries []*api.Registry, projects []*a
 	return nil
 }
 
+// checkScannerNamesInProjects checks that the scanners referenced by the
+// projects exist.
+func checkScannerNamesInProjects(projects []*api.Project, scanners []*api.Scanner) error {
+	isProjectInvalid := false
+	scannerNames := map[string]*api.Scanner{}
+	for _, scanner := range scanners {
+		scannerNames[scanner.GetName()] = scanner
+	}
+	for _, project := range projects {
+		if project.Spec.Scanner != "" &&
+			scannerNames[project.Spec.Scanner] == nil {
+			// there is a project with invalid scanner name
+			logger.V(-2).Info("Project refers to non-existing scanner",
+				"project_name", project.Name,
+				"scanner_name", project.Spec.Scanner)
+			isProjectInvalid = true
+		}
+	}
+
+	if isProjectInvalid {
+		return ErrValidationScannerNameReference
+	}
+	return nil
+}
+
 // checkScannerNameUniqueness checks that there are no 2 scanners with the same
 // name.
 func checkScannerNameUniqueness(scanners []*api.Scanner) error {
@@ -268,6 +293,12 @@ func (aos *ApiObjectStore) validate() error {
 
 	// Checking local registry names in all local projects
 	err = checkLocalRegistryNamesInProjects(registries, projects)
+	if err != nil {
+		return err
+	}
+
+	// Checking scanner names in all projects
+	err = checkScannerNamesInProjects(projects, scanners)
 	if err != nil {
 		return err
 	}
