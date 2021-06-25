@@ -95,9 +95,9 @@ type ProjectAPI interface {
 	List() ([]Project, error)
 
 	// GetByName returns the project with the given name. If no project is
-	// present with the given name nil, nil is returned.
+	// present with the given name (nil, nil) is returned.
 	GetByName(name string) (Project, error)
 
-	// Create create a new project with the given name.
+	// Create creates a new project with the given name.
 	Create(name string) (Project, error)
 }

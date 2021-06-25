@@ -93,6 +93,7 @@ func (rt ReplicationTrigger) MarshalText() ([]byte, error) {
 // ReplicationRule interface declares the methods that can be used to manipulate
 // the replication rule of a project.
 type ReplicationRule interface {
+
 	// GetProjectName returns the name of the project that is subject to the
 	// replication.
 	GetProjectName() string

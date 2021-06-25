@@ -25,7 +25,7 @@ import (
 // ScannerStatus specifies the status of a project's external vulnerability scanner.
 type ScannerStatus struct {
 
-	// Name of the scanner
+	// Name of the scanner.
 	Name string `json:"name"`
 
 	// URL of the scanner.

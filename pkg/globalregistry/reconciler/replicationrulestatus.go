@@ -33,7 +33,7 @@ type ReplicationRuleStatus struct {
 	// Trigger describes the event that shall trigger the replication.
 	Trigger globalregistry.ReplicationTrigger `json:"trigger"`
 
-	// Direction shows whether the replication is of type pull or pull.
+	// Direction shows whether the replication is of type pull or push.
 	Direction globalregistry.ReplicationDirection `json:"direction"`
 }
 
