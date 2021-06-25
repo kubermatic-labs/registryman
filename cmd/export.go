@@ -18,7 +18,6 @@ package cmd
 import (
 	"fmt"
 
-	"github.com/kubermatic-labs/registryman/pkg/config"
 	"github.com/kubermatic-labs/registryman/pkg/docker"
 	"github.com/spf13/cobra"
 )
@@ -34,33 +33,25 @@ var exportCmd = &cobra.Command{
 		fmt.Println("export called")
 		repository := args[0]
 		destinationPath := args[1]
-
 		// TODO: project arg instead of repository
-		logger.Info("repository to be exported", "name", repository)
-
-		// TODO: default
-		logger.Info("target file name", "path", destinationPath)
-
-		config.SetLogger(logger)
+		// TODO: default destination
 
 		// Create the neccessary directory structure on the given storage
 		// according to the projects involved
 
-		logger.Info("pulling image")
-		err := docker.PullImage(repository)
+		// // TODO: adding metadata to exported tars
+		// // Maybe using ImageTag()
+
+		// // TODO: Delete image if it has been pulled
+
+		err := docker.Export(repository, destinationPath, logger)
 		if err != nil {
 			return err
 		}
-		// TODO: check if it works with remote images
-		// TODO: adding metadata to exported tars
-		// Maybe using ImageTag()
-		logger.Info("exporting images")
-		err = docker.ExportImages(repository, destinationPath)
-		if err != nil {
-			return err
-		}
+
 		logger.Info("exporting finished", "result path", destinationPath)
 		return nil
+		// TODO: sync command
 	},
 }
 

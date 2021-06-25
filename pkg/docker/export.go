@@ -1,65 +1,41 @@
 package docker
 
 import (
-	"context"
 	"fmt"
-	"io"
-	"os"
 
-	"github.com/docker/docker/api/types"
-	"github.com/docker/docker/api/types/filters"
-	"github.com/docker/docker/client"
+	"github.com/containers/image/v5/types"
+	"github.com/go-logr/logr"
 )
 
-func ExportImages(repo, destinationPath string) error {
-	ctx := context.Background()
-	cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
-	if err != nil {
-		return err
+const (
+	dockerTransportPrefix    = "docker://"
+	directoryTransportPrefix = "dir:"
+)
+
+func Export(source, destination string, logger logr.Logger) error {
+	logger.Info("exporting images started")
+
+	sourceCtx := &types.SystemContext{
+		DockerAuthConfig: &types.DockerAuthConfig{
+			Username: "admin",
+			Password: "P8wk%pU9D!#bSp",
+		},
 	}
 
-	images, err := searchImage(repo, &ctx, cli)
+	err := exportImages(
+		fmt.Sprintf("%s%s", dockerTransportPrefix, source),
+		fmt.Sprintf("%s%s", directoryTransportPrefix, destination),
+		sourceCtx,
+	)
 	if err != nil {
-		return err
+		return fmt.Errorf("exporting images failed: %w", err)
 	}
 
-	imageIDs := []string{}
-	for _, image := range images {
-		fmt.Println("image ID:", image.ID)
-		imageIDs = append(imageIDs, image.ID)
-	}
-
-	reader, err := cli.ImageSave(ctx, imageIDs)
-	if err != nil {
-		return err
-	}
-	defer reader.Close()
-
-	destination, err := os.Create(destinationPath)
-	if err != nil {
-		return err
-	}
-	defer destination.Close()
-
-	_, err = io.Copy(destination, reader)
-	if err != nil {
-		return err
-	}
+	// logger.Info("deleting images started")
+	// err = deleteImage(source, sourceCtx)
+	// if err != nil {
+	// 	return fmt.Errorf("failed deleting image: %w", err)
+	// }
 
 	return nil
-}
-
-func searchImage(repo string, ctx *context.Context, cli *client.Client) ([]types.ImageSummary, error) {
-	args := filters.NewArgs(filters.KeyValuePair{
-		Key:   "reference",
-		Value: fmt.Sprintf("%s:*", repo),
-	})
-	images, err := cli.ImageList(*ctx, types.ImageListOptions{
-		Filters: args,
-	})
-	if err != nil {
-		return nil, err
-	}
-
-	return images, nil
 }
