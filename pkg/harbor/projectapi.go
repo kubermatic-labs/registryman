@@ -5,7 +5,7 @@
    you may not use this file except in compliance with the License.
    You may obtain a copy of the License at
 
-http://www.apache.org/licenses/LICENSE-2.0
+   http://www.apache.org/licenses/LICENSE-2.0
 
    Unless required by applicable law or agreed to in writing, software
    distributed under the License is distributed on an "AS IS" BASIS,
@@ -13,6 +13,7 @@ http://www.apache.org/licenses/LICENSE-2.0
    See the License for the specific language governing permissions and
    limitations under the License.
 */
+
 package harbor
 
 import (
@@ -234,17 +235,7 @@ type projectRepositoryRespBody struct {
 	proj *project
 }
 
-func (prrb *projectRepositoryRespBody) GetName() string {
-	return prrb.Name
-}
-
-func (prrb *projectRepositoryRespBody) Delete() error {
-	return prrb.proj.api.deleteProjectRepository(
-		prrb.proj,
-		prrb)
-}
-
-func (p *projectAPI) listProjectRepositories(proj *project) ([]globalregistry.Repository, error) {
+func (p *projectAPI) listProjectRepositories(proj *project) ([]*projectRepositoryRespBody, error) {
 	url := *p.reg.parsedUrl
 	url.Path = fmt.Sprintf("%s/%s/repositories", path, proj.Name)
 	req, err := http.NewRequest(http.MethodGet, url.String(), nil)
@@ -269,33 +260,11 @@ func (p *projectAPI) listProjectRepositories(proj *project) ([]globalregistry.Re
 		p.reg.logger.Error(err, "json decoding failed")
 		p.reg.logger.Info(buf.String())
 	}
-	repos := make([]globalregistry.Repository, len(repositories))
-	for i, rep := range repositories {
+	for _, rep := range repositories {
 		rep.proj = proj
 		rep.Name = strings.TrimPrefix(
 			rep.Name,
 			proj.Name+"/")
-		repos[i] = rep
 	}
-	return repos, err
-}
-
-func (p *projectAPI) deleteProjectRepository(proj *project, repo globalregistry.Repository) error {
-	url := *p.reg.parsedUrl
-	url.Path = fmt.Sprintf("%s/%s/repositories/%s", path, proj.Name, repo.GetName())
-	req, err := http.NewRequest(http.MethodDelete, url.String(), nil)
-	if err != nil {
-		return err
-	}
-
-	req.SetBasicAuth(p.reg.GetUsername(), p.reg.GetPassword())
-
-	resp, err := p.reg.do(req)
-	if err != nil {
-		return err
-	}
-
-	defer resp.Body.Close()
-
-	return nil
+	return repositories, err
 }

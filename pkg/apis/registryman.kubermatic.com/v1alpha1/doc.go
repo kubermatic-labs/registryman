@@ -5,7 +5,7 @@
    you may not use this file except in compliance with the License.
    You may obtain a copy of the License at
 
-http://www.apache.org/licenses/LICENSE-2.0
+   http://www.apache.org/licenses/LICENSE-2.0
 
    Unless required by applicable law or agreed to in writing, software
    distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,35 +14,13 @@ http://www.apache.org/licenses/LICENSE-2.0
    limitations under the License.
 */
 
-// +kubebuilder:skip
+// Package v1alpha1 is the v1alpha1 version of the API.
 
-package v1alpha1_test
+// +k8s:openapi-gen=true
+// +k8s:deepcopy-gen=package,register
+// +groupName=registryman.kubermatic.com
+// +versionName=v1alpha1
 
-import (
-	"os"
-	"path/filepath"
-	"testing"
-
-	"io"
-
-	. "github.com/onsi/ginkgo"
-	. "github.com/onsi/gomega"
-)
-
-func openTestFile(name string) ([]byte, error) {
-	f, err := os.Open(filepath.Join(testdataDir, name))
-	if err != nil {
-		return nil, err
-	}
-	defer f.Close()
-	b, err := io.ReadAll(f)
-	if err != nil {
-		return nil, err
-	}
-	return b, nil
-}
-
-func TestV1alpha1(t *testing.T) {
-	RegisterFailHandler(Fail)
-	RunSpecs(t, "V1alpha1 Suite")
-}
+// package v1alpha1 implements the v1alpha1 version of the resources used by
+// registryman.
+package v1alpha1 // import "github.com/kubermatic-labs/registryman/pkg/apis/registryman.kubermatic.com/v1alpha1"

@@ -5,7 +5,7 @@
    you may not use this file except in compliance with the License.
    You may obtain a copy of the License at
 
-http://www.apache.org/licenses/LICENSE-2.0
+   http://www.apache.org/licenses/LICENSE-2.0
 
    Unless required by applicable law or agreed to in writing, software
    distributed under the License is distributed on an "AS IS" BASIS,
@@ -13,6 +13,7 @@ http://www.apache.org/licenses/LICENSE-2.0
    See the License for the specific language governing permissions and
    limitations under the License.
 */
+
 package cmd
 
 import (
@@ -51,6 +52,7 @@ to quickly create a Cobra application.`,
 		}
 
 		expectedRegistries := manifests.ExpectedProvider().GetRegistries()
+		sideeffectCtx := context.WithValue(context.Background(), reconciler.SideEffectManifestManipulator, manifests)
 		for _, expectedRegistry := range expectedRegistries {
 			logger.Info("inspecting registry", "registry_name", expectedRegistry.GetName())
 			regStatusExpected, err := reconciler.GetRegistryStatus(expectedRegistry)
@@ -80,9 +82,7 @@ to quickly create a Cobra application.`,
 							return err
 						}
 					}
-					ctx := context.WithValue(context.Background(), reconciler.SideEffectPath, args[0])
-					ctx = context.WithValue(ctx, reconciler.SideEffectSerializer, manifests.GetSerializer())
-					if err = sideEffect.Perform(ctx); err != nil {
+					if err = sideEffect.Perform(sideeffectCtx); err != nil {
 						return err
 					}
 				} else {
