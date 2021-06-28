@@ -23,7 +23,7 @@ import (
 )
 
 type ReplicationRuleStatus struct {
-	RemoteRegistryName string                              `json:"name"`
+	RemoteRegistryName string                              `json:"remote-registry"`
 	Trigger            globalregistry.ReplicationTrigger   `json:"trigger"`
 	Direction          globalregistry.ReplicationDirection `json:"direction"`
 }
