@@ -22,42 +22,39 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// exportCmd represents the export command
-var exportCmd = &cobra.Command{
-	Use:   "export",
-	Short: "It saves the given repository in tar format",
-	Long: `The export command takes two arguments, the repository to be saved
-and also the path/filename of the generated tar file.`,
+// importCmd represents the import command
+var importCmd = &cobra.Command{
+	Use:   "import",
+	Short: "Uploads a repository from a local directory to a registry",
+	Long: `The import command takes two arguments, the path to the 
+local directory that contains the repository in .tar format, and also
+the URL of the registry, where the repository will be pushed.
+	`,
 	Args: cobra.ExactArgs(2),
 	RunE: func(cmd *cobra.Command, args []string) error {
-		fmt.Println("export called")
-		repository := args[0]
-		destinationPath := args[1]
-		// TODO: project arg instead of repository
-		// TODO: default destination
+		fmt.Println("import called")
+		path := args[0]
+		destinationRepo := args[1]
 
-		// TODO: adding metadata to exported tars
-		// Maybe using ImageTag()
-
-		if err := docker.Export(repository, destinationPath, logger); err != nil {
+		if err := docker.Import(path, destinationRepo, logger); err != nil {
 			return err
 		}
 
-		logger.Info("exporting finished", "result path", destinationPath)
+		logger.Info("importing finished", "result path", destinationRepo)
 		return nil
 	},
 }
 
 func init() {
-	rootCmd.AddCommand(exportCmd)
+	rootCmd.AddCommand(importCmd)
 
 	// Here you will define your flags and configuration settings.
 
 	// Cobra supports Persistent Flags which will work for this command
 	// and all subcommands, e.g.:
-	// exportCmd.PersistentFlags().String("foo", "", "A help for foo")
+	// importCmd.PersistentFlags().String("foo", "", "A help for foo")
 
 	// Cobra supports local flags which will only run when this command
 	// is called directly, e.g.:
-	// exportCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	// importCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 }
