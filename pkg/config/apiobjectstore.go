@@ -64,7 +64,8 @@ type ApiObjectStore struct {
 
 // WriteManifest serializes the object specified by the obj parameter. The
 // filename parameter specifies the name of the file to be created. The path
-// where the file is created is determined the ApiObjectStore.
+// where the file is created is set when the ReadManifests function
+// creates the ApiObjectStore.
 func (aos *ApiObjectStore) WriteManifest(filename string, obj runtime.Object) error {
 	fName := filepath.Join(aos.path, filename)
 	f, err := os.Create(fName)
@@ -81,7 +82,8 @@ func (aos *ApiObjectStore) WriteManifest(filename string, obj runtime.Object) er
 }
 
 // RemoveManifest removes the file from the filesystem. The path where the file
-// is removed from is determined the ApiObjectStore.
+// is removed from is set when the ReadManifests function creates the
+// ApiObjectStore.
 func (aos *ApiObjectStore) RemoveManifest(filename string) error {
 	fName := filepath.Join(aos.path, filename)
 	return os.Remove(fName)

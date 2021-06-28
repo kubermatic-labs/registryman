@@ -23,14 +23,22 @@ import (
 	"github.com/kubermatic-labs/registryman/pkg/globalregistry"
 )
 
+// RegistryStatus specifies the status of a registry.
 type RegistryStatus struct {
 	Projects []ProjectStatus `json:"projects"`
 }
 
+// Compare compares the actual and expected status of a registry. The function
+// returns the actions that are needed to synchronize the actual state to the
+// expected state.
 func Compare(store *config.ExpectedProvider, actual, expected *RegistryStatus) []Action {
 	return CompareProjectStatuses(store, actual.Projects, expected.Projects)
 }
 
+// GetRegistryStatus function calculate the status of a registry. If the
+// registry represents a configuration of registry, then the expected registry
+// status is returned. If the registry represents an actual (real) registry, the
+// actual status is returned.
 func GetRegistryStatus(reg globalregistry.Registry) (*RegistryStatus, error) {
 	projects, err := reg.ProjectAPI().List()
 	if err != nil {
@@ -82,7 +90,7 @@ func GetRegistryStatus(reg globalregistry.Registry) (*RegistryStatus, error) {
 		if projectScanner != nil {
 			projectStatuses[i].ScannerStatus = ScannerStatus{
 				Name: projectScanner.GetName(),
-				Url:  projectScanner.GetURL(),
+				URL:  projectScanner.GetURL(),
 			}
 		}
 	}

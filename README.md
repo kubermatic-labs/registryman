@@ -58,6 +58,7 @@ Scanner describes an external vulnerability scanner that can be assigned to a
 project.
 
 Registry and Project resources are declaratively configured as separate files.
+For examples, see the `examples` directory.
 
 ## Usage
 
