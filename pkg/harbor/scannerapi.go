@@ -1,3 +1,19 @@
+/*
+   Copyright 2021 The Kubermatic Kubernetes Platform contributors.
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*/
+
 package harbor
 
 import (
@@ -47,7 +63,7 @@ type scannerAPI struct {
 	reg *registry
 }
 
-var _ globalregistry.ScannerConfig = &scannerRegistrationRequest{}
+var _ globalregistry.Scanner = &scannerRegistrationRequest{}
 
 func newScannerAPI(reg *registry) *scannerAPI {
 	return &scannerAPI{
@@ -55,14 +71,14 @@ func newScannerAPI(reg *registry) *scannerAPI {
 	}
 }
 
-func (s *scannerAPI) create(config globalregistry.ScannerConfig) (string, error) {
+func (s *scannerAPI) create(config globalregistry.Scanner) (string, error) {
 	url := *s.reg.parsedUrl
 	url.Path = scannersPath
 
 	reqBodyBuf := bytes.NewBuffer(nil)
 	err := json.NewEncoder(reqBodyBuf).Encode(&scannerRegistrationRequest{
 		Name: config.GetName(),
-		Url:  config.GetUrl(),
+		Url:  config.GetURL(),
 	})
 	if err != nil {
 		return "", err
@@ -324,7 +340,7 @@ func (c *scannerRegistrationRequest) GetCredential() string {
 	return c.AccessCredential
 }
 
-func (c *scannerRegistrationRequest) GetUrl() string {
+func (c *scannerRegistrationRequest) GetURL() string {
 	return c.Url
 }
 

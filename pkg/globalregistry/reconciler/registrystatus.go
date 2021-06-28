@@ -5,7 +5,7 @@
    you may not use this file except in compliance with the License.
    You may obtain a copy of the License at
 
-http://www.apache.org/licenses/LICENSE-2.0
+   http://www.apache.org/licenses/LICENSE-2.0
 
    Unless required by applicable law or agreed to in writing, software
    distributed under the License is distributed on an "AS IS" BASIS,
@@ -13,46 +13,32 @@ http://www.apache.org/licenses/LICENSE-2.0
    See the License for the specific language governing permissions and
    limitations under the License.
 */
+
 package reconciler
 
 import (
-	"context"
 	"errors"
 
 	"github.com/kubermatic-labs/registryman/pkg/config"
 	"github.com/kubermatic-labs/registryman/pkg/globalregistry"
 )
 
-type nilSideEffect struct{}
-
-func (se nilSideEffect) Perform(context.Context) error {
-	return nil
-}
-
-var nilEffect = nilSideEffect{}
-
-type SideEffectContextKey string
-
-var SideEffectPath = SideEffectContextKey("path")
-var SideEffectSerializer = SideEffectContextKey("serializer")
-
-type SideEffect interface {
-	Perform(ctx context.Context) error
-}
-
-type Action interface {
-	String() string
-	Perform(globalregistry.Registry) (SideEffect, error)
-}
-
+// RegistryStatus specifies the status of a registry.
 type RegistryStatus struct {
 	Projects []ProjectStatus `json:"projects"`
 }
 
+// Compare compares the actual and expected status of a registry. The function
+// returns the actions that are needed to synchronize the actual state to the
+// expected state.
 func Compare(store *config.ExpectedProvider, actual, expected *RegistryStatus) []Action {
 	return CompareProjectStatuses(store, actual.Projects, expected.Projects)
 }
 
+// GetRegistryStatus function calculate the status of a registry. If the
+// registry represents a configuration of registry, then the expected registry
+// status is returned. If the registry represents an actual (real) registry, the
+// actual status is returned.
 func GetRegistryStatus(reg globalregistry.Registry) (*RegistryStatus, error) {
 	projects, err := reg.ProjectAPI().List()
 	if err != nil {
@@ -104,7 +90,7 @@ func GetRegistryStatus(reg globalregistry.Registry) (*RegistryStatus, error) {
 		if projectScanner != nil {
 			projectStatuses[i].ScannerStatus = ScannerStatus{
 				Name: projectScanner.GetName(),
-				Url:  projectScanner.GetURL(),
+				URL:  projectScanner.GetURL(),
 			}
 		}
 	}

@@ -14,25 +14,35 @@
    limitations under the License.
 */
 
-package reconciler_test
+// +kubebuilder:skip
+
+package v1alpha1_test
 
 import (
+	"os"
+	"path/filepath"
 	"testing"
 
-	"github.com/kubermatic-labs/registryman/pkg/globalregistry/reconciler"
+	"io"
+
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
 
-func actionsToStrings(actions []reconciler.Action) []string {
-	result := make([]string, len(actions))
-	for i, act := range actions {
-		result[i] = act.String()
+func openTestFile(name string) ([]byte, error) {
+	f, err := os.Open(filepath.Join(testdataDir, name))
+	if err != nil {
+		return nil, err
 	}
-	return result
+	defer f.Close()
+	b, err := io.ReadAll(f)
+	if err != nil {
+		return nil, err
+	}
+	return b, nil
 }
 
-func TestReconciler(t *testing.T) {
+func TestV1alpha1(t *testing.T) {
 	RegisterFailHandler(Fail)
-	RunSpecs(t, "Reconciler Suite")
+	RunSpecs(t, "V1alpha1 Suite")
 }

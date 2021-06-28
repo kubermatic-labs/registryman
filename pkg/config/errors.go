@@ -5,7 +5,7 @@
    you may not use this file except in compliance with the License.
    You may obtain a copy of the License at
 
-http://www.apache.org/licenses/LICENSE-2.0
+   http://www.apache.org/licenses/LICENSE-2.0
 
    Unless required by applicable law or agreed to in writing, software
    distributed under the License is distributed on an "AS IS" BASIS,
@@ -13,10 +13,15 @@ http://www.apache.org/licenses/LICENSE-2.0
    See the License for the specific language governing permissions and
    limitations under the License.
 */
+
 package config
 
 import "errors"
 
-var ValidationErrorInvalidLocalRegistryInProject error = errors.New("validation error: project contains invalid registry name")
+// ErrValidationInvalidLocalRegistryInProject error indicates that a local
+// project refers to a non-existing registry.
+var ErrValidationInvalidLocalRegistryInProject error = errors.New("validation error: project contains invalid registry name")
 
-var ValidationErrorMultipleGlobalRegistries error = errors.New("validation error: multiple global registries found")
+// ErrValidationMultipleGlobalRegistries error indicates that there are multiple
+// global registries configured.
+var ErrValidationMultipleGlobalRegistries error = errors.New("validation error: multiple global registries found")

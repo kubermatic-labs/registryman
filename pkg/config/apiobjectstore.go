@@ -5,7 +5,7 @@
    you may not use this file except in compliance with the License.
    You may obtain a copy of the License at
 
-http://www.apache.org/licenses/LICENSE-2.0
+   http://www.apache.org/licenses/LICENSE-2.0
 
    Unless required by applicable law or agreed to in writing, software
    distributed under the License is distributed on an "AS IS" BASIS,
@@ -13,6 +13,7 @@ http://www.apache.org/licenses/LICENSE-2.0
    See the License for the specific language governing permissions and
    limitations under the License.
 */
+
 package config
 
 import (
@@ -21,11 +22,10 @@ import (
 	"os"
 	"path/filepath"
 
-	api "github.com/kubermatic-labs/registryman/pkg/apis/globalregistry/v1alpha1"
+	_ "github.com/kubermatic-labs/registryman/pkg/acr"
+	api "github.com/kubermatic-labs/registryman/pkg/apis/registryman.kubermatic.com/v1alpha1"
 	"github.com/kubermatic-labs/registryman/pkg/config/registry"
 	_ "github.com/kubermatic-labs/registryman/pkg/harbor"
-
-	_ "github.com/kubermatic-labs/registryman/pkg/acr"
 
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -53,17 +53,47 @@ func init() {
 	scheme.AddKnownTypeWithName(secret.GroupVersionKind(), secret)
 }
 
+// ApiObjectStore is the database of the configured resources (Projects,
+// Registries and Scanners).
 type ApiObjectStore struct {
 	store      map[schema.GroupVersionKind][]runtime.Object
 	serializer *json.Serializer
+	path       string
 }
 
-func (aos *ApiObjectStore) GetSerializer() *json.Serializer {
-	return aos.serializer
+// WriteManifest serializes the object specified by the obj parameter. The
+// filename parameter specifies the name of the file to be created. The path
+// where the file is created is set when the ReadManifests function
+// creates the ApiObjectStore.
+func (aos *ApiObjectStore) WriteManifest(filename string, obj runtime.Object) error {
+	fName := filepath.Join(aos.path, filename)
+	f, err := os.Create(fName)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+
+	err = aos.serializer.Encode(obj, f)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
+// RemoveManifest removes the file from the filesystem. The path where the file
+// is removed from is set when the ReadManifests function creates the
+// ApiObjectStore.
+func (aos *ApiObjectStore) RemoveManifest(filename string) error {
+	fName := filepath.Join(aos.path, filename)
+	return os.Remove(fName)
+}
+
+// ReadManifests creates a new ApiObjectStore. It reads all files under path.
+// The files are deserialized and validated.
 func ReadManifests(path string) (*ApiObjectStore, error) {
-	aos := &ApiObjectStore{}
+	aos := &ApiObjectStore{
+		path: path,
+	}
 	aos.serializer = json.NewSerializerWithOptions(
 		json.DefaultMetaFactory,
 		scheme,
@@ -111,13 +141,15 @@ func ReadManifests(path string) (*ApiObjectStore, error) {
 			aos.store[*gvk] = []runtime.Object{o}
 		}
 	}
-	err = aos.Validate()
+	err = aos.validate()
 	if err != nil {
 		return nil, fmt.Errorf("%w", err)
 	}
 	return aos, nil
 }
 
+// checkGlobalRegistryCount checks that there is 1 or 0 registry configured with
+// the type GlobalHub.
 func checkGlobalRegistryCount(registries []*api.Registry) error {
 	globalRegistries := make([]string, 0)
 	for _, registry := range registries {
@@ -130,11 +162,13 @@ func checkGlobalRegistryCount(registries []*api.Registry) error {
 			logger.V(-2).Info("Multiple Global Registries found",
 				"registry_name", registry)
 		}
-		return fmt.Errorf("%w", ValidationErrorMultipleGlobalRegistries)
+		return fmt.Errorf("%w", ErrValidationMultipleGlobalRegistries)
 	}
 	return nil
 }
 
+// checkLocalRegistryNamesInProjects checks that the registries referenced by
+// the local projects exist.
 func checkLocalRegistryNamesInProjects(registries []*api.Registry, projects []*api.Project) error {
 	localRegistries := make([]string, 0)
 	for _, registry := range registries {
@@ -165,15 +199,16 @@ func checkLocalRegistryNamesInProjects(registries []*api.Registry, projects []*a
 	}
 
 	if len(invalidProjects) > 0 {
-		return fmt.Errorf("%w", ValidationErrorInvalidLocalRegistryInProject)
+		return fmt.Errorf("%w", ErrValidationInvalidLocalRegistryInProject)
 	}
 	return nil
 }
 
-func (aos *ApiObjectStore) Validate() error {
-	provider := aos.ApiProvider()
-	registries := provider.GetRegistries()
-	projects := provider.GetProjects()
+// validate performs all validations that require the full context, i.e. all
+// resources parsed.
+func (aos *ApiObjectStore) validate() error {
+	registries := aos.GetRegistries()
+	projects := aos.GetProjects()
 
 	// Forcing maximum one Global registry
 	err := checkGlobalRegistryCount(registries)
@@ -190,6 +225,7 @@ func (aos *ApiObjectStore) Validate() error {
 	return nil
 }
 
+// validateObjects perform the CRD level validation on each object.
 func validateObjects(o runtime.Object, gvk *schema.GroupVersionKind) error {
 	var results *validate.Result
 
@@ -210,14 +246,9 @@ func validateObjects(o runtime.Object, gvk *schema.GroupVersionKind) error {
 	return nil
 }
 
-type ApiProvider ApiObjectStore
-
-func (aos *ApiObjectStore) ApiProvider() *ApiProvider {
-	return (*ApiProvider)(aos)
-}
-
-func (apip *ApiProvider) GetRegistries() []*api.Registry {
-	registryObjects, found := apip.store[api.SchemeGroupVersion.WithKind("Registry")]
+// GetRegistries returns the parsed registries as API objects.
+func (aos *ApiObjectStore) GetRegistries() []*api.Registry {
+	registryObjects, found := aos.store[api.SchemeGroupVersion.WithKind("Registry")]
 	if !found {
 		return []*api.Registry{}
 	}
@@ -228,8 +259,9 @@ func (apip *ApiProvider) GetRegistries() []*api.Registry {
 	return registries
 }
 
-func (apip *ApiProvider) GetProjects() []*api.Project {
-	projectObjects, found := apip.store[api.SchemeGroupVersion.WithKind("Project")]
+// GetProjects returns the parsed projects as API objects.
+func (aos *ApiObjectStore) GetProjects() []*api.Project {
+	projectObjects, found := aos.store[api.SchemeGroupVersion.WithKind("Project")]
 	if !found {
 		return []*api.Project{}
 	}
@@ -240,8 +272,9 @@ func (apip *ApiProvider) GetProjects() []*api.Project {
 	return projects
 }
 
-func (apip *ApiProvider) GetScanners() []*api.Scanner {
-	scannerObjects, found := apip.store[api.SchemeGroupVersion.WithKind("Scanner")]
+// GetScanners returns the parsed scanners as API objects.
+func (aos *ApiObjectStore) GetScanners() []*api.Scanner {
+	scannerObjects, found := aos.store[api.SchemeGroupVersion.WithKind("Scanner")]
 	if !found {
 		return []*api.Scanner{}
 	}
@@ -252,12 +285,19 @@ func (apip *ApiProvider) GetScanners() []*api.Scanner {
 	return scanners
 }
 
+// ExpectedProvider is a database of the resources which implement the
+// interfaces defines in the globalregistry package.
+//
+// The resources in the database usually show the expected state of the
+// resources.
 type ExpectedProvider ApiObjectStore
 
+// ExpectedProvider method turns an ApiObjectStore into an ExpectedProvider.
 func (aos *ApiObjectStore) ExpectedProvider() *ExpectedProvider {
 	return (*ExpectedProvider)(aos)
 }
 
+// GetRegistries returns the Registries of the resource database.
 func (expp *ExpectedProvider) GetRegistries() []*registry.Registry {
 	registryObjects, found := expp.store[api.SchemeGroupVersion.WithKind("Registry")]
 	if !found {
@@ -269,11 +309,13 @@ func (expp *ExpectedProvider) GetRegistries() []*registry.Registry {
 		if !ok {
 			panic("cannot assert registry object")
 		}
-		registries[i] = registry.New(apiRegistry, (*ApiObjectStore)(expp).ApiProvider())
+		registries[i] = registry.New(apiRegistry, (*ApiObjectStore)(expp))
 	}
 	return registries
 }
 
+// GetRegistryByName returns a Registry with the given name from the database.
+// If no Registry if found with the specified name, nil is returned.
 func (expp *ExpectedProvider) GetRegistryByName(name string) *registry.Registry {
 	registryObjects, found := expp.store[api.SchemeGroupVersion.WithKind("Registry")]
 	if !found {
@@ -285,7 +327,7 @@ func (expp *ExpectedProvider) GetRegistryByName(name string) *registry.Registry 
 			panic("cannot assert registry object")
 		}
 		if apiRegistry.GetName() == name {
-			return registry.New(apiRegistry, (*ApiObjectStore)(expp).ApiProvider())
+			return registry.New(apiRegistry, (*ApiObjectStore)(expp))
 		}
 	}
 	return nil

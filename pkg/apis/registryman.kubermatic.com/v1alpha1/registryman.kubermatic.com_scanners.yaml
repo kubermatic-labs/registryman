@@ -19,6 +19,8 @@ spec:
   - name: v1alpha1
     schema:
       openAPIV3Schema:
+        description: Scanner resource describes the configuration of an external vulnerability
+          scanner.
         properties:
           apiVersion:
             description: 'APIVersion defines the versioned schema of this representation
