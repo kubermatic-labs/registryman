@@ -1,0 +1,6 @@
+apiVersion: registryman.kubermatic.com/v1alpha1
+kind: Scanner
+metadata:
+  name: scanner
+spec:
+  url: http://scanner.test

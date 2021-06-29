@@ -25,3 +25,23 @@ var ErrValidationInvalidLocalRegistryInProject error = errors.New("validation er
 // ErrValidationMultipleGlobalRegistries error indicates that there are multiple
 // global registries configured.
 var ErrValidationMultipleGlobalRegistries error = errors.New("validation error: multiple global registries found")
+
+// ErrValidationScannerNameNotUnique error indicates that there are multiple
+// scanners configured with the same name.
+var ErrValidationScannerNameNotUnique error = errors.New("validation error: multiple scanners present with the same name")
+
+// ErrValidationProjectNameNotUnique error indicates that there are multiple
+// projects configured with the same name.
+var ErrValidationProjectNameNotUnique error = errors.New("validation error: multiple projects present with the same name")
+
+// ErrValidationRegistryNameNotUnique error indicates that there are multiple
+// registries configured with the same name.
+var ErrValidationRegistryNameNotUnique error = errors.New("validation error: multiple registries present with the same name")
+
+// ErrValidationScannerNameReference error indicates that a project refers to a
+// non-existing Scanner.
+var ErrValidationScannerNameReference error = errors.New("validation error: multiple registries present with the same name")
+
+// ErrValidationScannerNameReference error indicates that a project refers to a
+// non-existing Scanner.
+var ErrValidationGroupWithoutDN error = errors.New("validation error: project group member with missing DN field")

@@ -16,6 +16,3 @@ spec:
   - name: ci-robot
     type: Robot
     role: PushOnly
-  - name: project-admins
-    type: Group
-    role: ProjectAdmin

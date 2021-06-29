@@ -95,15 +95,6 @@ var _ = Describe("Validation", func() {
 			fmt.Fprintln(GinkgoWriter, results.AsError().Error())
 		}
 		Expect(results.HasErrorsOrWarnings()).To(BeFalse())
-
-		// registry, err = objectFromFile("testdata/local-registry.yaml")
-		// Expect(err).ToNot(HaveOccurred())
-
-		// results = v1alpha1.RegistryValidator.Validate(registry)
-		// if results.HasErrors() {
-		// 	fmt.Fprintln(GinkgoWriter, results.AsError().Error())
-		// }
-		// Expect(results.HasErrorsOrWarnings()).To(BeFalse())
 	})
 
 	It("will fail for invalid Registry resources", func() {
@@ -120,6 +111,24 @@ var _ = Describe("Validation", func() {
 			for _, e := range c.Errors {
 				v := e.(*errors.Validation)
 				Expect(v.Name).To(Equal("spec.apiEndpoint"))
+				Expect(v.Code()).Should(Equal(int32(errors.PatternFailCode)))
+			}
+		}
+	})
+	It("will fail for invalid Scanner resources", func() {
+		scanner, err := objectFromFile("testdata/scanner-wrong-url.yaml")
+		Expect(err).ToNot(HaveOccurred())
+
+		results := v1alpha1.ScannerValidator.Validate(scanner)
+		Expect(results.HasErrorsOrWarnings()).To(BeTrue())
+		if results.HasErrors() {
+			fmt.Fprintln(GinkgoWriter, results.AsError().Error())
+			c, ok := results.AsError().(*errors.CompositeError)
+			Expect(ok).To(BeTrue())
+			Expect(len(c.Errors)).Should(Equal(1))
+			for _, e := range c.Errors {
+				v := e.(*errors.Validation)
+				Expect(v.Name).To(Equal("spec.url"))
 				Expect(v.Code()).Should(Equal(int32(errors.PatternFailCode)))
 			}
 		}
