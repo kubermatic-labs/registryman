@@ -1,3 +1,5 @@
+[![Go Reference](https://pkg.go.dev/badge/github.com/kubermatic-labs/registryman.svg)](https://pkg.go.dev/github.com/kubermatic-labs/registryman) ![CI](https://github.com/kubermatic-labs/registryman/actions/workflows/ci.yaml/badge.svg)
+
 -----
 # Registryman
 
