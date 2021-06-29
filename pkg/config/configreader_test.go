@@ -35,4 +35,9 @@ var _ = Describe("Configreader", func() {
 		registry := m.ExpectedProvider().GetRegistries()
 		Expect(len(registry)).To(Equal(2))
 	})
+	It("reads the registries and projects even with other yamls present", func() {
+		m, err := config.ReadManifests("testdata/test_other_yamls")
+		Expect(err).ToNot(HaveOccurred())
+		Expect(m).ToNot(BeNil())
+	})
 })

@@ -1,0 +1,19 @@
+apiVersion: registryman.kubermatic.com/v1alpha1
+kind: Project
+metadata:
+  name: node
+spec:
+  type: Local
+  localRegistries:
+  - local
+  members:
+  - name: alpha
+    role: Maintainer
+  - name: beta
+    role: Developer
+  - name: ci-robot
+    type: Robot
+    role: PushOnly
+  - name: project-admins
+    type: Group
+    role: ProjectAdmin
