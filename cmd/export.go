@@ -36,13 +36,8 @@ and also the path/filename of the generated tar file.`,
 		repository := args[0]
 
 		// TODO: project arg instead of repository
-		// TODO: default destination
+		// TODO: change logger?
 
-		// TODO: adding metadata to exported tars
-		// Maybe using ImageTag()
-
-		// TODO: change logger
-		// TODO: sync beetween registries
 		if err := docker.Export(repository, destinationPath, logger); err != nil {
 			return err
 		}
