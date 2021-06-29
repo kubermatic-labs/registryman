@@ -82,3 +82,22 @@ func Import(source, destination string, logger logr.Logger) error {
 
 	return nil
 }
+
+func Sync(sourceRepo, destinationRepo string, logger logr.Logger) error {
+	logger.Info("syncing images started")
+	err := syncImages(&transferData{
+		sourcePath:           sourceRepo,
+		destinationPath:      destinationRepo,
+		sourceCtx:            dockerCtx,
+		destinationCtx:       dockerCtx,
+		sourceTransport:      docker.Transport.Name(),
+		destinationTransport: docker.Transport.Name(),
+		scoped:               false,
+	})
+
+	if err != nil {
+		return fmt.Errorf("syncing images failed: %w", err)
+	}
+
+	return nil
+}

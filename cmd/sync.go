@@ -22,47 +22,41 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var destinationPath string
+// syncCmd represents the sync command
+var syncCmd = &cobra.Command{
+	Use:   "sync",
+	Short: "A brief description of your command",
+	Long: `A longer description that spans multiple lines and likely contains examples
+and usage of using your command. For example:
 
-// exportCmd represents the export command
-var exportCmd = &cobra.Command{
-	Use:   "export",
-	Short: "It saves the given repository in tar format",
-	Long: `The export command takes two arguments, the repository to be saved
-and also the path/filename of the generated tar file.`,
-	Args: cobra.ExactArgs(1),
+Cobra is a CLI library for Go that empowers applications.
+This application is a tool to generate the needed files
+to quickly create a Cobra application.`,
+	Args: cobra.ExactArgs(2),
 	RunE: func(cmd *cobra.Command, args []string) error {
-		fmt.Println("export called")
-		repository := args[0]
+		fmt.Println("sync called")
+		sourceRepo := args[0]
+		destinationRepo := args[1]
 
-		// TODO: project arg instead of repository
-		// TODO: default destination
-
-		// TODO: adding metadata to exported tars
-		// Maybe using ImageTag()
-
-		// TODO: change logger
-		// TODO: sync beetween registries
-		if err := docker.Export(repository, destinationPath, logger); err != nil {
+		if err := docker.Sync(sourceRepo, destinationRepo, logger); err != nil {
 			return err
 		}
 
-		logger.Info("exporting finished", "result path", destinationPath)
+		logger.Info("syncing finished", "destination repo", destinationRepo)
 		return nil
 	},
 }
 
 func init() {
-	rootCmd.AddCommand(exportCmd)
+	rootCmd.AddCommand(syncCmd)
 
 	// Here you will define your flags and configuration settings.
 
 	// Cobra supports Persistent Flags which will work for this command
 	// and all subcommands, e.g.:
-	// exportCmd.PersistentFlags().String("foo", "", "A help for foo")
-	exportCmd.PersistentFlags().StringVarP(&destinationPath, "output", "o", "./exported-registry", "The path for the saved repositories")
+	// syncCmd.PersistentFlags().String("foo", "", "A help for foo")
 
 	// Cobra supports local flags which will only run when this command
 	// is called directly, e.g.:
-	// exportCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	// syncCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 }
