@@ -118,7 +118,7 @@ command. Similarly to apply, you have to specify the directory where the YAML
 files describing the registries reside.
 
 ```bash
-$ registryman state <path-to-configuration-dir>
+$ registryman status <path-to-configuration-dir>
 ```
 
 ### Generating the Swagger API

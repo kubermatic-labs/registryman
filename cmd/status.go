@@ -31,6 +31,7 @@ var statusCmd = &cobra.Command{
 	Use:   "status",
 	Short: "Get registry status information",
 	Long:  `Get registry status information`,
+	Args:  cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		config.SetLogger(logger)
 		logger.Info("reading config files", "dir", args[0])
