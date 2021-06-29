@@ -1,7 +1,7 @@
 apiVersion: registryman.kubermatic.com/v1alpha1
 kind: Project
 metadata:
-  name: ubuntu
+  name: project
 spec:
   type: Global
   members:
@@ -9,6 +9,6 @@ spec:
     role: Maintainer
   - name: beta
     role: Developer
-  - name: ci-robot
-    type: Robot
-    role: PushOnly
+  - name: developers
+    type: Group
+    role: Developer

@@ -1,9 +1,11 @@
 apiVersion: registryman.kubermatic.com/v1alpha1
 kind: Project
 metadata:
-  name: ubuntu
+  name: node
 spec:
-  type: Global
+  type: Local
+  localRegistries:
+  - local
   members:
   - name: alpha
     role: Maintainer
@@ -12,3 +14,4 @@ spec:
   - name: ci-robot
     type: Robot
     role: PushOnly
+  scanner: non-existing
