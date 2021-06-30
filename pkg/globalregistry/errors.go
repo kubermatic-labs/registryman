@@ -32,4 +32,8 @@ var (
 	// ErrAlreadyExists is an error value that indicates that the resource
 	// to be created exists already.
 	ErrAlreadyExists error = errors.New("already exists")
+
+	// ErrUnauthorized is an error value that indicates that the API call
+	// failed due to the API user is not authorized.
+	ErrUnauthorized error = errors.New("unauthorized")
 )
