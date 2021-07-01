@@ -99,6 +99,9 @@ func (p *projectAPI) GetByName(name string) (globalregistry.Project, error) {
 }
 
 func (p *projectAPI) List() ([]globalregistry.Project, error) {
+	p.reg.logger.V(1).Info("listing projects",
+		"registry", p.reg.GetName(),
+	)
 	url := *p.reg.parsedUrl
 	url.Path = path
 	req, err := http.NewRequest(http.MethodGet, url.String(), nil)
@@ -106,7 +109,6 @@ func (p *projectAPI) List() ([]globalregistry.Project, error) {
 		return nil, err
 	}
 
-	// p.registry.AddBasicAuth(req)
 	req.SetBasicAuth(p.reg.GetUsername(), p.reg.GetPassword())
 
 	resp, err := p.reg.do(req)

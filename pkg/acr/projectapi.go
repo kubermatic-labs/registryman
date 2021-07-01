@@ -82,7 +82,12 @@ func (s *registry) do(req *http.Request) (*http.Response, error) {
 	}
 	resp.Body = buf
 
-	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
+	switch {
+	case resp.StatusCode == 401:
+		// Unauthorized
+		return nil, globalregistry.ErrUnauthorized
+	case resp.StatusCode < 200 || resp.StatusCode >= 300:
+		// Any other error code
 		s.logger.V(-1).Info("HTTP response status code is not OK",
 			"status-code", resp.StatusCode,
 			"resp-body-size", n,
