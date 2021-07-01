@@ -11,4 +11,4 @@ spec:
     role: Maintainer
   - name: beta
     role: Developer
-  scanner: anchore-project
+  scanner: anchore-scanner
