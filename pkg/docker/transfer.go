@@ -34,6 +34,7 @@ type transferData struct {
 	scoped               bool
 }
 
+// os-images -> "harbor-1.lab.kubermatic.io/os-images/photon"
 func Export(source, destination string, logger logr.Logger) error {
 	logger.Info("exporting images started")
 

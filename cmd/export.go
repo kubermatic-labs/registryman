@@ -18,7 +18,9 @@ package cmd
 import (
 	"fmt"
 
+	"github.com/kubermatic-labs/registryman/pkg/config"
 	"github.com/kubermatic-labs/registryman/pkg/docker"
+	"github.com/kubermatic-labs/registryman/pkg/globalregistry/reconciler"
 	"github.com/spf13/cobra"
 )
 
@@ -30,19 +32,45 @@ var exportCmd = &cobra.Command{
 	Short: "It saves the given repository in tar format",
 	Long: `The export command takes two arguments, the repository to be saved
 and also the path/filename of the generated tar file.`,
-	Args: cobra.ExactArgs(1),
+	Args: cobra.ExactArgs(2),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		fmt.Println("export called")
-		repository := args[0]
-
+		projectName := args[0]
+		configDir := args[1]
 		// TODO: project arg instead of repository
 		// TODO: change logger?
 
-		if err := docker.Export(repository, destinationPath, logger); err != nil {
+		logger.Info("reading config files", "dir", configDir)
+		config.SetLogger(logger)
+		manifests, err := config.ReadManifests(configDir)
+		if err != nil {
 			return err
 		}
 
-		logger.Info("exporting finished", "result path", destinationPath)
+		expectedRegistries := manifests.ExpectedProvider().GetRegistries()
+		for _, expectedRegistry := range expectedRegistries {
+			logger.Info("inspecting registry", "registry_name", expectedRegistry.GetName())
+			regStatusExpected, err := reconciler.GetRegistryStatus(expectedRegistry)
+			if err != nil {
+				return err
+			}
+			for _, project := range regStatusExpected.Projects {
+				if project.Name == projectName {
+					pName, err := manifests.ApiProvider().ProjectRepoName(project.Name)
+					if err != nil {
+						return err
+					}
+					err = docker.Export(pName, destinationPath, logger)
+					if err != nil {
+						return err
+					}
+					logger.Info("exporting project finished", "result path", destinationPath)
+				}
+			}
+			logger.V(1).Info("expected registry status acquired", "status", regStatusExpected)
+
+		}
+
 		return nil
 	},
 }

@@ -18,6 +18,7 @@ package config
 import (
 	"fmt"
 	"io"
+	"net/url"
 	"os"
 	"path/filepath"
 
@@ -250,6 +251,46 @@ func (apip *ApiProvider) GetScanners() []*api.Scanner {
 		scanners[i] = reg.(*api.Scanner)
 	}
 	return scanners
+}
+
+// ProjectRepoName generates a project-level repository URL for a given project.
+func (apip *ApiProvider) ProjectRepoName(projectName string) (string, error) {
+	generateProjectRepoName := func(reg *api.Registry) (string, error) {
+		url, err := url.Parse(reg.Spec.APIEndpoint)
+		if err != nil {
+			return "", err
+		}
+		url.Path = projectName
+		return fmt.Sprintf("%s/%s", url.Host, url.Path), nil
+	}
+
+	projects := apip.GetProjects()
+	registries := apip.GetRegistries()
+	for _, project := range projects {
+		if project.GetName() == projectName {
+			switch project.Spec.Type {
+			case api.GlobalProjectType:
+				for _, registry := range registries {
+					if registry.Spec.Role == "GlobalHub" {
+						return generateProjectRepoName(registry)
+					}
+				}
+			case api.LocalProjectType:
+				if len(project.Spec.LocalRegistries) == 0 {
+					return "", fmt.Errorf("local project with no local registries")
+				}
+				localRegistryName := project.Spec.LocalRegistries[0]
+				for _, registry := range registries {
+					if registry.Spec.Role == "Local" && registry.GetName() == localRegistryName {
+						return generateProjectRepoName(registry)
+					}
+				}
+			default:
+				panic(fmt.Sprintf("unhandled project type: %s", project.Spec.Type.String()))
+			}
+		}
+	}
+	return "", fmt.Errorf("project %s not found", projectName)
 }
 
 type ExpectedProvider ApiObjectStore
