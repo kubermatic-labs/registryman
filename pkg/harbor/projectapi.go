@@ -270,3 +270,23 @@ func (p *projectAPI) listProjectRepositories(proj *project) ([]*projectRepositor
 	}
 	return repositories, err
 }
+
+func (p *projectAPI) deleteProjectRepository(proj *project, repo *projectRepositoryRespBody) error {
+	url := *p.reg.parsedUrl
+	url.Path = fmt.Sprintf("%s/%s/repositories/%s", path, proj.Name, repo.Name)
+	req, err := http.NewRequest(http.MethodDelete, url.String(), nil)
+	if err != nil {
+		return err
+	}
+
+	req.SetBasicAuth(p.reg.GetUsername(), p.reg.GetPassword())
+
+	resp, err := p.reg.do(req)
+	if err != nil {
+		return err
+	}
+
+	defer resp.Body.Close()
+
+	return nil
+}

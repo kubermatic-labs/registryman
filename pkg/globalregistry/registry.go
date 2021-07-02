@@ -60,6 +60,7 @@ type RegistryConfig interface {
 	GetPassword() string
 	GetAPIEndpoint() string
 	GetName() string
+	GetOptions() RegistryOptions
 }
 
 // Registry is an abstraction over registries. It is an abstraction over the

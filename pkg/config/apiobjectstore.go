@@ -26,6 +26,7 @@ import (
 	_ "github.com/kubermatic-labs/registryman/pkg/acr"
 	api "github.com/kubermatic-labs/registryman/pkg/apis/registryman.kubermatic.com/v1alpha1"
 	"github.com/kubermatic-labs/registryman/pkg/config/registry"
+	"github.com/kubermatic-labs/registryman/pkg/globalregistry"
 	_ "github.com/kubermatic-labs/registryman/pkg/harbor"
 
 	corev1 "k8s.io/api/core/v1"
@@ -59,6 +60,7 @@ func init() {
 type ApiObjectStore struct {
 	store      map[schema.GroupVersionKind][]runtime.Object
 	serializer *json.Serializer
+	options    globalregistry.RegistryOptions
 	path       string
 }
 
@@ -91,9 +93,10 @@ func (aos *ApiObjectStore) RemoveManifest(filename string) error {
 
 // ReadManifests creates a new ApiObjectStore. It reads all files under path.
 // The files are deserialized and validated.
-func ReadManifests(path string) (*ApiObjectStore, error) {
+func ReadManifests(path string, options globalregistry.RegistryOptions) (*ApiObjectStore, error) {
 	aos := &ApiObjectStore{
-		path: path,
+		path:    path,
+		options: options,
 	}
 	aos.serializer = json.NewSerializerWithOptions(
 		json.DefaultMetaFactory,
@@ -414,6 +417,11 @@ func (aos *ApiObjectStore) GetScanners() []*api.Scanner {
 		scanners[i] = reg.(*api.Scanner)
 	}
 	return scanners
+}
+
+// GetCliOptions returns the ApiObjectStore related CLI options of an apply.
+func (apip *ApiObjectStore) GetCliOptions() globalregistry.RegistryOptions {
+	return (*ApiObjectStore)(apip).options
 }
 
 // ExpectedProvider is a database of the resources which implement the

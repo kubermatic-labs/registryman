@@ -34,7 +34,7 @@ var statusCmd = &cobra.Command{
 	RunE: func(cmd *cobra.Command, args []string) error {
 		config.SetLogger(logger)
 		logger.Info("reading config files", "dir", args[0])
-		manifests, err := config.ReadManifests(args[0])
+		manifests, err := config.ReadManifests(args[0], nil)
 
 		if err != nil {
 			return err

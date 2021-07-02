@@ -111,6 +111,30 @@ $ registryman apply <path-to-configuration-dir>
 1.6230652135111215e+09	info	removing project os-images	{"dry-run": true}
 ```
 
+With the `force-delete` flag, you can remove projects, even if they have repositories under them.
+In this case, they will be deleted before of the removal of the project.
+
+You can use `registryman.kubermatic.com/forceDelete` annotation in Registry resources
+with `true` or `false` value, to control this behaviour per repository.
+Annotations are always prioritized, CLI flags are used only when they are omitted.
+
+Annotation usage example:
+```yaml
+apiVersion: registryman.kubermatic.com/v1alpha1
+kind: Registry
+metadata:
+  name: global
+  annotations:
+    "registryman.kubermatic.com/forceDelete": "true"
+spec:
+  provider: harbor
+  role: GlobalHub
+  apiEndpoint: http://core.harbor-1.demo
+  username: admin
+  password: admin
+```
+
+
 ### Checking the actual registry state
 
 Registryman can generate the state of the managed registries using the `state`

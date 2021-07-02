@@ -28,6 +28,7 @@ import (
 )
 
 var dryRun bool
+var options *cliOptions
 
 // applyCmd represents the apply command
 var applyCmd = &cobra.Command{
@@ -45,7 +46,8 @@ to quickly create a Cobra application.`,
 
 		logger.Info("reading config files", "dir", args[0])
 		config.SetLogger(logger)
-		manifests, err := config.ReadManifests(args[0])
+
+		manifests, err := config.ReadManifests(args[0], options)
 
 		if err != nil {
 			return err
@@ -98,7 +100,9 @@ to quickly create a Cobra application.`,
 func init() {
 	rootCmd.AddCommand(applyCmd)
 
+	options = &cliOptions{}
 	applyCmd.PersistentFlags().BoolVar(&dryRun, "dry-run", false, "if specified, no operation will be performed")
+	applyCmd.PersistentFlags().BoolVar(&options.forceDelete, "force-delete", false, "if specified, projects will be deleted, even with repositories")
 	// Here you will define your flags and configuration settings.
 
 	// Cobra supports Persistent Flags which will work for this command

@@ -54,7 +54,7 @@ func (p *projectAPI) GetByName(name string) (globalregistry.Project, error) {
 			return project, nil
 		}
 	}
-	return nil, nil
+	return nil, fmt.Errorf("no project found: %w", globalregistry.ErrRecoverableError)
 }
 
 type bytesBody struct {
@@ -171,4 +171,21 @@ func (p *projectAPI) collectReposOfProject(projectName string, repoNames []strin
 		}
 	}
 	return reposOfProject
+}
+
+func (p *projectAPI) deleteRepoOfProject(proj *project, repoName string) error {
+	p.reg.logger.V(1).Info("deleting ACR repository",
+		"repositoryName", repoName,
+	)
+	url := *p.reg.parsedUrl
+	url.Path = fmt.Sprintf("/acr/v1/%s", repoName)
+	req, err := http.NewRequest(http.MethodDelete, url.String(), nil)
+	if err != nil {
+		return err
+	}
+
+	req.SetBasicAuth(p.reg.GetUsername(), p.reg.GetPassword())
+
+	_, err = p.reg.do(req)
+	return err
 }

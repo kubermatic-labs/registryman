@@ -46,8 +46,24 @@ func (p *project) Delete() error {
 	if err != nil {
 		return err
 	}
+
 	if len(repos) > 0 {
-		return fmt.Errorf("%s: repositories are present, please delete them before deleting the project, %w", p.Name, globalregistry.ErrRecoverableError)
+		switch opt := p.api.reg.GetOptions().(type) {
+		case globalregistry.CanForceDelete:
+			if f := opt.ForceDeleteProjects(); !f {
+				return fmt.Errorf("%s: repositories are present, please delete them before deleting the project, %w", p.Name, globalregistry.ErrRecoverableError)
+			}
+			for _, repo := range repos {
+				p.api.reg.logger.V(1).Info("deleting repository",
+					"repositoryName", repo.Name,
+				)
+				err = p.deleteRepository(repo)
+				if err != nil {
+					return err
+				}
+			}
+		}
+
 	}
 	return p.api.delete(p.id)
 }
@@ -246,6 +262,10 @@ func (p *project) AssignReplicationRule(remoteReg globalregistry.RegistryConfig,
 
 func (p *project) getRepositories() ([]*projectRepositoryRespBody, error) {
 	return p.api.listProjectRepositories(p)
+}
+
+func (p *project) deleteRepository(r *projectRepositoryRespBody) error {
+	return p.api.deleteProjectRepository(p, r)
 }
 
 func (p *project) GetReplicationRules(

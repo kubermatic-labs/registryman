@@ -1,5 +1,3 @@
-// +build tools
-
 /*
    Copyright 2021 The Kubermatic Kubernetes Platform contributors.
 
@@ -16,10 +14,17 @@
    limitations under the License.
 */
 
-// This package imports things required by build scripts, to force `go mod` to see them as dependencies
-package tools
+package cmd
 
-import (
-	_ "k8s.io/code-generator"
-	_ "sigs.k8s.io/controller-tools/cmd/controller-gen"
-)
+import "github.com/kubermatic-labs/registryman/pkg/globalregistry"
+
+type cliOptions struct {
+	forceDelete bool
+}
+
+var _ globalregistry.CanForceDelete = &cliOptions{}
+
+// ForceDeleteProjects returns with the value of the force-delete CLI option.
+func (o *cliOptions) ForceDeleteProjects() bool {
+	return o.forceDelete
+}

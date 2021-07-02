@@ -19,6 +19,8 @@
 package registry
 
 import (
+	"strconv"
+
 	"github.com/go-logr/logr"
 	api "github.com/kubermatic-labs/registryman/pkg/apis/registryman.kubermatic.com/v1alpha1"
 	"github.com/kubermatic-labs/registryman/pkg/globalregistry"
@@ -30,6 +32,7 @@ type ApiObjectProvider interface {
 	GetProjects() []*api.Project
 	GetRegistries() []*api.Registry
 	GetScanners() []*api.Scanner
+	GetCliOptions() globalregistry.RegistryOptions
 }
 
 // Registry type describes the API representation of a registry (i.e. the
@@ -85,6 +88,28 @@ func (reg *Registry) GetUsername() string {
 // GetPassword method implements the globalregistry.RegistryConfig interface.
 func (reg *Registry) GetPassword() string {
 	return reg.apiRegistry.Spec.Password
+}
+
+type registryOptions struct {
+	forceDelete bool
+}
+
+var _ globalregistry.CanForceDelete = &registryOptions{}
+
+// ForceDeleteProjects returns with the value of the force-delete option.
+func (o *registryOptions) ForceDeleteProjects() bool {
+	return o.forceDelete
+}
+
+// GetOptions method implements the globalregistry.RegistryConfig interface.
+func (reg *Registry) GetOptions() globalregistry.RegistryOptions {
+	if val, ok := reg.apiRegistry.Annotations["registryman.kubermatic.com/forceDelete"]; ok {
+		b, err := strconv.ParseBool(val)
+		if err != nil {
+			return &registryOptions{forceDelete: b}
+		}
+	}
+	return reg.apiProvider.GetCliOptions()
 }
 
 // ToReal method turns the (i.e. expected) Registry value into a
