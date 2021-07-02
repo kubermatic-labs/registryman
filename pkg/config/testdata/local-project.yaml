@@ -17,3 +17,4 @@ spec:
   - name: project-admins
     type: Group
     role: ProjectAdmin
+    dn: "this is a dn"

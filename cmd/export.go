@@ -42,7 +42,7 @@ and also the path/filename of the generated tar file.`,
 
 		logger.Info("reading config files", "dir", configDir)
 		config.SetLogger(logger)
-		manifests, err := config.ReadManifests(configDir)
+		manifests, err := config.ReadManifests(configDir, nil)
 		if err != nil {
 			return err
 		}
@@ -56,7 +56,7 @@ and also the path/filename of the generated tar file.`,
 			}
 			for _, project := range regStatusExpected.Projects {
 				if project.Name == projectName {
-					pName, err := manifests.ApiProvider().ProjectRepoName(project.Name)
+					pName, err := manifests.ProjectRepoName(project.Name)
 					if err != nil {
 						return err
 					}

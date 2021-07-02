@@ -1,0 +1,14 @@
+apiVersion: registryman.kubermatic.com/v1alpha1
+kind: Project
+metadata:
+  name: local-project
+spec:
+  type: Local
+  localRegistries:
+  - local-reg
+  members:
+  - name: alpha
+    role: Maintainer
+  - name: beta
+    role: Developer
+  scanner: anchore-scanner

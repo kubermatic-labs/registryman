@@ -27,27 +27,27 @@ var _ = Describe("ProjectRepoName", func() {
 	var manifests *config.ApiObjectStore
 	BeforeEach(func() {
 		var err error
-		manifests, err = config.ReadManifests("testdata/test_projectreponame")
+		manifests, err = config.ReadManifests("testdata/test_projectreponame", nil)
 		Expect(err).ToNot(HaveOccurred())
 		Expect(manifests).NotTo(BeNil())
 	})
 
 	It("throws an error for a non-existing project name", func() {
-		projectRepoName, err := manifests.ApiProvider().ProjectRepoName("non-existing")
+		projectRepoName, err := manifests.ProjectRepoName("non-existing")
 		Expect(err).Should(MatchError("project non-existing not found"))
 		Expect(projectRepoName).To(Equal(""))
 	})
 
 	It("can generate the correct project repo name for a global project with a global registry", func() {
-		projectRepoName, err := manifests.ApiProvider().ProjectRepoName("global")
+		projectRepoName, err := manifests.ProjectRepoName("global")
 		Expect(err).ToNot(HaveOccurred())
-		Expect(projectRepoName).To(Equal("http://core.global.demo/global"))
+		Expect(projectRepoName).To(Equal("core.global.demo/global"))
 	})
 
 	It("can generate the correct project repo name for a local project with a global registry", func() {
-		projectRepoName, err := manifests.ApiProvider().ProjectRepoName("local")
+		projectRepoName, err := manifests.ProjectRepoName("local")
 		Expect(err).ToNot(HaveOccurred())
-		Expect(projectRepoName).To(Equal("http://core.local.demo/local"))
+		Expect(projectRepoName).To(Equal("core.local.demo/local"))
 	})
 
 })

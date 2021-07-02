@@ -5,7 +5,7 @@
    you may not use this file except in compliance with the License.
    You may obtain a copy of the License at
 
-http://www.apache.org/licenses/LICENSE-2.0
+   http://www.apache.org/licenses/LICENSE-2.0
 
    Unless required by applicable law or agreed to in writing, software
    distributed under the License is distributed on an "AS IS" BASIS,
@@ -13,10 +13,14 @@ http://www.apache.org/licenses/LICENSE-2.0
    See the License for the specific language governing permissions and
    limitations under the License.
 */
+
 package harbor
 
 import (
+	"bytes"
+	"encoding/json"
 	"fmt"
+	"net/http"
 	"strings"
 
 	"github.com/kubermatic-labs/registryman/pkg/globalregistry"
@@ -42,8 +46,24 @@ func (p *project) Delete() error {
 	if err != nil {
 		return err
 	}
+
 	if len(repos) > 0 {
-		return fmt.Errorf("%s: repositories are present, please delete them before deleting the project, %w", p.Name, globalregistry.RecoverableError)
+		switch opt := p.api.reg.GetOptions().(type) {
+		case globalregistry.CanForceDelete:
+			if f := opt.ForceDeleteProjects(); !f {
+				return fmt.Errorf("%s: repositories are present, please delete them before deleting the project, %w", p.Name, globalregistry.ErrRecoverableError)
+			}
+			for _, repo := range repos {
+				p.api.reg.logger.V(1).Info("deleting repository",
+					"repositoryName", repo.Name,
+				)
+				err = p.deleteRepository(repo)
+				if err != nil {
+					return err
+				}
+			}
+		}
+
 	}
 	return p.api.delete(p.id)
 }
@@ -240,8 +260,12 @@ func (p *project) AssignReplicationRule(remoteReg globalregistry.RegistryConfig,
 	return p.api.reg.ReplicationAPI().(*replicationAPI).create(p, remoteReg, trigger, direction)
 }
 
-func (p *project) getRepositories() ([]globalregistry.Repository, error) {
+func (p *project) getRepositories() ([]*projectRepositoryRespBody, error) {
 	return p.api.listProjectRepositories(p)
+}
+
+func (p *project) deleteRepository(r *projectRepositoryRespBody) error {
+	return p.api.deleteProjectRepository(p, r)
 }
 
 func (p *project) GetReplicationRules(
@@ -312,4 +336,51 @@ func (p *project) UnassignScanner(targetScanner globalregistry.Scanner) error {
 	}
 
 	return p.AssignScanner(defaultScanner)
+}
+
+type projectStatusQuotaUsed struct {
+	Storage int `json:"storage"`
+}
+type projectStatusQuota struct {
+	Used projectStatusQuotaUsed `json:"used"`
+}
+
+type projectStatusResponse struct {
+	Quota projectStatusQuota `json:"quota"`
+}
+
+// GetUsedStorage implements the globalregistry.Project interface.
+func (p *project) GetUsedStorage() (int, error) {
+	p.api.reg.logger.V(1).Info("getting storage usage of a project",
+		"projectName", p.Name,
+	)
+	url := *p.api.reg.parsedUrl
+	url.Path = fmt.Sprintf("/api/v2.0/projects/%d/summary", p.id)
+	req, err := http.NewRequest(http.MethodGet, url.String(), nil)
+	if err != nil {
+		return -1, err
+	}
+
+	req.SetBasicAuth(p.api.reg.GetUsername(), p.api.reg.GetPassword())
+
+	resp, err := p.api.reg.do(req)
+	if err != nil {
+		return -1, err
+	}
+
+	defer resp.Body.Close()
+
+	parsedResponse := &projectStatusResponse{}
+
+	err = json.NewDecoder(resp.Body).Decode(&parsedResponse)
+	if err != nil {
+		p.api.reg.logger.Error(err, "json decoding failed")
+		b := bytes.NewBuffer(nil)
+		_, err := b.ReadFrom(resp.Body)
+		if err != nil {
+			panic(err)
+		}
+		p.api.reg.logger.Info(b.String())
+	}
+	return parsedResponse.Quota.Used.Storage, nil
 }

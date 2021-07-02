@@ -5,7 +5,7 @@
    you may not use this file except in compliance with the License.
    You may obtain a copy of the License at
 
-http://www.apache.org/licenses/LICENSE-2.0
+   http://www.apache.org/licenses/LICENSE-2.0
 
    Unless required by applicable law or agreed to in writing, software
    distributed under the License is distributed on an "AS IS" BASIS,
@@ -13,6 +13,7 @@ http://www.apache.org/licenses/LICENSE-2.0
    See the License for the specific language governing permissions and
    limitations under the License.
 */
+
 package config_test
 
 import (
@@ -23,15 +24,20 @@ import (
 
 var _ = Describe("Configreader", func() {
 	It("fails for invalid path", func() {
-		m, err := config.ReadManifests("nonexisting")
+		m, err := config.ReadManifests("nonexisting", nil)
 		Expect(err).To(HaveOccurred())
 		Expect(m).To(BeNil())
 	})
 	It("gets the correct values for api/testdata", func() {
-		m, err := config.ReadManifests("testdata")
+		m, err := config.ReadManifests("testdata", nil)
 		Expect(err).ToNot(HaveOccurred())
 		Expect(m).ToNot(BeNil())
 		registry := m.ExpectedProvider().GetRegistries()
 		Expect(len(registry)).To(Equal(2))
+	})
+	It("reads the registries and projects even with other yamls present", func() {
+		m, err := config.ReadManifests("testdata/test_other_yamls", nil)
+		Expect(err).ToNot(HaveOccurred())
+		Expect(m).ToNot(BeNil())
 	})
 })

@@ -50,26 +50,26 @@ SCRIPT_ROOT=$(dirname "${BASH_SOURCE[0]}")/..
 echo "Generating CRDs"
 go run \
    "${SCRIPT_ROOT}"/vendor/sigs.k8s.io/controller-tools/cmd/controller-gen/main.go crd \
-   paths="$(realpath "${SCRIPT_ROOT}"/pkg/apis/globalregistry/v1alpha1)"               \
-   output:dir="${SCRIPT_ROOT}"/pkg/apis/globalregistry/v1alpha1
+   paths="$(realpath "${SCRIPT_ROOT}"/pkg/apis/registryman.kubermatic.com/v1alpha1)"               \
+   output:dir="${SCRIPT_ROOT}"/pkg/apis/registryman.kubermatic.com/v1alpha1
 
 echo "Generating deepcopy code"
 go run \
    "${SCRIPT_ROOT}/vendor/k8s.io/code-generator/cmd/deepcopy-gen/main.go"     \
-   -i github.com/kubermatic-labs/registryman/pkg/apis/globalregistry/v1alpha1 \
-   -p github.com/kubermatic-labs/registryman/pkg/apis/globalregistry/v1alpha1 \
+   -i github.com/kubermatic-labs/registryman/pkg/apis/registryman.kubermatic.com/v1alpha1 \
+   -p github.com/kubermatic-labs/registryman/pkg/apis/registryman.kubermatic.com/v1alpha1 \
    -h "${SCRIPT_ROOT}/hack/boilerplate.go.txt"
 
 echo "Generating register code"
 go run \
    "${SCRIPT_ROOT}"/vendor/k8s.io/code-generator/cmd/register-gen/main.go     \
-   -i github.com/kubermatic-labs/registryman/pkg/apis/globalregistry/v1alpha1 \
-   -p github.com/kubermatic-labs/registryman/pkg/apis/globalregistry/v1alpha1 \
+   -i github.com/kubermatic-labs/registryman/pkg/apis/registryman.kubermatic.com/v1alpha1 \
+   -p github.com/kubermatic-labs/registryman/pkg/apis/registryman.kubermatic.com/v1alpha1 \
    -h "${SCRIPT_ROOT}"/hack/boilerplate.go.txt
 
 echo "Generating OpenAPI"
 go run \
    "${SCRIPT_ROOT}"/vendor/k8s.io/code-generator/cmd/openapi-gen/main.go                                           \
-   -i github.com/kubermatic-labs/registryman/pkg/apis/globalregistry/v1alpha1,k8s.io/apimachinery/pkg/apis/meta/v1 \
-   -p github.com/kubermatic-labs/registryman/pkg/apis/globalregistry/v1alpha1                                      \
+   -i github.com/kubermatic-labs/registryman/pkg/apis/registryman.kubermatic.com/v1alpha1,k8s.io/apimachinery/pkg/apis/meta/v1 \
+   -p github.com/kubermatic-labs/registryman/pkg/apis/registryman.kubermatic.com/v1alpha1                                      \
    -h "${SCRIPT_ROOT}"/hack/boilerplate.go.txt

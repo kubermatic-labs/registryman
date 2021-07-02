@@ -5,7 +5,7 @@
    you may not use this file except in compliance with the License.
    You may obtain a copy of the License at
 
-http://www.apache.org/licenses/LICENSE-2.0
+   http://www.apache.org/licenses/LICENSE-2.0
 
    Unless required by applicable law or agreed to in writing, software
    distributed under the License is distributed on an "AS IS" BASIS,
@@ -13,6 +13,7 @@ http://www.apache.org/licenses/LICENSE-2.0
    See the License for the specific language governing permissions and
    limitations under the License.
 */
+
 package acr
 
 import (
@@ -26,25 +27,59 @@ type project struct {
 	api  *projectAPI
 }
 
+var _ globalregistry.Project = &project{}
+
 func (p *project) GetName() string {
 	return p.name
 }
 
+// Delete implements the globalregistry.Project interface. It succeeds of there
+// are no repos of the projects. Otherwise, it returns an error.
+//
 func (p *project) Delete() error {
-	return fmt.Errorf("project deletion on ACR is not implemented: %w", globalregistry.RecoverableError)
-	//	return p.api.delete(p.Name)
+	repoNames, err := p.api.getRepositories()
+	if err != nil {
+		return err
+	}
+	reposOfProject := p.api.collectReposOfProject(p.name, repoNames)
+	if len(reposOfProject) == 0 {
+		switch opt := p.api.reg.GetOptions().(type) {
+		case globalregistry.CanForceDelete:
+			if f := opt.ForceDeleteProjects(); !f {
+				return fmt.Errorf("%s: repositories are present, please delete them before deleting the project, %w", p.GetName(), globalregistry.ErrRecoverableError)
+			}
+			for _, repo := range repoNames {
+				p.api.reg.logger.V(1).Info("deleting repository",
+					"repositoryName", repoNames,
+				)
+				err = p.deleteRepository(repo)
+				if err != nil {
+					return err
+				}
+			}
+		}
+	}
+	return nil
 }
 
+// AssignMember implements the globalregistry.Project interface. Currently, it
+// is not implemented.
 func (p *project) AssignMember(member globalregistry.ProjectMember) (*globalregistry.ProjectMemberCredentials, error) {
-	return nil, fmt.Errorf("method ACR.AssignMember not implemented: %w", globalregistry.RecoverableError)
+	return nil, fmt.Errorf("cannot assign member to a project in ACR: %w",
+		globalregistry.ErrNotImplemented)
 }
 
+// UnassignMember implements the globalregistry.Project interface. Currently, it
+// is not implemented.
 func (p *project) UnassignMember(member globalregistry.ProjectMember) error {
-	return globalregistry.RecoverableError
+	return fmt.Errorf("cannot assign member to a project in ACR: %w",
+		globalregistry.ErrNotImplemented)
 }
 
+// AssignReplicationRule implements the globalregistry.Project interface.
+// Currently, it is not implemented.
 func (p *project) AssignReplicationRule(remoteReg globalregistry.RegistryConfig, trigger globalregistry.ReplicationTrigger, direction globalregistry.ReplicationDirection) (globalregistry.ReplicationRule, error) {
-	return nil, globalregistry.RecoverableError
+	return nil, fmt.Errorf("cannot assign the replication rule to a project in ACR: %w", globalregistry.ErrNotImplemented)
 }
 
 func (p *project) GetMembers() ([]globalregistry.ProjectMember, error) {
@@ -60,7 +95,7 @@ func (p *project) GetReplicationRules(
 }
 
 func (p *project) AssignScanner(s globalregistry.Scanner) error {
-	return fmt.Errorf("method ACR.AssignScanner not implemented: %w", globalregistry.RecoverableError)
+	return fmt.Errorf("method ACR.AssignScanner not implemented: %w", globalregistry.ErrRecoverableError)
 }
 
 func (p *project) GetScanner() (globalregistry.Scanner, error) {
@@ -68,5 +103,16 @@ func (p *project) GetScanner() (globalregistry.Scanner, error) {
 }
 
 func (p *project) UnassignScanner(s globalregistry.Scanner) error {
-	return fmt.Errorf("method ACR.UnassignScanner not implemented: %w", globalregistry.RecoverableError)
+	return fmt.Errorf("method ACR.UnassignScanner not implemented: %w", globalregistry.ErrRecoverableError)
+}
+
+// GetUsedStorage implements the globalregistry.Project interface. Currently, it
+// is not implemented.
+func (p *project) GetUsedStorage() (int, error) {
+	return -1, fmt.Errorf("cannot get used storage of a project in ACR: %w",
+		globalregistry.ErrNotImplemented)
+}
+
+func (p *project) deleteRepository(repoName string) error {
+	return p.api.deleteRepoOfProject(p, repoName)
 }

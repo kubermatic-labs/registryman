@@ -1,0 +1,6 @@
+apiVersion: registryman.kubermatic.com/v1alpha1
+kind: Scanner
+metadata:
+  name: anchore-scanner
+spec:
+  url: http://harbor-scanner-anchore.anchore:8080

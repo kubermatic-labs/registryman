@@ -5,7 +5,7 @@
    you may not use this file except in compliance with the License.
    You may obtain a copy of the License at
 
-http://www.apache.org/licenses/LICENSE-2.0
+   http://www.apache.org/licenses/LICENSE-2.0
 
    Unless required by applicable law or agreed to in writing, software
    distributed under the License is distributed on an "AS IS" BASIS,
@@ -13,6 +13,7 @@ http://www.apache.org/licenses/LICENSE-2.0
    See the License for the specific language governing permissions and
    limitations under the License.
 */
+
 package cmd
 
 import (
@@ -27,6 +28,7 @@ import (
 )
 
 var dryRun bool
+var options *cliOptions
 
 // applyCmd represents the apply command
 var applyCmd = &cobra.Command{
@@ -44,13 +46,15 @@ to quickly create a Cobra application.`,
 
 		logger.Info("reading config files", "dir", args[0])
 		config.SetLogger(logger)
-		manifests, err := config.ReadManifests(args[0])
+
+		manifests, err := config.ReadManifests(args[0], options)
 
 		if err != nil {
 			return err
 		}
 
 		expectedRegistries := manifests.ExpectedProvider().GetRegistries()
+		sideeffectCtx := context.WithValue(context.Background(), reconciler.SideEffectManifestManipulator, manifests)
 		for _, expectedRegistry := range expectedRegistries {
 			logger.Info("inspecting registry", "registry_name", expectedRegistry.GetName())
 			regStatusExpected, err := reconciler.GetRegistryStatus(expectedRegistry)
@@ -74,15 +78,13 @@ to quickly create a Cobra application.`,
 					logger.Info(action.String())
 					sideEffect, err := action.Perform(actualRegistry)
 					if err != nil {
-						if errors.Is(err, globalregistry.RecoverableError) {
+						if errors.Is(err, globalregistry.ErrRecoverableError) {
 							logger.V(-1).Info(err.Error())
 						} else {
 							return err
 						}
 					}
-					ctx := context.WithValue(context.Background(), reconciler.SideEffectPath, args[0])
-					ctx = context.WithValue(ctx, reconciler.SideEffectSerializer, manifests.GetSerializer())
-					if err = sideEffect.Perform(ctx); err != nil {
+					if err = sideEffect.Perform(sideeffectCtx); err != nil {
 						return err
 					}
 				} else {
@@ -98,7 +100,9 @@ to quickly create a Cobra application.`,
 func init() {
 	rootCmd.AddCommand(applyCmd)
 
+	options = &cliOptions{}
 	applyCmd.PersistentFlags().BoolVar(&dryRun, "dry-run", false, "if specified, no operation will be performed")
+	applyCmd.PersistentFlags().BoolVar(&options.forceDelete, "force-delete", false, "if specified, projects will be deleted, even with repositories")
 	// Here you will define your flags and configuration settings.
 
 	// Cobra supports Persistent Flags which will work for this command

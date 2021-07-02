@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: Secret
+metadata:
+  annotations:
+    globalregistry.org/project-name: os-images
+    globalregistry.org/registry-name: harbor-2
+  creationTimestamp: null
+  name: testrobot
+stringData:
+  .dockerconfigjson: '{"auths": {"https://core.harbor-2.demo": {"auth": "cm9ib3Qkb3MtaW1hZ2VzK3Rlc3Ryb2JvdDpjcmVkZW50aWFs"}}}'
+type: kubernetes.io/dockerconfigjson

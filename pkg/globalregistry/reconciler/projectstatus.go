@@ -5,7 +5,7 @@
    you may not use this file except in compliance with the License.
    You may obtain a copy of the License at
 
-http://www.apache.org/licenses/LICENSE-2.0
+   http://www.apache.org/licenses/LICENSE-2.0
 
    Unless required by applicable law or agreed to in writing, software
    distributed under the License is distributed on an "AS IS" BASIS,
@@ -13,20 +13,34 @@ http://www.apache.org/licenses/LICENSE-2.0
    See the License for the specific language governing permissions and
    limitations under the License.
 */
+
 package reconciler
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/kubermatic-labs/registryman/pkg/config"
 	"github.com/kubermatic-labs/registryman/pkg/globalregistry"
 )
 
+// ProjectStatus specifies the status of a registry project.
 type ProjectStatus struct {
-	Name             string
-	Members          []MemberStatus
-	ReplicationRules []ReplicationRuleStatus
-	ScannerStatus    ScannerStatus
+
+	// Name of the project.
+	Name string `json:"name"`
+
+	// Members of the project.
+	Members []MemberStatus `json:"members"`
+
+	// Replication rules of the project.
+	ReplicationRules []ReplicationRuleStatus `json:"replication-rules"`
+
+	// Storage used by the project in bytes.
+	StorageUsed int `json:"storage-used"`
+
+	// Scanner of the project.
+	ScannerStatus ScannerStatus `json:"scanner-status"`
 }
 
 type projectAddAction struct {
@@ -41,10 +55,12 @@ func (pa *projectAddAction) String() string {
 
 func (pa *projectAddAction) Perform(reg globalregistry.Registry) (SideEffect, error) {
 	_, err := reg.ProjectAPI().Create(pa.Name)
-	if err != nil {
+	switch {
+	case errors.Is(err, globalregistry.ErrNotImplemented):
+		return nilEffect, nil
+	default:
 		return nilEffect, err
 	}
-	return nilEffect, nil
 }
 
 type projectRemoveAction struct {
@@ -65,6 +81,9 @@ func (pa *projectRemoveAction) Perform(reg globalregistry.Registry) (SideEffect,
 	return nilEffect, project.Delete()
 }
 
+// CompareProjectStatuses compares the actual and expected status of the projects
+// of a registry. The function returns the actions that are needed to synchronize
+// the actual state to the expected state.
 func CompareProjectStatuses(store *config.ExpectedProvider, actual, expected []ProjectStatus) []Action {
 	same := make(map[string][2]ProjectStatus)
 	actualDiff := []ProjectStatus{}
@@ -109,7 +128,7 @@ ExpLoop:
 		}
 		// Then remove the project itself
 		actions = append(actions, &projectRemoveAction{
-			act,
+			ProjectStatus: act,
 		})
 	}
 

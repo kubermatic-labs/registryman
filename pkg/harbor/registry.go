@@ -5,7 +5,7 @@
    you may not use this file except in compliance with the License.
    You may obtain a copy of the License at
 
-http://www.apache.org/licenses/LICENSE-2.0
+   http://www.apache.org/licenses/LICENSE-2.0
 
    Unless required by applicable law or agreed to in writing, software
    distributed under the License is distributed on an "AS IS" BASIS,
@@ -13,6 +13,9 @@ http://www.apache.org/licenses/LICENSE-2.0
    See the License for the specific language governing permissions and
    limitations under the License.
 */
+
+// harbor package implements the globalregistry.Registry interface for the registry
+// provider Harbor.
 package harbor
 
 import (
@@ -91,10 +94,10 @@ func (bb bytesBody) Close() error { return nil }
 // it prints extra information in case of unexpected response codes. The
 // response body is replaced with a bytesBody which provides the bytes.Buffer
 // (e.g. String()) methods too.
-func (s *registry) do(req *http.Request) (*http.Response, error) {
-	resp, err := s.Client.Do(req)
+func (r *registry) do(req *http.Request) (*http.Response, error) {
+	resp, err := r.Client.Do(req)
 	if err != nil {
-		s.logger.Error(err, "http.Client cannot Do",
+		r.logger.Error(err, "http.Client cannot Do",
 			"req-url", req.URL,
 		)
 		return nil, err
@@ -105,18 +108,26 @@ func (s *registry) do(req *http.Request) (*http.Response, error) {
 	}
 	n, err := buf.ReadFrom(resp.Body)
 	if err != nil {
-		s.logger.Error(err, "cannot read HTTP response body")
+		r.logger.Error(err, "cannot read HTTP response body")
 		return nil, err
 	}
 	resp.Body = buf
 
-	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
-		s.logger.V(1).Info("HTTP response status code is not OK",
+	switch {
+	case resp.StatusCode == 401:
+		// Unauthorized
+		//
+		// Harbor sometimes misses to return 401 status code. It tends
+		// to respond 200 even when the credentials are incorrect.
+		return nil, globalregistry.ErrUnauthorized
+	case resp.StatusCode < 200 || resp.StatusCode >= 300:
+		// Any other error code
+		r.logger.V(-1).Info("HTTP response status code is not OK",
 			"status-code", resp.StatusCode,
 			"resp-body-size", n,
 			"req-url", req.URL,
 		)
-		s.logger.V(1).Info(buf.String())
+		r.logger.V(1).Info(buf.String())
 	}
 	return resp, nil
 }

@@ -1,0 +1,14 @@
+apiVersion: registryman.kubermatic.com/v1alpha1
+kind: Project
+metadata:
+  name: project
+spec:
+  type: Global
+  members:
+  - name: alpha
+    role: Maintainer
+  - name: beta
+    role: Developer
+  - name: developers
+    type: Group
+    role: Developer

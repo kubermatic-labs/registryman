@@ -6,7 +6,6 @@ on:
       - 'release-*'
       - 'master'
       - 'main'
-      - 'basic-ci'
     tags:
       - 'v*'
 env:
