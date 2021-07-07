@@ -81,14 +81,14 @@ path/filename of the generated tar file can also be overwritten with the '-o' fl
 						}
 					}
 					logger.Info("exporting project finished", "result path", destinationPath)
-					break
+					return nil
 				}
 			}
 			logger.Info("searching registry for project finished", "registry", expectedRegistry.GetName())
 
 		}
 
-		return nil
+		return fmt.Errorf("project with name %s not found", projectName)
 	},
 }
 
