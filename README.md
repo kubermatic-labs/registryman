@@ -1,3 +1,5 @@
+[![Go Reference](https://pkg.go.dev/badge/github.com/kubermatic-labs/registryman.svg)](https://pkg.go.dev/github.com/kubermatic-labs/registryman) ![CI](https://github.com/kubermatic-labs/registryman/actions/workflows/ci.yaml/badge.svg)
+
 -----
 # Registryman
 
@@ -118,7 +120,7 @@ command. Similarly to apply, you have to specify the directory where the YAML
 files describing the registries reside.
 
 ```bash
-$ registryman state <path-to-configuration-dir>
+$ registryman status <path-to-configuration-dir>
 ```
 
 ### Generating the Swagger API

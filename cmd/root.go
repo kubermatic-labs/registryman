@@ -35,12 +35,9 @@ var cfgFile string
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
-	Use:   "kubermatic-harbor",
-	Short: "Harbor API testing",
-	Long:  `Test the Harbor API`,
-	// Uncomment the following line if your bare application
-	// has an action associated with it:
-	// Run: func(cmd *cobra.Command, args []string) { },
+	Use:   "registryman",
+	Short: "RegistryMan global registry manager",
+	Long:  `RegistryMan global registry manager`,
 }
 
 // Execute adds all child commands to the root command and sets flags appropriately.
@@ -74,9 +71,9 @@ func initConfig() {
 		home, err := homedir.Dir()
 		cobra.CheckErr(err)
 
-		// Search config in home directory with name ".kubermatic-harbor" (without extension).
+		// Search config in home directory with name ".registryman" (without extension).
 		viper.AddConfigPath(home)
-		viper.SetConfigName(".kubermatic-harbor")
+		viper.SetConfigName(".registryman")
 	}
 
 	viper.AutomaticEnv() // read in environment variables that match
