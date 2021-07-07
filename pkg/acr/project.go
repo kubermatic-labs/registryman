@@ -106,6 +106,10 @@ func (p *project) UnassignScanner(s globalregistry.Scanner) error {
 	return fmt.Errorf("method ACR.UnassignScanner not implemented: %w", globalregistry.ErrRecoverableError)
 }
 
+func (p *project) GetRepositories() ([]string, error) {
+	return p.api.getRepositories()
+}
+
 // GetUsedStorage implements the globalregistry.Project interface. Currently, it
 // is not implemented.
 func (p *project) GetUsedStorage() (int, error) {

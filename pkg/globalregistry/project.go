@@ -84,6 +84,9 @@ type Project interface {
 	// UnassignScanner removes a scanner from the project.
 	UnassignScanner(Scanner) error
 
+	// GetRepositories returns the repositories found in the project
+	GetRepositories() ([]string, error)
+
 	Storage
 }
 

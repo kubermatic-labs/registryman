@@ -20,7 +20,6 @@ import (
 
 	"github.com/kubermatic-labs/registryman/pkg/config"
 	"github.com/kubermatic-labs/registryman/pkg/docker"
-	"github.com/kubermatic-labs/registryman/pkg/globalregistry/reconciler"
 	"github.com/spf13/cobra"
 )
 
@@ -29,9 +28,10 @@ var destinationPath string
 // exportCmd represents the export command
 var exportCmd = &cobra.Command{
 	Use:   "export",
-	Short: "It saves the given repository in tar format",
-	Long: `The export command takes two arguments, the repository to be saved
-and also the path/filename of the generated tar file.`,
+	Short: "It creates a backup for a given project in tar format",
+	Long: `The export command takes two arguments, the name of the project to be saved
+and the path for the configuration directory describing the registry. The default 
+path/filename of the generated tar file can also be overwritten with the '-o' flag.`,
 	Args: cobra.ExactArgs(2),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		fmt.Println("export called")
@@ -50,24 +50,41 @@ and also the path/filename of the generated tar file.`,
 		expectedRegistries := manifests.ExpectedProvider().GetRegistries()
 		for _, expectedRegistry := range expectedRegistries {
 			logger.Info("inspecting registry", "registry_name", expectedRegistry.GetName())
-			regStatusExpected, err := reconciler.GetRegistryStatus(expectedRegistry)
+
+			actualRegistry, err := expectedRegistry.ToReal(logger)
 			if err != nil {
 				return err
 			}
-			for _, project := range regStatusExpected.Projects {
-				if project.Name == projectName {
-					pName, err := manifests.ProjectRepoName(project.Name)
+
+			actualProjectList, err := actualRegistry.ProjectAPI().List()
+
+			if err != nil {
+				return err
+			}
+			for _, project := range actualProjectList {
+				if project.GetName() == projectName {
+					projectFullPath, err := manifests.ProjectRepoName(project.GetName())
+					fmt.Println(projectFullPath)
 					if err != nil {
 						return err
 					}
-					err = docker.Export(pName, destinationPath, logger)
+					repositories, err := project.GetRepositories()
 					if err != nil {
 						return err
+					}
+					for _, repoName := range repositories {
+						repoFullPath := fmt.Sprintf("%s/%s", projectFullPath, repoName)
+						logger.Info("exporting repository", "path", repoFullPath)
+						err = docker.Export(repoFullPath, destinationPath, logger)
+						if err != nil {
+							return err
+						}
 					}
 					logger.Info("exporting project finished", "result path", destinationPath)
+					break
 				}
 			}
-			logger.V(1).Info("expected registry status acquired", "status", regStatusExpected)
+			logger.Info("searching registry for project finished", "registry", expectedRegistry.GetName())
 
 		}
 
