@@ -55,6 +55,7 @@ path/filename of the generated tar file can also be overwritten with the '-o' fl
 			if err != nil {
 				return err
 			}
+			transfer := docker.New(actualRegistry.GetUsername(), actualRegistry.GetPassword())
 
 			actualProjectList, err := actualRegistry.ProjectAPI().List()
 
@@ -75,7 +76,7 @@ path/filename of the generated tar file can also be overwritten with the '-o' fl
 					for _, repoName := range repositories {
 						repoFullPath := fmt.Sprintf("%s/%s", projectFullPath, repoName)
 						logger.Info("exporting repository", "path", repoFullPath)
-						err = docker.Export(repoFullPath, destinationPath, logger)
+						err = transfer.Export(repoFullPath, destinationPath, logger)
 						if err != nil {
 							return err
 						}

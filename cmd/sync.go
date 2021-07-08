@@ -18,7 +18,6 @@ package cmd
 import (
 	"fmt"
 
-	"github.com/kubermatic-labs/registryman/pkg/docker"
 	"github.com/spf13/cobra"
 )
 
@@ -35,14 +34,14 @@ to quickly create a Cobra application.`,
 	Args: cobra.ExactArgs(2),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		fmt.Println("sync called")
-		sourceRepo := args[0]
-		destinationRepo := args[1]
+		// sourceRepo := args[0]
+		// destinationRepo := args[1]
 
-		if err := docker.Sync(sourceRepo, destinationRepo, logger); err != nil {
-			return err
-		}
+		// if err := docker.Sync(sourceRepo, destinationRepo, logger); err != nil {
+		// 	return err
+		// }
 
-		logger.Info("syncing finished", "destination repo", destinationRepo)
+		// logger.Info("syncing finished", "destination repo", destinationRepo)
 		return nil
 	},
 }

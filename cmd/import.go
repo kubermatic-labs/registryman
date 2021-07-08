@@ -18,7 +18,6 @@ package cmd
 import (
 	"fmt"
 
-	"github.com/kubermatic-labs/registryman/pkg/docker"
 	"github.com/spf13/cobra"
 )
 
@@ -33,14 +32,14 @@ the URL of the registry, where the repository will be pushed.
 	Args: cobra.ExactArgs(2),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		fmt.Println("import called")
-		path := args[0]
-		destinationRepo := args[1]
+		// path := args[0]
+		// destinationRepo := args[1]
 
-		if err := docker.Import(path, destinationRepo, logger); err != nil {
-			return err
-		}
+		// if err := docker.Import(path, destinationRepo, logger); err != nil {
+		// 	return err
+		// }
 
-		logger.Info("importing finished", "result path", destinationRepo)
+		// logger.Info("importing finished", "result path", destinationRepo)
 		return nil
 	},
 }
