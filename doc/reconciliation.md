@@ -8,7 +8,7 @@ and then compares it to the expected state.
 
 The architecture or registryman is shown below.
 
-![architecture.svg](./architecture.svg "Architecture")
+![architecture.svg](./img/architecture.svg "Architecture")
 
 ### The main packages
 
