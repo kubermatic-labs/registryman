@@ -62,6 +62,8 @@ project.
 Registry and Project resources are declaratively configured as separate files.
 For examples, see the `examples` directory.
 
+For more details, feel free to review the content of the [Documentaion folder](doc/README.md).
+
 ## Usage
 
 ### Applying the configuration
