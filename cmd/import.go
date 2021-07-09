@@ -17,7 +17,11 @@ package cmd
 
 import (
 	"fmt"
+	"path"
+	"strings"
 
+	"github.com/kubermatic-labs/registryman/pkg/config"
+	"github.com/kubermatic-labs/registryman/pkg/docker"
 	"github.com/spf13/cobra"
 )
 
@@ -32,15 +36,37 @@ the URL of the registry, where the repository will be pushed.
 	Args: cobra.ExactArgs(2),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		fmt.Println("import called")
-		// path := args[0]
-		// destinationRepo := args[1]
+		importPath := args[0]
+		configDir := args[1]
 
-		// if err := docker.Import(path, destinationRepo, logger); err != nil {
-		// 	return err
-		// }
+		config.SetLogger(logger)
 
-		// logger.Info("importing finished", "result path", destinationRepo)
-		return nil
+		splitN := strings.SplitN(path.Clean(importPath), "/", -1)
+		destinationRepo := path.Join(splitN[len(splitN)-2], splitN[len(splitN)-1])
+
+		manifests, err := config.ReadManifests(configDir, nil)
+		if err != nil {
+			return err
+		}
+
+		expectedRegistries := manifests.ExpectedProvider().GetRegistries()
+		for _, expectedRegistry := range expectedRegistries {
+			logger.Info("inspecting registry", "registry_name", expectedRegistry.GetName())
+
+			actualRegistry, err := expectedRegistry.ToReal(logger)
+			if err != nil {
+				return err
+			}
+			transfer := docker.New(actualRegistry.GetUsername(), actualRegistry.GetPassword())
+
+			if err := transfer.Import(importPath, destinationRepo, logger); err != nil {
+				return err
+			}
+			logger.Info("importing project finished", "target registry", expectedRegistry.GetName())
+			return nil
+		}
+
+		return fmt.Errorf("importing repository on path %s failed", importPath)
 	},
 }
 

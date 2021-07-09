@@ -37,11 +37,10 @@ path/filename of the generated tar file can also be overwritten with the '-o' fl
 		fmt.Println("export called")
 		projectName := args[0]
 		configDir := args[1]
-		// TODO: project arg instead of repository
-		// TODO: change logger?
 
 		logger.Info("reading config files", "dir", configDir)
 		config.SetLogger(logger)
+
 		manifests, err := config.ReadManifests(configDir, nil)
 		if err != nil {
 			return err
@@ -55,8 +54,8 @@ path/filename of the generated tar file can also be overwritten with the '-o' fl
 			if err != nil {
 				return err
 			}
-			transfer := docker.New(actualRegistry.GetUsername(), actualRegistry.GetPassword())
 
+			transfer := docker.New(actualRegistry.GetUsername(), actualRegistry.GetPassword())
 			actualProjectList, err := actualRegistry.ProjectAPI().List()
 
 			if err != nil {
@@ -64,7 +63,7 @@ path/filename of the generated tar file can also be overwritten with the '-o' fl
 			}
 			for _, project := range actualProjectList {
 				if project.GetName() == projectName {
-					projectFullPath, err := manifests.ProjectRepoName(project.GetName())
+					projectFullPath, err := manifests.ProjectRepoName(projectName)
 					fmt.Println(projectFullPath)
 					if err != nil {
 						return err
@@ -86,7 +85,6 @@ path/filename of the generated tar file can also be overwritten with the '-o' fl
 				}
 			}
 			logger.Info("searching registry for project finished", "registry", expectedRegistry.GetName())
-
 		}
 
 		return fmt.Errorf("project with name %s not found", projectName)
