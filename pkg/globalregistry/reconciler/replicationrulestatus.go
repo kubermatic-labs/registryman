@@ -28,7 +28,7 @@ type ReplicationRuleStatus struct {
 
 	// RemoteRegistryName indicates the name of the remote registry which
 	// the current registry shall synchronize with.
-	RemoteRegistryName string `json:"name"`
+	RemoteRegistryName string `json:"remote-registry"`
 
 	// Trigger describes the event that shall trigger the replication.
 	Trigger globalregistry.ReplicationTrigger `json:"trigger"`
