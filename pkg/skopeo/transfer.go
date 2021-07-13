@@ -39,6 +39,7 @@ type transferData struct {
 	scoped               bool
 }
 
+// New creates a new transfer struct.
 func New(username, password string) *transfer {
 	return &transfer{
 		dockerCtx: &types.SystemContext{
@@ -51,7 +52,7 @@ func New(username, password string) *transfer {
 	}
 }
 
-// os-images -> "harbor-1.lab.kubermatic.io/os-images/photon"
+// Export exports Docker repositories from a source repository to a destination path.
 func (t *transfer) Export(source, destination string, logger logr.Logger) error {
 	logger.Info("exporting images started")
 
@@ -72,6 +73,7 @@ func (t *transfer) Export(source, destination string, logger logr.Logger) error 
 	return nil
 }
 
+// Import imports Docker repositories from a source path to a destination repository.
 func (t *transfer) Import(source, destination string, logger logr.Logger) error {
 	logger.Info("importing images started")
 
@@ -92,6 +94,7 @@ func (t *transfer) Import(source, destination string, logger logr.Logger) error 
 	return nil
 }
 
+// Sync synchronizes Docker repositories from a source repository to a destination repository.
 func (t *transfer) Sync(sourceRepo, destinationRepo string, logger logr.Logger) error {
 	logger.Info("syncing images started")
 	err := syncImages(&transferData{
