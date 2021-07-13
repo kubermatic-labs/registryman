@@ -420,35 +420,58 @@ func (aos *ApiObjectStore) GetScanners() []*api.Scanner {
 	return scanners
 }
 
-// ProjectRepoName generates a project-level repository URL for a given project.
-func (aos *ApiObjectStore) ProjectRepoName(projectName string) (string, error) {
-	generateProjectRepoName := func(reg *api.Registry) (string, error) {
-		url, err := url.Parse(reg.Spec.APIEndpoint)
-		if err != nil {
-			return "", err
-		}
-		return fmt.Sprintf("%s/%s", url.Host, projectName), nil
-	}
+// ProjectOfRegistry struct describes a connection between a globalregistry.Registry and globalregistry.Project object.
+type ProjectOfRegistry struct {
+	Registry globalregistry.Registry
+	Project  globalregistry.Project
+}
 
+// GenerateProjectRepoName generates a project-level repository URL for a given project.
+func (p *ProjectOfRegistry) GenerateProjectRepoName() (string, error) {
+	url, err := url.Parse(p.Registry.GetAPIEndpoint())
+	if err != nil {
+		return "", err
+	}
+	return fmt.Sprintf("%s/%s", url.Host, p.Project.GetName()), nil
+}
+
+func (aos *ApiObjectStore) newProject(reg *api.Registry, proj *api.Project) (*ProjectOfRegistry, error) {
+	realRegistry, err := registry.New(reg, aos).ToReal(logger)
+	if err != nil {
+		return nil, err
+	}
+	realProject, err := realRegistry.ProjectAPI().GetByName(proj.GetName())
+	if err != nil {
+		return nil, err
+	}
+	if realProject == nil {
+		return nil, fmt.Errorf("%v Project doesn't exists in %v Registry, actual state differs from the expected state",
+			proj.GetName(), realRegistry.GetAPIEndpoint())
+	}
+	return &ProjectOfRegistry{Registry: realRegistry, Project: realProject}, nil
+}
+
+// GetProjectByName returns a Project struct for a matching project name.
+func (aos *ApiObjectStore) GetProjectByName(projectName string) (*ProjectOfRegistry, error) {
 	projects := aos.GetProjects()
 	registries := aos.GetRegistries()
 	for _, project := range projects {
 		if project.GetName() == projectName {
 			switch project.Spec.Type {
 			case api.GlobalProjectType:
-				for _, registry := range registries {
-					if registry.Spec.Role == "GlobalHub" {
-						return generateProjectRepoName(registry)
+				for _, reg := range registries {
+					if reg.Spec.Role == "GlobalHub" {
+						return aos.newProject(reg, project)
 					}
 				}
 			case api.LocalProjectType:
 				if len(project.Spec.LocalRegistries) == 0 {
-					return "", fmt.Errorf("local project with no local registries")
+					return nil, fmt.Errorf("local project with no local registries")
 				}
 				localRegistryName := project.Spec.LocalRegistries[0]
-				for _, registry := range registries {
-					if registry.Spec.Role == "Local" && registry.GetName() == localRegistryName {
-						return generateProjectRepoName(registry)
+				for _, reg := range registries {
+					if reg.Spec.Role == "Local" && reg.GetName() == localRegistryName {
+						return aos.newProject(reg, project)
 					}
 				}
 			default:
@@ -456,7 +479,7 @@ func (aos *ApiObjectStore) ProjectRepoName(projectName string) (string, error) {
 			}
 		}
 	}
-	return "", fmt.Errorf("project %s not found", projectName)
+	return nil, fmt.Errorf("project %s not found", projectName)
 }
 
 // GetCliOptions returns the ApiObjectStore related CLI options of an apply.
