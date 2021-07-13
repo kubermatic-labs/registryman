@@ -472,7 +472,6 @@ func getImageTags(ctx context.Context, sysCtx *types.SystemContext, repoRef refe
 		// Some registries may decide to block the "list all tags" endpoint.
 		// Gracefully allow the sync to continue in this case.
 		logrus.Warnf("Registry disallows tag list retrieval: %s", err)
-		break
 	default:
 		return tags, errors.Wrapf(err, "Error determining repository tags for image %s", name)
 	}
