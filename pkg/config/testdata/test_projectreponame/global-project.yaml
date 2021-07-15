@@ -1,0 +1,7 @@
+apiVersion: registryman.kubermatic.com/v1alpha1
+kind: Project
+metadata:
+  name: global
+spec:
+  type: Global
+  members: []

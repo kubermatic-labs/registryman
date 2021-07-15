@@ -1,0 +1,9 @@
+apiVersion: registryman.kubermatic.com/v1alpha1
+kind: Project
+metadata:
+  name: local
+spec:
+  type: Local
+  localRegistries:
+    - local
+  members: []

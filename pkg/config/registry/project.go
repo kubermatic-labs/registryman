@@ -119,6 +119,10 @@ func (p *project) UnassignScanner(globalregistry.Scanner) error {
 	panic("config.registry.project.UnassignScanner() not implemented")
 }
 
+func (p *project) GetRepositories() ([]string, error) {
+	panic("config.registry.project.GetRepositories() not implemented")
+}
+
 // GetUsedStorage implements the globalregistry.Project interface. Currently, it
 // is not implemented.
 func (p *project) GetUsedStorage() (int, error) {

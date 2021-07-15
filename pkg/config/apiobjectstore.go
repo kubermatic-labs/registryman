@@ -19,6 +19,7 @@ package config
 import (
 	"fmt"
 	"io"
+	"net/url"
 	"os"
 	"path/filepath"
 	"strings"
@@ -419,9 +420,71 @@ func (aos *ApiObjectStore) GetScanners() []*api.Scanner {
 	return scanners
 }
 
+// ProjectOfRegistry struct describes a connection between a globalregistry.Registry and globalregistry.Project object.
+type ProjectOfRegistry struct {
+	Registry globalregistry.Registry
+	Project  globalregistry.Project
+}
+
+// GenerateProjectRepoName generates a project-level repository URL for a given project.
+func (p *ProjectOfRegistry) GenerateProjectRepoName() (string, error) {
+	url, err := url.Parse(p.Registry.GetAPIEndpoint())
+	if err != nil {
+		return "", err
+	}
+	return fmt.Sprintf("%s/%s", url.Host, p.Project.GetName()), nil
+}
+
+func (aos *ApiObjectStore) newProject(reg *api.Registry, proj *api.Project) (*ProjectOfRegistry, error) {
+	realRegistry, err := registry.New(reg, aos).ToReal(logger)
+	if err != nil {
+		return nil, err
+	}
+	realProject, err := realRegistry.ProjectAPI().GetByName(proj.GetName())
+	if err != nil {
+		return nil, err
+	}
+	if realProject == nil {
+		return nil, fmt.Errorf("%v Project doesn't exists in %v Registry, actual state differs from the expected state",
+			proj.GetName(), realRegistry.GetAPIEndpoint())
+	}
+	return &ProjectOfRegistry{Registry: realRegistry, Project: realProject}, nil
+}
+
+// GetProjectByName returns a Project struct for a matching project name.
+func (aos *ApiObjectStore) GetProjectByName(projectName string) (*ProjectOfRegistry, error) {
+	projects := aos.GetProjects()
+	registries := aos.GetRegistries()
+	for _, project := range projects {
+		if project.GetName() == projectName {
+			switch project.Spec.Type {
+			case api.GlobalProjectType:
+				for _, reg := range registries {
+					if reg.Spec.Role == "GlobalHub" {
+						return aos.newProject(reg, project)
+					}
+				}
+			case api.LocalProjectType:
+				if len(project.Spec.LocalRegistries) == 0 {
+					return nil, fmt.Errorf("local project with no local registries")
+				}
+				localRegistryName := project.Spec.LocalRegistries[0]
+				for _, reg := range registries {
+					if reg.Spec.Role == "Local" && reg.GetName() == localRegistryName {
+						return aos.newProject(reg, project)
+					}
+				}
+			default:
+				panic(fmt.Sprintf("unhandled project type: %s", project.Spec.Type.String()))
+			}
+		}
+	}
+	return nil, fmt.Errorf("project %s not found", projectName)
+}
+
 // GetCliOptions returns the ApiObjectStore related CLI options of an apply.
-func (apip *ApiObjectStore) GetCliOptions() globalregistry.RegistryOptions {
-	return (*ApiObjectStore)(apip).options
+func (aos *ApiObjectStore) GetCliOptions() globalregistry.RegistryOptions {
+	return (*ApiObjectStore)(aos).options
 }
 
 // ExpectedProvider is a database of the resources which implement the

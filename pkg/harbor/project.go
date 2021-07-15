@@ -42,7 +42,7 @@ func (p *project) GetName() string {
 
 // Delete removes the project from registry
 func (p *project) Delete() error {
-	repos, err := p.getRepositories()
+	repos, err := p.GetRepositories()
 	if err != nil {
 		return err
 	}
@@ -55,7 +55,7 @@ func (p *project) Delete() error {
 			}
 			for _, repo := range repos {
 				p.api.reg.logger.V(1).Info("deleting repository",
-					"repositoryName", repo.Name,
+					"repositoryName", repos,
 				)
 				err = p.deleteRepository(repo)
 				if err != nil {
@@ -260,11 +260,11 @@ func (p *project) AssignReplicationRule(remoteReg globalregistry.RegistryConfig,
 	return p.api.reg.ReplicationAPI().(*replicationAPI).create(p, remoteReg, trigger, direction)
 }
 
-func (p *project) getRepositories() ([]*projectRepositoryRespBody, error) {
+func (p *project) GetRepositories() ([]string, error) {
 	return p.api.listProjectRepositories(p)
 }
 
-func (p *project) deleteRepository(r *projectRepositoryRespBody) error {
+func (p *project) deleteRepository(r string) error {
 	return p.api.deleteProjectRepository(p, r)
 }
 
