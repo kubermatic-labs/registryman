@@ -48,7 +48,7 @@ var statusCmd = &cobra.Command{
 			fmt.Printf("# %s\n", expectedRegistry.GetName())
 			fmt.Println("#")
 			fmt.Println("#")
-			actualRegistry, err := expectedRegistry.ToReal(logger)
+			actualRegistry, err := expectedRegistry.ToReal()
 			if err != nil {
 				return err
 			}

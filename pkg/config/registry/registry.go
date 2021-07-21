@@ -33,6 +33,7 @@ type ApiObjectProvider interface {
 	GetRegistries() []*api.Registry
 	GetScanners() []*api.Scanner
 	GetCliOptions() globalregistry.RegistryOptions
+	GetLogger() logr.Logger
 }
 
 // Registry type describes the API representation of a registry (i.e. the
@@ -101,21 +102,31 @@ func (o *registryOptions) ForceDeleteProjects() bool {
 	return o.forceDelete
 }
 
-// GetOptions method implements the globalregistry.RegistryConfig interface.
+// GetOptions method implements the globalregistry.RegistryConfig interface. The
+// method returns the RegistryOptions configured via annotations of the Registry
+// object. If there are no annotations, the CLI options of the API provider is
+// used.
+//
+// Supported annotations:
+// - registryman.kubermatic.com/forceDelete: <bool_as_string>
 func (reg *Registry) GetOptions() globalregistry.RegistryOptions {
 	if val, ok := reg.apiRegistry.Annotations["registryman.kubermatic.com/forceDelete"]; ok {
 		b, err := strconv.ParseBool(val)
 		if err != nil {
-			return &registryOptions{forceDelete: b}
+			reg.apiProvider.GetLogger().V(-1).Info("invalid value for registryman.kubermatic.com/forceDelete annotation, expected \"true\" or \"false\"",
+				"registry", reg.apiRegistry.GetName(),
+				"value", val)
+			return &registryOptions{forceDelete: false}
 		}
+		return &registryOptions{forceDelete: b}
 	}
 	return reg.apiProvider.GetCliOptions()
 }
 
 // ToReal method turns the (i.e. expected) Registry value into a
 // provider-specific (i.e. actual) registry value.
-func (reg *Registry) ToReal(logger logr.Logger) (globalregistry.Registry, error) {
-	return globalregistry.New(logger, reg)
+func (reg *Registry) ToReal() (globalregistry.Registry, error) {
+	return globalregistry.New(reg.apiProvider.GetLogger(), reg)
 }
 
 func (reg *Registry) registryCapabilities() registryCapabilities {
