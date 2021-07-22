@@ -19,7 +19,6 @@ package harbor
 import (
 	"fmt"
 
-	// "encoding/json"
 	"github.com/kubermatic-labs/registryman/pkg/globalregistry"
 )
 
@@ -36,18 +35,6 @@ type replicationTrigger struct {
 	Type            string          `json:"type"`
 	TriggerSettings triggerSettings `json:"trigger_settings"`
 }
-
-// TODO: toGlobRegTrigger shall equal to rt.Type
-// func (rt *replicationTrigger) toGlobRegTrigger() globalregistry.ReplicationTrigger {
-// 	switch rt.Type {
-// 	case "manual":
-// 		return globalregistry.ManualReplicationTrigger
-// 	case "event_based":
-// 		return globalregistry.EventReplicationTrigger
-// 	default:
-// 		panic(fmt.Sprintf("%s cannot be converted to globalregistry.ReplicationTrigger", rt.Type))
-// 	}
-// }
 
 type replicationResponseBody struct {
 	UpdateTime    string                `json:"update_time"`
