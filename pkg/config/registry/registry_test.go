@@ -1,6 +1,7 @@
 package registry
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/go-logr/logr"
@@ -94,24 +95,48 @@ func apiRegistryName(t *testing.T, reg *api.Registry) string {
 	}
 }
 
-func testGetOptions(t *testing.T, ap *mockApiProvider, apiReg *api.Registry, expResult bool) {
+func testGetOptions(t *testing.T, ap *mockApiProvider, apiReg *api.Registry, optionName string) (bool, error) {
 	reg := New(apiReg, ap)
 	t.Logf("%s, %s",
 		apiProviderName(t, ap),
 		apiRegistryName(t, apiReg),
 	)
-	if canForceDelete(t, reg.GetOptions()) != expResult {
-		t.Error("unexpected result")
+	switch optionName {
+	case "forceDelete":
+		return canForceDelete(t, reg.GetOptions()), nil
+	default:
+		return false, fmt.Errorf("invalid optionName: %v", optionName)
 	}
 }
-func TestRegistry_GetOptions(t *testing.T) {
-	testGetOptions(t, apiProviderForceDelete, registryForceDelete, true)
-	testGetOptions(t, apiProviderForceDelete, registryNoForceDelete, false)
-	testGetOptions(t, apiProviderForceDelete, registryInvalidForceDelete, false)
-	testGetOptions(t, apiProviderForceDelete, registryMissingForceDelete, true)
 
-	testGetOptions(t, apiProviderNoForceDelete, registryForceDelete, true)
-	testGetOptions(t, apiProviderNoForceDelete, registryNoForceDelete, false)
-	testGetOptions(t, apiProviderNoForceDelete, registryInvalidForceDelete, false)
-	testGetOptions(t, apiProviderNoForceDelete, registryMissingForceDelete, false)
+func TestRegistry_GetOptions(t *testing.T) {
+
+	registryTest := []struct {
+		id         string
+		cliOption  *mockApiProvider
+		apiOption  *api.Registry
+		optionName string
+		expResult  bool
+	}{
+		{id: "1", cliOption: apiProviderForceDelete, apiOption: registryForceDelete, optionName: "forceDelete", expResult: true},
+		{id: "2", cliOption: apiProviderForceDelete, apiOption: registryNoForceDelete, optionName: "forceDelete", expResult: false},
+		{id: "3", cliOption: apiProviderForceDelete, apiOption: registryInvalidForceDelete, optionName: "forceDelete", expResult: false},
+		{id: "4", cliOption: apiProviderForceDelete, apiOption: registryMissingForceDelete, optionName: "forceDelete", expResult: true},
+		{id: "5", cliOption: apiProviderNoForceDelete, apiOption: registryForceDelete, optionName: "forceDelete", expResult: true},
+		{id: "6", cliOption: apiProviderNoForceDelete, apiOption: registryNoForceDelete, optionName: "forceDelete", expResult: false},
+		{id: "7", cliOption: apiProviderNoForceDelete, apiOption: registryInvalidForceDelete, optionName: "forceDelete", expResult: false},
+		{id: "8", cliOption: apiProviderNoForceDelete, apiOption: registryMissingForceDelete, optionName: "forceDelete", expResult: false},
+	}
+
+	for _, tt := range registryTest {
+		t.Run(tt.id, func(t *testing.T) {
+			got, err := testGetOptions(t, tt.cliOption, tt.apiOption, tt.optionName)
+			if err != nil {
+				t.Fatalf("%v", err)
+			}
+			if got != tt.expResult {
+				t.Errorf("TC-%v got %t want %t", tt.id, got, tt.expResult)
+			}
+		})
+	}
 }
