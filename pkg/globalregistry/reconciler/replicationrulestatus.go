@@ -19,26 +19,13 @@ package reconciler
 import (
 	"fmt"
 
+	api "github.com/kubermatic-labs/registryman/pkg/apis/registryman.kubermatic.com/v1alpha1"
 	"github.com/kubermatic-labs/registryman/pkg/config"
 	"github.com/kubermatic-labs/registryman/pkg/globalregistry"
 )
 
-// ReplicationRuleStatus specifies the status of project replication rule.
-type ReplicationRuleStatus struct {
-
-	// RemoteRegistryName indicates the name of the remote registry which
-	// the current registry shall synchronize with.
-	RemoteRegistryName string `json:"remote-registry"`
-
-	// Trigger describes the event that shall trigger the replication.
-	Trigger globalregistry.ReplicationTrigger `json:"trigger"`
-
-	// Direction shows whether the replication is of type pull or push.
-	Direction globalregistry.ReplicationDirection `json:"direction"`
-}
-
 type rRuleAddAction struct {
-	ReplicationRuleStatus
+	api.ReplicationRuleStatus
 	store       *config.ExpectedProvider
 	projectName string
 }
@@ -49,8 +36,8 @@ func (ra *rRuleAddAction) String() string {
 	return fmt.Sprintf("adding replication rule for %s: %s [%s] on %s",
 		ra.projectName,
 		ra.RemoteRegistryName,
-		ra.Direction.String(),
-		ra.Trigger.String(),
+		ra.Direction,
+		ra.Trigger,
 	)
 }
 
@@ -68,7 +55,7 @@ func (ra *rRuleAddAction) Perform(reg globalregistry.Registry) (SideEffect, erro
 }
 
 type rRuleRemoveAction struct {
-	ReplicationRuleStatus
+	api.ReplicationRuleStatus
 	store       *config.ExpectedProvider
 	projectName string
 }
@@ -79,8 +66,8 @@ func (ra *rRuleRemoveAction) String() string {
 	return fmt.Sprintf("removing replication rule for %s: %s [%s] on %s",
 		ra.projectName,
 		ra.RemoteRegistryName,
-		ra.Direction.String(),
-		ra.Trigger.String(),
+		ra.Direction,
+		ra.Trigger,
 	)
 }
 
@@ -89,7 +76,7 @@ func (ra *rRuleRemoveAction) Perform(reg globalregistry.Registry) (SideEffect, e
 	if err != nil {
 		return nilEffect, err
 	}
-	rRules, err := project.GetReplicationRules(&ra.Trigger, &ra.Direction)
+	rRules, err := project.GetReplicationRules(ra.Trigger, ra.Direction)
 	if err != nil {
 		return nilEffect, err
 	}
@@ -105,9 +92,9 @@ func (ra *rRuleRemoveAction) Perform(reg globalregistry.Registry) (SideEffect, e
 // CompareReplicationRuleStatus compares the actual and expected status of the
 // replication rules of a project. The function returns the actions that are
 // needed to synchronize the actual state to the expected state.
-func CompareReplicationRuleStatus(store *config.ExpectedProvider, projectName string, actual, expected []ReplicationRuleStatus) []Action {
-	actualDiff := []ReplicationRuleStatus{}
-	expectedDiff := []ReplicationRuleStatus{}
+func CompareReplicationRuleStatus(store *config.ExpectedProvider, projectName string, actual, expected []api.ReplicationRuleStatus) []Action {
+	actualDiff := []api.ReplicationRuleStatus{}
+	expectedDiff := []api.ReplicationRuleStatus{}
 ActLoop:
 	for _, act := range actual {
 		for _, exp := range expected {

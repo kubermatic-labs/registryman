@@ -19,34 +19,27 @@ package reconciler
 import (
 	"fmt"
 
+	api "github.com/kubermatic-labs/registryman/pkg/apis/registryman.kubermatic.com/v1alpha1"
 	"github.com/kubermatic-labs/registryman/pkg/globalregistry"
 )
 
-// ScannerStatus specifies the status of a project's external vulnerability scanner.
-type ScannerStatus struct {
+type scannerStatus api.ScannerStatus
 
-	// Name of the scanner.
-	Name string `json:"name"`
-
-	// URL of the scanner.
-	URL string `json:"url"`
-}
-
-var _ globalregistry.Scanner = &ScannerStatus{}
+var _ globalregistry.Scanner = &scannerStatus{}
 
 // GetName implements the globalregistry.Scanner interface.
-func (ss *ScannerStatus) GetName() string {
+func (ss *scannerStatus) GetName() string {
 	return ss.Name
 }
 
 // GetURL implements the globalregistry.Scanner interface.
-func (ss *ScannerStatus) GetURL() string {
+func (ss *scannerStatus) GetURL() string {
 	return ss.URL
 }
 
 type scannerAssignAction struct {
 	projectName string
-	*ScannerStatus
+	*api.ScannerStatus
 }
 
 var _ Action = &scannerAssignAction{}
@@ -61,13 +54,13 @@ func (a *scannerAssignAction) Perform(reg globalregistry.Registry) (SideEffect, 
 	if err != nil {
 		return nilEffect, err
 	}
-	err = project.AssignScanner(a)
+	err = project.AssignScanner((*scannerStatus)(a.ScannerStatus))
 	return nilEffect, err
 }
 
 type scannerUnassignAction struct {
 	projectName string
-	*ScannerStatus
+	*api.ScannerStatus
 }
 
 func (a *scannerUnassignAction) String() string {
@@ -80,7 +73,7 @@ func (a *scannerUnassignAction) Perform(reg globalregistry.Registry) (SideEffect
 	if err != nil {
 		return nilEffect, err
 	}
-	err = project.UnassignScanner(a)
+	err = project.UnassignScanner((*scannerStatus)(a.ScannerStatus))
 	return nilEffect, err
 }
 
@@ -89,7 +82,7 @@ var _ Action = &scannerUnassignAction{}
 // CompareScannerStatuses compares the actual and expected status of the scanner
 // of a project. The function returns the actions that are needed to synchronize
 // the actual state to the expected state.
-func CompareScannerStatuses(projectName string, actual, expected ScannerStatus) []Action {
+func CompareScannerStatuses(projectName string, actual, expected api.ScannerStatus) []Action {
 	actions := make([]Action, 0)
 
 	// Old scanner shall be deleted

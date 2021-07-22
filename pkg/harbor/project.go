@@ -256,7 +256,7 @@ func (p *project) UnassignMember(member globalregistry.ProjectMember) error {
 	return err
 }
 
-func (p *project) AssignReplicationRule(remoteReg globalregistry.RegistryConfig, trigger globalregistry.ReplicationTrigger, direction globalregistry.ReplicationDirection) (globalregistry.ReplicationRule, error) {
+func (p *project) AssignReplicationRule(remoteReg globalregistry.RegistryConfig, trigger, direction string) (globalregistry.ReplicationRule, error) {
 	return p.api.reg.ReplicationAPI().(*replicationAPI).create(p, remoteReg, trigger, direction)
 }
 
@@ -268,9 +268,7 @@ func (p *project) deleteRepository(r string) error {
 	return p.api.deleteProjectRepository(p, r)
 }
 
-func (p *project) GetReplicationRules(
-	trigger *globalregistry.ReplicationTrigger,
-	direction *globalregistry.ReplicationDirection) ([]globalregistry.ReplicationRule, error) {
+func (p *project) GetReplicationRules(trigger string, direction string) ([]globalregistry.ReplicationRule, error) {
 	p.api.reg.logger.V(1).Info("Project.GetReplicationRules invoked",
 		"projectName", p.Name,
 	)
@@ -289,10 +287,10 @@ func (p *project) GetReplicationRules(
 		)
 		if replRule.GetProjectName() == p.Name {
 			p.api.reg.logger.V(1).Info("project name matches, replication rule stored")
-			if trigger != nil && *trigger != replRule.Trigger() {
+			if trigger != "" && trigger != replRule.Trigger() {
 				continue
 			}
-			if direction != nil && *direction != replRule.Direction() {
+			if direction != "" && direction != replRule.Direction() {
 				continue
 			}
 			results = append(results, replRule)

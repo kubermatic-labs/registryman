@@ -37,16 +37,17 @@ type replicationTrigger struct {
 	TriggerSettings triggerSettings `json:"trigger_settings"`
 }
 
-func (rt *replicationTrigger) toGlobRegTrigger() globalregistry.ReplicationTrigger {
-	switch rt.Type {
-	case "manual":
-		return globalregistry.ManualReplicationTrigger
-	case "event_based":
-		return globalregistry.EventReplicationTrigger
-	default:
-		panic(fmt.Sprintf("%s cannot be converted to globalregistry.ReplicationTrigger", rt.Type))
-	}
-}
+// TODO: toGlobRegTrigger shall equal to rt.Type
+// func (rt *replicationTrigger) toGlobRegTrigger() globalregistry.ReplicationTrigger {
+// 	switch rt.Type {
+// 	case "manual":
+// 		return globalregistry.ManualReplicationTrigger
+// 	case "event_based":
+// 		return globalregistry.EventReplicationTrigger
+// 	default:
+// 		panic(fmt.Sprintf("%s cannot be converted to globalregistry.ReplicationTrigger", rt.Type))
+// 	}
+// }
 
 type replicationResponseBody struct {
 	UpdateTime    string                `json:"update_time"`
@@ -64,14 +65,14 @@ type replicationResponseBody struct {
 	Name          string                `json:"name"`
 }
 
-func (rp *replicationResponseBody) direction() (globalregistry.ReplicationDirection, error) {
+func (rp *replicationResponseBody) direction() (string, error) {
 	if rp.SrcRegistry.Name == "Local" {
-		return globalregistry.PushReplication, nil
+		return "Push", nil
 	}
 	if rp.DestRegistry.Name == "Local" {
-		return globalregistry.PullReplication, nil
+		return "Pull", nil
 	}
-	return globalregistry.PullReplication, fmt.Errorf("cannot determine direction")
+	return "Pull", fmt.Errorf("cannot determine direction")
 }
 
 func (rp *replicationResponseBody) remote() (*remoteRegistryStatus, error) {
@@ -90,7 +91,7 @@ type replicationRule struct {
 	api         *replicationAPI
 	name        string
 	projectName string
-	Dir         globalregistry.ReplicationDirection
+	Dir         string
 	ReplTrigger *replicationTrigger
 	Remote      *remoteRegistryStatus
 }
@@ -103,11 +104,11 @@ func (r *replicationRule) GetName() string {
 	return r.name
 }
 
-func (r *replicationRule) Trigger() globalregistry.ReplicationTrigger {
-	return r.ReplTrigger.toGlobRegTrigger()
+func (r *replicationRule) Trigger() string {
+	return r.ReplTrigger.Type
 }
 
-func (r *replicationRule) Direction() globalregistry.ReplicationDirection {
+func (r *replicationRule) Direction() string {
 	return r.Dir
 }
 

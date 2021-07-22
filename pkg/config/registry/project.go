@@ -56,7 +56,7 @@ func (proj *project) GetMembers() ([]globalregistry.ProjectMember, error) {
 	return members, nil
 }
 
-func (proj *project) AssignReplicationRule(globalregistry.RegistryConfig, globalregistry.ReplicationTrigger, globalregistry.ReplicationDirection) (globalregistry.ReplicationRule, error) {
+func (proj *project) AssignReplicationRule(globalregistry.RegistryConfig, string, string) (globalregistry.ReplicationRule, error) {
 	panic("not implemented")
 }
 
@@ -64,7 +64,7 @@ func (proj *project) Delete() error {
 	panic("not implemented")
 }
 
-func (proj *project) GetReplicationRules(trigger *globalregistry.ReplicationTrigger, direction *globalregistry.ReplicationDirection) ([]globalregistry.ReplicationRule, error) {
+func (proj *project) GetReplicationRules(trigger, direction string) ([]globalregistry.ReplicationRule, error) {
 	rules := []globalregistry.ReplicationRule{}
 	switch proj.Spec.Type {
 	case api.GlobalProjectType:
@@ -81,10 +81,10 @@ func (proj *project) GetReplicationRules(trigger *globalregistry.ReplicationTrig
 						project:               proj,
 						remote:                remoteReg,
 					}
-					if trigger != nil && *trigger != repRule.Trigger() {
+					if trigger != "" && trigger != repRule.Trigger() {
 						continue
 					}
-					if direction != nil && *direction != repRule.Direction() {
+					if direction != "" && direction != repRule.Direction() {
 						continue
 					}
 					rules = append(rules, repRule)

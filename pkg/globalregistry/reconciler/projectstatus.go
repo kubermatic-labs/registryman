@@ -20,31 +20,13 @@ import (
 	"errors"
 	"fmt"
 
+	api "github.com/kubermatic-labs/registryman/pkg/apis/registryman.kubermatic.com/v1alpha1"
 	"github.com/kubermatic-labs/registryman/pkg/config"
 	"github.com/kubermatic-labs/registryman/pkg/globalregistry"
 )
 
-// ProjectStatus specifies the status of a registry project.
-type ProjectStatus struct {
-
-	// Name of the project.
-	Name string `json:"name"`
-
-	// Members of the project.
-	Members []MemberStatus `json:"members"`
-
-	// Replication rules of the project.
-	ReplicationRules []ReplicationRuleStatus `json:"replication-rules"`
-
-	// Storage used by the project in bytes.
-	StorageUsed int `json:"storage-used"`
-
-	// Scanner of the project.
-	ScannerStatus ScannerStatus `json:"scanner-status"`
-}
-
 type projectAddAction struct {
-	ProjectStatus
+	api.ProjectStatus
 }
 
 var _ Action = &projectAddAction{}
@@ -64,7 +46,7 @@ func (pa *projectAddAction) Perform(reg globalregistry.Registry) (SideEffect, er
 }
 
 type projectRemoveAction struct {
-	ProjectStatus
+	api.ProjectStatus
 }
 
 var _ Action = &projectRemoveAction{}
@@ -84,15 +66,15 @@ func (pa *projectRemoveAction) Perform(reg globalregistry.Registry) (SideEffect,
 // CompareProjectStatuses compares the actual and expected status of the projects
 // of a registry. The function returns the actions that are needed to synchronize
 // the actual state to the expected state.
-func CompareProjectStatuses(store *config.ExpectedProvider, actual, expected []ProjectStatus) []Action {
-	same := make(map[string][2]ProjectStatus)
-	actualDiff := []ProjectStatus{}
-	expectedDiff := []ProjectStatus{}
+func CompareProjectStatuses(store *config.ExpectedProvider, actual, expected []api.ProjectStatus) []Action {
+	same := make(map[string][2]api.ProjectStatus)
+	actualDiff := []api.ProjectStatus{}
+	expectedDiff := []api.ProjectStatus{}
 ActLoop:
 	for _, act := range actual {
 		for _, exp := range expected {
 			if act.Name == exp.Name {
-				same[act.Name] = [2]ProjectStatus{
+				same[act.Name] = [2]api.ProjectStatus{
 					act,
 					exp,
 				}

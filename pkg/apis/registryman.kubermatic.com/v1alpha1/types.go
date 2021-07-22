@@ -36,13 +36,15 @@ import (
 // +kubebuilder:object:root=true
 // +kubebuilder:resource:path=registries,scope=Cluster,singular=registry
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+// +kubebuilder:subresource:status
 
 // Registry describes the expected state of a registry Object
 type Registry struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 	// Spec describes the Registry Specification.
-	Spec *RegistrySpec `json:"spec"`
+	Spec   *RegistrySpec   `json:"spec"`
+	Status *RegistryStatus `json:"status,omitempty"`
 }
 
 // Registry implements the runtime.Object interface
@@ -79,6 +81,70 @@ type RegistrySpec struct {
 	// Role specifies whether the registry is a Global Hub or a Local
 	// registry.
 	Role string `json:"role"`
+}
+
+// RegistryStatus specifies the status of a registry.
+type RegistryStatus struct {
+	Projects []ProjectStatus `json:"projects"`
+}
+
+// ProjectStatus specifies the status of a registry project.
+type ProjectStatus struct {
+
+	// Name of the project.
+	Name string `json:"name"`
+
+	// Members of the project.
+	Members []MemberStatus `json:"members"`
+
+	// Replication rules of the project.
+	ReplicationRules []ReplicationRuleStatus `json:"replication-rules"`
+
+	// Storage used by the project in bytes.
+	StorageUsed int `json:"storage-used"`
+
+	// Scanner of the project.
+	ScannerStatus ScannerStatus `json:"scanner-status"`
+}
+
+// MemberStatus specifies the status of a project member.
+type MemberStatus struct {
+
+	// Name of the project member.
+	Name string `json:"name"`
+
+	// Type of the project membership, like user, group, robot.
+	Type string `json:"type"`
+
+	// Role of the project member, like admin, developer, maintainer, etc.
+	Role string `json:"role"`
+
+	// Distinguished name of the project member. Empty when omitted.
+	DN string `json:"dn,omitempty"`
+}
+
+// ReplicationRuleStatus specifies the status of project replication rule.
+type ReplicationRuleStatus struct {
+
+	// RemoteRegistryName indicates the name of the remote registry which
+	// the current registry shall synchronize with.
+	RemoteRegistryName string `json:"remote-registry"`
+
+	// Trigger describes the event that shall trigger the replication.
+	Trigger string `json:"trigger"`
+
+	// Direction shows whether the replication is of type pull or push.
+	Direction string `json:"direction"`
+}
+
+// ScannerStatus specifies the status of a project's external vulnerability scanner.
+type ScannerStatus struct {
+
+	// Name of the scanner.
+	Name string `json:"name"`
+
+	// URL of the scanner.
+	URL string `json:"url"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object

@@ -19,19 +19,15 @@ package reconciler
 import (
 	"errors"
 
+	api "github.com/kubermatic-labs/registryman/pkg/apis/registryman.kubermatic.com/v1alpha1"
 	"github.com/kubermatic-labs/registryman/pkg/config"
 	"github.com/kubermatic-labs/registryman/pkg/globalregistry"
 )
 
-// RegistryStatus specifies the status of a registry.
-type RegistryStatus struct {
-	Projects []ProjectStatus `json:"projects"`
-}
-
 // Compare compares the actual and expected status of a registry. The function
 // returns the actions that are needed to synchronize the actual state to the
 // expected state.
-func Compare(store *config.ExpectedProvider, actual, expected *RegistryStatus) []Action {
+func Compare(store *config.ExpectedProvider, actual, expected *api.RegistryStatus) []Action {
 	return CompareProjectStatuses(store, actual.Projects, expected.Projects)
 }
 
@@ -39,12 +35,12 @@ func Compare(store *config.ExpectedProvider, actual, expected *RegistryStatus) [
 // registry represents a configuration of registry, then the expected registry
 // status is returned. If the registry represents an actual (real) registry, the
 // actual status is returned.
-func GetRegistryStatus(reg globalregistry.Registry) (*RegistryStatus, error) {
+func GetRegistryStatus(reg globalregistry.Registry) (*api.RegistryStatus, error) {
 	projects, err := reg.ProjectAPI().List()
 	if err != nil {
 		return nil, err
 	}
-	projectStatuses := make([]ProjectStatus, len(projects))
+	projectStatuses := make([]api.ProjectStatus, len(projects))
 	for i, project := range projects {
 		projectStatuses[i].Name = project.GetName()
 
@@ -52,7 +48,7 @@ func GetRegistryStatus(reg globalregistry.Registry) (*RegistryStatus, error) {
 		if err != nil {
 			return nil, err
 		}
-		projectStatuses[i].Members = make([]MemberStatus, len(members))
+		projectStatuses[i].Members = make([]api.MemberStatus, len(members))
 		for n, member := range members {
 			projectStatuses[i].Members[n].Name = member.GetName()
 			projectStatuses[i].Members[n].Type = member.GetType()
@@ -62,14 +58,14 @@ func GetRegistryStatus(reg globalregistry.Registry) (*RegistryStatus, error) {
 				projectStatuses[i].Members[n].DN = m.GetDN()
 			}
 		}
-		replicationRules, err := project.GetReplicationRules(nil, nil)
+		replicationRules, err := project.GetReplicationRules("", "")
 		if err != nil {
 			return nil, err
 		}
-		projectStatuses[i].ReplicationRules = make([]ReplicationRuleStatus, len(replicationRules))
+		projectStatuses[i].ReplicationRules = make([]api.ReplicationRuleStatus, len(replicationRules))
 		for n, rule := range replicationRules {
 			projectStatuses[i].ReplicationRules[n].RemoteRegistryName = rule.RemoteRegistry().GetName()
-			projectStatuses[i].ReplicationRules[n].Trigger = rule.Trigger()
+			projectStatuses[i].ReplicationRules[n].Trigger = string(rule.Trigger())
 			projectStatuses[i].ReplicationRules[n].Direction = rule.Direction()
 		}
 
@@ -88,13 +84,13 @@ func GetRegistryStatus(reg globalregistry.Registry) (*RegistryStatus, error) {
 			return nil, err
 		}
 		if projectScanner != nil {
-			projectStatuses[i].ScannerStatus = ScannerStatus{
+			projectStatuses[i].ScannerStatus = api.ScannerStatus{
 				Name: projectScanner.GetName(),
 				URL:  projectScanner.GetURL(),
 			}
 		}
 	}
-	return &RegistryStatus{
+	return &api.RegistryStatus{
 		Projects: projectStatuses,
 	}, nil
 }

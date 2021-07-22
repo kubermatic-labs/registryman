@@ -20,56 +20,56 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
-	"github.com/kubermatic-labs/registryman/pkg/globalregistry"
+	api "github.com/kubermatic-labs/registryman/pkg/apis/registryman.kubermatic.com/v1alpha1"
 	"github.com/kubermatic-labs/registryman/pkg/globalregistry/reconciler"
 )
 
 var (
-	rrule1 = reconciler.ReplicationRuleStatus{
+	rrule1 = api.ReplicationRuleStatus{
 		RemoteRegistryName: "reg1",
-		Trigger:            globalregistry.EventReplicationTrigger,
-		Direction:          globalregistry.PushReplication,
+		Trigger:            "event_based",
+		Direction:          "Push",
 	}
-	rrule2 = reconciler.ReplicationRuleStatus{
+	rrule2 = api.ReplicationRuleStatus{
 		RemoteRegistryName: "reg2",
-		Trigger:            globalregistry.EventReplicationTrigger,
-		Direction:          globalregistry.PushReplication,
+		Trigger:            "event_based",
+		Direction:          "Push",
 	}
-	rrule1Trig = reconciler.ReplicationRuleStatus{
+	rrule1Trig = api.ReplicationRuleStatus{
 		RemoteRegistryName: "reg1",
-		Trigger:            globalregistry.ManualReplicationTrigger,
-		Direction:          globalregistry.PushReplication,
+		Trigger:            "manual",
+		Direction:          "Push",
 	}
-	rrule1Pull = reconciler.ReplicationRuleStatus{
+	rrule1Pull = api.ReplicationRuleStatus{
 		RemoteRegistryName: "reg1",
-		Trigger:            globalregistry.EventReplicationTrigger,
-		Direction:          globalregistry.PullReplication,
+		Trigger:            "event_based",
+		Direction:          "Pull",
 	}
 )
 
 var _ = Describe("Memberstatus", func() {
 	It("returns no action for the same ReplicationRuleStatus slice", func() {
-		act := []reconciler.ReplicationRuleStatus{}
-		exp := []reconciler.ReplicationRuleStatus{}
+		act := []api.ReplicationRuleStatus{}
+		exp := []api.ReplicationRuleStatus{}
 		actions := reconciler.CompareReplicationRuleStatus(nil, "proj", act, exp)
 		Expect(actions).ToNot(BeNil())
 		Expect(len(actions)).To(Equal(0))
 
-		act = []reconciler.ReplicationRuleStatus{
+		act = []api.ReplicationRuleStatus{
 			rrule1,
 		}
-		exp = []reconciler.ReplicationRuleStatus{
+		exp = []api.ReplicationRuleStatus{
 			rrule1,
 		}
 		actions = reconciler.CompareReplicationRuleStatus(nil, "proj", act, exp)
 		Expect(actions).ToNot(BeNil())
 		Expect(len(actions)).To(Equal(0))
 
-		act = []reconciler.ReplicationRuleStatus{
+		act = []api.ReplicationRuleStatus{
 			rrule1,
 			rrule2,
 		}
-		exp = []reconciler.ReplicationRuleStatus{
+		exp = []api.ReplicationRuleStatus{
 			rrule1,
 			rrule2,
 		}
@@ -77,11 +77,11 @@ var _ = Describe("Memberstatus", func() {
 		Expect(actions).ToNot(BeNil())
 		Expect(len(actions)).To(Equal(0))
 
-		act = []reconciler.ReplicationRuleStatus{
+		act = []api.ReplicationRuleStatus{
 			rrule1,
 			rrule2,
 		}
-		exp = []reconciler.ReplicationRuleStatus{
+		exp = []api.ReplicationRuleStatus{
 			rrule2,
 			rrule1,
 		}
@@ -90,21 +90,21 @@ var _ = Describe("Memberstatus", func() {
 	})
 
 	It("can detect missing rules", func() {
-		act := []reconciler.ReplicationRuleStatus{}
-		exp := []reconciler.ReplicationRuleStatus{
+		act := []api.ReplicationRuleStatus{}
+		exp := []api.ReplicationRuleStatus{
 			rrule1,
 		}
 		actions := reconciler.CompareReplicationRuleStatus(nil, "proj", act, exp)
 		Expect(actions).ToNot(BeNil())
 		Expect(len(actions)).To(Equal(1))
 		Expect(actionsToStrings(actions)).To(Equal([]string{
-			"adding replication rule for proj: reg1 [Push] on EventBased",
+			"adding replication rule for proj: reg1 [Push] on event_based",
 		}))
 
-		act = []reconciler.ReplicationRuleStatus{
+		act = []api.ReplicationRuleStatus{
 			rrule2,
 		}
-		exp = []reconciler.ReplicationRuleStatus{
+		exp = []api.ReplicationRuleStatus{
 			rrule1,
 			rrule2,
 		}
@@ -112,75 +112,75 @@ var _ = Describe("Memberstatus", func() {
 		Expect(actions).ToNot(BeNil())
 		Expect(len(actions)).To(Equal(1))
 		Expect(actionsToStrings(actions)).To(Equal([]string{
-			"adding replication rule for proj: reg1 [Push] on EventBased",
+			"adding replication rule for proj: reg1 [Push] on event_based",
 		}))
 	})
 
 	It("can detect surplus rules", func() {
-		act := []reconciler.ReplicationRuleStatus{
+		act := []api.ReplicationRuleStatus{
 			rrule1,
 		}
-		exp := []reconciler.ReplicationRuleStatus{}
+		exp := []api.ReplicationRuleStatus{}
 		actions := reconciler.CompareReplicationRuleStatus(nil, "proj", act, exp)
 		Expect(actions).ToNot(BeNil())
 		Expect(len(actions)).To(Equal(1))
 		Expect(actionsToStrings(actions)).To(Equal([]string{
-			"removing replication rule for proj: reg1 [Push] on EventBased",
+			"removing replication rule for proj: reg1 [Push] on event_based",
 		}))
-		act = []reconciler.ReplicationRuleStatus{
+		act = []api.ReplicationRuleStatus{
 			rrule1,
 			rrule2,
 		}
-		exp = []reconciler.ReplicationRuleStatus{
+		exp = []api.ReplicationRuleStatus{
 			rrule2,
 		}
 		actions = reconciler.CompareReplicationRuleStatus(nil, "proj", act, exp)
 		Expect(actions).ToNot(BeNil())
 		Expect(len(actions)).To(Equal(1))
 		Expect(actionsToStrings(actions)).To(Equal([]string{
-			"removing replication rule for proj: reg1 [Push] on EventBased",
+			"removing replication rule for proj: reg1 [Push] on event_based",
 		}))
 	})
 
 	It("can detect different rules", func() {
-		act := []reconciler.ReplicationRuleStatus{
+		act := []api.ReplicationRuleStatus{
 			rrule1,
 		}
-		exp := []reconciler.ReplicationRuleStatus{
+		exp := []api.ReplicationRuleStatus{
 			rrule2,
 		}
 		actions := reconciler.CompareReplicationRuleStatus(nil, "proj", act, exp)
 		Expect(actions).ToNot(BeNil())
 		Expect(len(actions)).To(Equal(2))
 		Expect(actionsToStrings(actions)).To(Equal([]string{
-			"removing replication rule for proj: reg1 [Push] on EventBased",
-			"adding replication rule for proj: reg2 [Push] on EventBased",
+			"removing replication rule for proj: reg1 [Push] on event_based",
+			"adding replication rule for proj: reg2 [Push] on event_based",
 		}))
-		act = []reconciler.ReplicationRuleStatus{
+		act = []api.ReplicationRuleStatus{
 			rrule1,
 		}
-		exp = []reconciler.ReplicationRuleStatus{
+		exp = []api.ReplicationRuleStatus{
 			rrule1Trig,
 		}
 		actions = reconciler.CompareReplicationRuleStatus(nil, "proj", act, exp)
 		Expect(actions).ToNot(BeNil())
 		Expect(len(actions)).To(Equal(2))
 		Expect(actionsToStrings(actions)).To(Equal([]string{
-			"removing replication rule for proj: reg1 [Push] on EventBased",
-			"adding replication rule for proj: reg1 [Push] on Manual",
+			"removing replication rule for proj: reg1 [Push] on event_based",
+			"adding replication rule for proj: reg1 [Push] on manual",
 		}))
-		act = []reconciler.ReplicationRuleStatus{
+		act = []api.ReplicationRuleStatus{
 			rrule1,
 		}
-		exp = []reconciler.ReplicationRuleStatus{
+		exp = []api.ReplicationRuleStatus{
 			rrule1Pull,
 		}
 		actions = reconciler.CompareReplicationRuleStatus(nil, "proj", act, exp)
 		Expect(actions).ToNot(BeNil())
 		Expect(len(actions)).To(Equal(2))
 		Expect(actionsToStrings(actions)).To(Equal([]string{
-			"removing replication rule for proj: reg1 [Push] on EventBased",
-			"adding replication rule for proj: reg1 [Pull] on EventBased",
+			"removing replication rule for proj: reg1 [Push] on event_based",
+			"adding replication rule for proj: reg1 [Pull] on event_based",
 		}))
 	})
 })
