@@ -25,6 +25,7 @@ import (
 
 	api "github.com/kubermatic-labs/registryman/pkg/apis/registryman.kubermatic.com/v1alpha1"
 	"github.com/kubermatic-labs/registryman/pkg/globalregistry"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/runtime/serializer/json"
@@ -42,13 +43,17 @@ type localFileApiObjectStore struct {
 
 var _ ApiObjectStore = &localFileApiObjectStore{}
 
-// WriteManifest serializes the object specified by the obj parameter. The
-// filename parameter specifies the name of the file to be created. The path
-// where the file is created is set when the ReadManifests function
-// creates the ApiObjectStore.
-func (aos *localFileApiObjectStore) WriteManifest(filename string, obj runtime.Object) error {
-	fName := filepath.Join(aos.path, filename)
-	f, err := os.Create(fName)
+func getFileName(obj runtime.Object) string {
+	metaV1Object := obj.(metav1.Object)
+	return fmt.Sprintf("%s.yaml", metaV1Object.GetName())
+}
+
+// WriteResource serializes the object specified by the obj parameter. The
+// filename is generated from the object name by appending .yaml to it. The path
+// where the file is created is set when the ReadLocalManifests function creates the
+// ApiObjectStore.
+func (aos *localFileApiObjectStore) WriteResource(obj runtime.Object) error {
+	f, err := os.Create(getFileName(obj))
 	if err != nil {
 		return err
 	}
@@ -61,11 +66,12 @@ func (aos *localFileApiObjectStore) WriteManifest(filename string, obj runtime.O
 	return nil
 }
 
-// RemoveManifest removes the file from the filesystem. The path where the file
-// is removed from is set when the ReadManifests function creates the
+// RemoveResource removes a file from the filesystem. The filename is generated
+// from the object name by appending .yaml to it. The path where the file is
+// removed from is set when the ReadLocalManifests function creates the
 // ApiObjectStore.
-func (aos *localFileApiObjectStore) RemoveManifest(filename string) error {
-	fName := filepath.Join(aos.path, filename)
+func (aos *localFileApiObjectStore) RemoveResource(objectName string) error {
+	fName := filepath.Join(aos.path, fmt.Sprintf("%s.yaml", objectName))
 	return os.Remove(fName)
 }
 

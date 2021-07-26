@@ -48,16 +48,16 @@ func init() {
 // ApiObjectStore interface is an abstract interface that hides the difference
 // between the local file and Kubernetes resource based config management.
 type ApiObjectStore interface {
-	// WriteManifest serializes the object specified by the obj parameter.
+	// WriteResource serializes the object specified by the obj parameter.
 	// The filename parameter specifies the name of the file to be created.
 	// The path where the file is created is set when the ReadManifests
 	// function creates the ApiObjectStore.
-	WriteManifest(filename string, obj runtime.Object) error
+	WriteResource(obj runtime.Object) error
 
-	// RemoveManifest removes the file from the filesystem. The path where
+	// RemoveResource removes the file from the filesystem. The path where
 	// the file is removed from is set when the ReadManifests function
 	// creates the ApiObjectStore.
-	RemoveManifest(filename string) error
+	RemoveResource(objectName string) error
 
 	// GetRegistries returns the parsed registries as API objects.
 	GetRegistries() []*api.Registry

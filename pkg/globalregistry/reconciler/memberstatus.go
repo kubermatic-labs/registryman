@@ -95,8 +95,8 @@ type persistMemberCredentials struct {
 var _ SideEffect = &persistMemberCredentials{}
 
 type manifestManipulator interface {
-	WriteManifest(filename string, obj runtime.Object) error
-	RemoveManifest(filename string) error
+	WriteResource(obj runtime.Object) error
+	RemoveResource(objectName string) error
 }
 
 func (pmc *persistMemberCredentials) Perform(ctx context.Context) error {
@@ -130,18 +130,18 @@ func (pmc *persistMemberCredentials) Perform(ctx context.Context) error {
 		},
 		Type: "kubernetes.io/dockerconfigjson",
 	}
-	secret.SetName(pmc.action.Name)
+	name := fmt.Sprintf("%s_%s_%s_creds",
+		pmc.registry.GetName(),
+		pmc.action.projectName,
+		pmc.action.Name,
+	)
+	secret.SetName(name)
 	secret.SetAnnotations(map[string]string{
 		"globalregistry.org/project-name":  pmc.action.projectName,
 		"globalregistry.org/registry-name": pmc.registry.GetName(),
 	})
 
-	filename := fmt.Sprintf("%s_%s_%s_creds.yaml",
-		pmc.registry.GetName(),
-		pmc.action.projectName,
-		pmc.action.Name,
-	)
-	return manifestManipulator.WriteManifest(filename, secret)
+	return manifestManipulator.WriteResource(secret)
 }
 
 func (ma *memberAddAction) Perform(reg globalregistry.Registry) (SideEffect, error) {
@@ -184,12 +184,12 @@ func (rmc *removeMemberCredentials) Perform(ctx context.Context) error {
 		return fmt.Errorf("SideEffectManifestManipulator is not a proper manifestManipulator")
 	}
 
-	filename := fmt.Sprintf("%s_%s_%s_creds.yaml",
+	filename := fmt.Sprintf("%s_%s_%s_creds",
 		rmc.registry.GetName(),
 		rmc.action.projectName,
 		rmc.action.Name,
 	)
-	return manifestManipulator.RemoveManifest(filename)
+	return manifestManipulator.RemoveResource(filename)
 }
 
 type memberRemoveAction struct {
