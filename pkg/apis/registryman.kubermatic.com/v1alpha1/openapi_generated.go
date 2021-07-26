@@ -240,6 +240,11 @@ func schema_pkg_apis_registrymankubermaticcom_v1alpha1_ProjectSpec(ref common.Re
 						},
 					},
 					"localRegistries": {
+						VendorExtensible: spec.VendorExtensible{
+							Extensions: spec.Extensions{
+								"x-kubernetes-list-type": "set",
+							},
+						},
 						SchemaProps: spec.SchemaProps{
 							Description: "LocalRegistries lists the registry names at which the local project shall be provisioned at.",
 							Type:        []string{"array"},
@@ -255,6 +260,14 @@ func schema_pkg_apis_registrymankubermaticcom_v1alpha1_ProjectSpec(ref common.Re
 						},
 					},
 					"members": {
+						VendorExtensible: spec.VendorExtensible{
+							Extensions: spec.Extensions{
+								"x-kubernetes-list-map-keys": []interface{}{
+									"name",
+								},
+								"x-kubernetes-list-type": "map",
+							},
+						},
 						SchemaProps: spec.SchemaProps{
 							Description: "Members enumerates the project members and their capabilities provisioned for the specific registry.",
 							Type:        []string{"array"},
@@ -299,6 +312,14 @@ func schema_pkg_apis_registrymankubermaticcom_v1alpha1_ProjectStatus(ref common.
 						},
 					},
 					"members": {
+						VendorExtensible: spec.VendorExtensible{
+							Extensions: spec.Extensions{
+								"x-kubernetes-list-map-keys": []interface{}{
+									"name",
+								},
+								"x-kubernetes-list-type": "map",
+							},
+						},
 						SchemaProps: spec.SchemaProps{
 							Description: "Members of the project.",
 							Type:        []string{"array"},
@@ -312,7 +333,12 @@ func schema_pkg_apis_registrymankubermaticcom_v1alpha1_ProjectStatus(ref common.
 							},
 						},
 					},
-					"replication-rules": {
+					"replicationRules": {
+						VendorExtensible: spec.VendorExtensible{
+							Extensions: spec.Extensions{
+								"x-kubernetes-list-type": "atomic",
+							},
+						},
 						SchemaProps: spec.SchemaProps{
 							Description: "Replication rules of the project.",
 							Type:        []string{"array"},
@@ -326,7 +352,7 @@ func schema_pkg_apis_registrymankubermaticcom_v1alpha1_ProjectStatus(ref common.
 							},
 						},
 					},
-					"storage-used": {
+					"storageUsed": {
 						SchemaProps: spec.SchemaProps{
 							Description: "Storage used by the project in bytes.",
 							Default:     0,
@@ -334,7 +360,7 @@ func schema_pkg_apis_registrymankubermaticcom_v1alpha1_ProjectStatus(ref common.
 							Format:      "int32",
 						},
 					},
-					"scanner-status": {
+					"scannerStatus": {
 						SchemaProps: spec.SchemaProps{
 							Description: "Scanner of the project.",
 							Default:     map[string]interface{}{},
@@ -342,7 +368,7 @@ func schema_pkg_apis_registrymankubermaticcom_v1alpha1_ProjectStatus(ref common.
 						},
 					},
 				},
-				Required: []string{"name", "members", "replication-rules", "storage-used", "scanner-status"},
+				Required: []string{"name", "members", "replicationRules", "storageUsed", "scannerStatus"},
 			},
 		},
 		Dependencies: []string{
@@ -508,6 +534,14 @@ func schema_pkg_apis_registrymankubermaticcom_v1alpha1_RegistryStatus(ref common
 				Type:        []string{"object"},
 				Properties: map[string]spec.Schema{
 					"projects": {
+						VendorExtensible: spec.VendorExtensible{
+							Extensions: spec.Extensions{
+								"x-kubernetes-list-map-keys": []interface{}{
+									"name",
+								},
+								"x-kubernetes-list-type": "map",
+							},
+						},
 						SchemaProps: spec.SchemaProps{
 							Type: []string{"array"},
 							Items: &spec.SchemaOrArray{
@@ -536,7 +570,7 @@ func schema_pkg_apis_registrymankubermaticcom_v1alpha1_ReplicationRuleStatus(ref
 				Description: "ReplicationRuleStatus specifies the status of project replication rule.",
 				Type:        []string{"object"},
 				Properties: map[string]spec.Schema{
-					"remote-registry": {
+					"remoteRegistryName": {
 						SchemaProps: spec.SchemaProps{
 							Description: "RemoteRegistryName indicates the name of the remote registry which the current registry shall synchronize with.",
 							Default:     "",
@@ -561,7 +595,7 @@ func schema_pkg_apis_registrymankubermaticcom_v1alpha1_ReplicationRuleStatus(ref
 						},
 					},
 				},
-				Required: []string{"remote-registry", "trigger", "direction"},
+				Required: []string{"remoteRegistryName", "trigger", "direction"},
 			},
 		},
 	}
@@ -622,7 +656,7 @@ func schema_pkg_apis_registrymankubermaticcom_v1alpha1_ScannerSpec(ref common.Re
 							Format:      "",
 						},
 					},
-					"access_credential": {
+					"accessCredential": {
 						SchemaProps: spec.SchemaProps{
 							Description: "An optional value of the HTTP Authorization header sent with each request to the Scanner Adapter API.",
 							Type:        []string{"string"},

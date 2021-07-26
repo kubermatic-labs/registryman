@@ -34,7 +34,7 @@ import (
 //                 ""                               ""
 //
 // +kubebuilder:object:root=true
-// +kubebuilder:resource:path=registries,scope=Cluster,singular=registry
+// +kubebuilder:resource:path=registries,scope=Namespaced,singular=registry
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 // +kubebuilder:subresource:status
 
@@ -85,6 +85,8 @@ type RegistrySpec struct {
 
 // RegistryStatus specifies the status of a registry.
 type RegistryStatus struct {
+	// +listType=map
+	// +listMapKey=name
 	Projects []ProjectStatus `json:"projects"`
 }
 
@@ -95,16 +97,21 @@ type ProjectStatus struct {
 	Name string `json:"name"`
 
 	// Members of the project.
+	//
+	// +listType=map
+	// +listMapKey=name
 	Members []MemberStatus `json:"members"`
 
 	// Replication rules of the project.
-	ReplicationRules []ReplicationRuleStatus `json:"replication-rules"`
+	//
+	// +listType=atomic
+	ReplicationRules []ReplicationRuleStatus `json:"replicationRules"`
 
 	// Storage used by the project in bytes.
-	StorageUsed int `json:"storage-used"`
+	StorageUsed int `json:"storageUsed"`
 
 	// Scanner of the project.
-	ScannerStatus ScannerStatus `json:"scanner-status"`
+	ScannerStatus ScannerStatus `json:"scannerStatus"`
 }
 
 // MemberStatus specifies the status of a project member.
@@ -128,7 +135,7 @@ type ReplicationRuleStatus struct {
 
 	// RemoteRegistryName indicates the name of the remote registry which
 	// the current registry shall synchronize with.
-	RemoteRegistryName string `json:"remote-registry"`
+	RemoteRegistryName string `json:"remoteRegistryName"`
 
 	// Trigger describes the event that shall trigger the replication.
 	Trigger string `json:"trigger"`
@@ -167,6 +174,8 @@ type RegistryList struct {
 //
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+// +kubebuilder:object:root=true
+// +kubebuilder:resource:path=projects,scope=Namespaced,singular=project
 
 // Project describes the expected state of a globalregistry Project
 type Project struct {
@@ -184,17 +193,19 @@ type ProjectSpec struct {
 	// Type selects whether the project is global or local.
 	Type ProjectType `json:"type"`
 
-	// +listType=set
-	// +kubebuilder:validation:Optional
-
 	// LocalRegistries lists the registry names at which the local project
 	// shall be provisioned at.
-	LocalRegistries []string `json:"localRegistries,omitempty"`
-
+	//
 	// +listType=set
+	// +kubebuilder:validation:Optional
+	LocalRegistries []string `json:"localRegistries,omitempty"`
 
 	// Members enumerates the project members and their capabilities
 	// provisioned for the specific registry.
+	//
+	// +kubebuilder:validation:Optional
+	// +listType=map
+	// +listMapKey=name
 	Members []*ProjectMember `json:"members,omitempty"`
 
 	// +kubebuilder:validation:Optional
@@ -451,7 +462,7 @@ func (mr *MemberRole) UnmarshalJSON(data []byte) error {
 //  ___) | (_| (_| | | | | | | |  __/ |
 // |____/ \___\__,_|_| |_|_| |_|\___|_|
 
-// +kubebuilder:resource:path=scanners,scope=Cluster,singular=scanner
+// +kubebuilder:resource:path=scanners,scope=Namespaced,singular=scanner
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
 // Scanner resource describes the configuration of an external vulnerability
@@ -471,5 +482,5 @@ type ScannerSpec struct {
 
 	// An optional value of the HTTP Authorization header sent with each
 	// request to the Scanner Adapter API.
-	AccessCredential string `json:"access_credential,omitempty"`
+	AccessCredential string `json:"accessCredential,omitempty"`
 }

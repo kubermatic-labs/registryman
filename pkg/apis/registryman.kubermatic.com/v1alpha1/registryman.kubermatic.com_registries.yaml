@@ -14,7 +14,7 @@ spec:
     listKind: RegistryList
     plural: registries
     singular: registry
-  scope: Cluster
+  scope: Namespaced
   versions:
   - name: v1alpha1
     schema:
@@ -105,10 +105,13 @@ spec:
                         - type
                         type: object
                       type: array
+                      x-kubernetes-list-map-keys:
+                      - name
+                      x-kubernetes-list-type: map
                     name:
                       description: Name of the project.
                       type: string
-                    replication-rules:
+                    replicationRules:
                       description: Replication rules of the project.
                       items:
                         description: ReplicationRuleStatus specifies the status of
@@ -118,7 +121,7 @@ spec:
                             description: Direction shows whether the replication is
                               of type pull or push.
                             type: string
-                          remote-registry:
+                          remoteRegistryName:
                             description: RemoteRegistryName indicates the name of
                               the remote registry which the current registry shall
                               synchronize with.
@@ -129,11 +132,12 @@ spec:
                             type: string
                         required:
                         - direction
-                        - remote-registry
+                        - remoteRegistryName
                         - trigger
                         type: object
                       type: array
-                    scanner-status:
+                      x-kubernetes-list-type: atomic
+                    scannerStatus:
                       description: Scanner of the project.
                       properties:
                         name:
@@ -146,17 +150,20 @@ spec:
                       - name
                       - url
                       type: object
-                    storage-used:
+                    storageUsed:
                       description: Storage used by the project in bytes.
                       type: integer
                   required:
                   - members
                   - name
-                  - replication-rules
-                  - scanner-status
-                  - storage-used
+                  - replicationRules
+                  - scannerStatus
+                  - storageUsed
                   type: object
                 type: array
+                x-kubernetes-list-map-keys:
+                - name
+                x-kubernetes-list-type: map
             required:
             - projects
             type: object

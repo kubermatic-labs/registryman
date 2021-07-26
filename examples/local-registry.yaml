@@ -2,6 +2,7 @@ apiVersion: registryman.kubermatic.com/v1alpha1
 kind: Registry
 metadata:
   name: local-reg
+  namespace: default
 spec:
   provider: acr
   role: Local

@@ -71,7 +71,9 @@ spec:
                   - role
                   type: object
                 type: array
-                x-kubernetes-list-type: set
+                x-kubernetes-list-map-keys:
+                - name
+                x-kubernetes-list-type: map
               scanner:
                 description: Scanner specifies the name of the assigned scanner.
                 type: string

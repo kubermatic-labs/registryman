@@ -14,7 +14,7 @@ spec:
     listKind: ScannerList
     plural: scanners
     singular: scanner
-  scope: Cluster
+  scope: Namespaced
   versions:
   - name: v1alpha1
     schema:
@@ -37,7 +37,7 @@ spec:
           spec:
             description: Spec describes the Scanner Specification.
             properties:
-              access_credential:
+              accessCredential:
                 description: An optional value of the HTTP Authorization header sent
                   with each request to the Scanner Adapter API.
                 type: string
