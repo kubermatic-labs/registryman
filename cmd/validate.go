@@ -30,7 +30,7 @@ var validateCmd = &cobra.Command{
 	RunE: func(cmd *cobra.Command, args []string) error {
 		config.SetLogger(logger)
 		logger.Info("validating config files", "dir", args[0])
-		_, err := config.ReadManifests(args[0], nil)
+		_, err := config.ReadLocalManifests(args[0], nil)
 		if err == nil {
 			logger.Info("config files are valid")
 		} else {

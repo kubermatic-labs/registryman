@@ -44,14 +44,15 @@ state of the system.`,
 		logger.Info("reading config files", "dir", args[0])
 		config.SetLogger(logger)
 
-		manifests, err := config.ReadManifests(args[0], options)
+		aos, err := config.ReadLocalManifests(args[0], options)
 
 		if err != nil {
 			return err
 		}
 
-		expectedRegistries := manifests.ExpectedProvider().GetRegistries()
-		sideeffectCtx := context.WithValue(context.Background(), reconciler.SideEffectManifestManipulator, manifests)
+		expectedProvider := config.NewExpectedProvider(aos)
+		expectedRegistries := expectedProvider.GetRegistries()
+		sideeffectCtx := context.WithValue(context.Background(), reconciler.SideEffectManifestManipulator, aos)
 		for _, expectedRegistry := range expectedRegistries {
 			logger.Info("inspecting registry", "registry_name", expectedRegistry.GetName())
 			regStatusExpected, err := reconciler.GetRegistryStatus(expectedRegistry)
@@ -68,7 +69,7 @@ state of the system.`,
 				return err
 			}
 			logger.V(1).Info("actual registry status acquired", "status", regStatusActual)
-			actions := reconciler.Compare(manifests.ExpectedProvider(), regStatusActual, regStatusExpected)
+			actions := reconciler.Compare(expectedProvider, regStatusActual, regStatusExpected)
 			logger.Info("ACTIONS:")
 			for _, action := range actions {
 				if !dryRun {

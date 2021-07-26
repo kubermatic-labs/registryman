@@ -35,13 +35,13 @@ var statusCmd = &cobra.Command{
 	RunE: func(cmd *cobra.Command, args []string) error {
 		config.SetLogger(logger)
 		logger.Info("reading config files", "dir", args[0])
-		manifests, err := config.ReadManifests(args[0], nil)
+		aos, err := config.ReadLocalManifests(args[0], nil)
 
 		if err != nil {
 			return err
 		}
 
-		expectedRegistries := manifests.ExpectedProvider().GetRegistries()
+		expectedRegistries := config.NewExpectedProvider(aos).GetRegistries()
 		for _, expectedRegistry := range expectedRegistries {
 			fmt.Println("#")
 			fmt.Println("#")

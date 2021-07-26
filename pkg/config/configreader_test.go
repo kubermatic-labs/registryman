@@ -24,19 +24,19 @@ import (
 
 var _ = Describe("Configreader", func() {
 	It("fails for invalid path", func() {
-		m, err := config.ReadManifests("nonexisting", nil)
+		m, err := config.ReadLocalManifests("nonexisting", nil)
 		Expect(err).To(HaveOccurred())
 		Expect(m).To(BeNil())
 	})
 	It("gets the correct values for api/testdata", func() {
-		m, err := config.ReadManifests("testdata", nil)
+		m, err := config.ReadLocalManifests("testdata", nil)
 		Expect(err).ToNot(HaveOccurred())
 		Expect(m).ToNot(BeNil())
-		registry := m.ExpectedProvider().GetRegistries()
-		Expect(len(registry)).To(Equal(2))
+		registries := config.NewExpectedProvider(m).GetRegistries()
+		Expect(len(registries)).To(Equal(2))
 	})
 	It("reads the registries and projects even with other yamls present", func() {
-		m, err := config.ReadManifests("testdata/test_other_yamls", nil)
+		m, err := config.ReadLocalManifests("testdata/test_other_yamls", nil)
 		Expect(err).ToNot(HaveOccurred())
 		Expect(m).ToNot(BeNil())
 	})
