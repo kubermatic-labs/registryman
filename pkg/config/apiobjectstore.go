@@ -68,7 +68,7 @@ type ApiObjectStore interface {
 	// GetScanners returns the parsed scanners as API objects.
 	GetScanners() []*api.Scanner
 
-	// GetCliOptions returns the ApiObjectStore related CLI options of an
+	// GetGlobalRegistryOptions returns the ApiObjectStore related CLI options of an
 	// apply.
-	GetCliOptions() globalregistry.RegistryOptions
+	GetGlobalRegistryOptions() globalregistry.RegistryOptions
 }

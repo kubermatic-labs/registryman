@@ -32,7 +32,7 @@ type ApiObjectProvider interface {
 	GetProjects() []*api.Project
 	GetRegistries() []*api.Registry
 	GetScanners() []*api.Scanner
-	GetCliOptions() globalregistry.RegistryOptions
+	GetGlobalRegistryOptions() globalregistry.RegistryOptions
 }
 
 // Registry type describes the API representation of a registry (i.e. the
@@ -109,7 +109,7 @@ func (reg *Registry) GetOptions() globalregistry.RegistryOptions {
 			return &registryOptions{forceDelete: b}
 		}
 	}
-	return reg.apiProvider.GetCliOptions()
+	return reg.apiProvider.GetGlobalRegistryOptions()
 }
 
 // ToReal method turns the (i.e. expected) Registry value into a

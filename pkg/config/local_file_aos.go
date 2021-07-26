@@ -398,6 +398,6 @@ func (aos *localFileApiObjectStore) GetScanners() []*api.Scanner {
 }
 
 // GetCliOptions returns the ApiObjectStore related CLI options of an apply.
-func (aos *localFileApiObjectStore) GetCliOptions() globalregistry.RegistryOptions {
+func (aos *localFileApiObjectStore) GetGlobalRegistryOptions() globalregistry.RegistryOptions {
 	return (*localFileApiObjectStore)(aos).options
 }
