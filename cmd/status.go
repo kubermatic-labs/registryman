@@ -36,16 +36,19 @@ var statusCmd = &cobra.Command{
 	RunE: func(cmd *cobra.Command, args []string) error {
 		config.SetLogger(logger)
 		var aos config.ApiObjectStore
+		var err error
 		if len(args) == 1 {
 			logger.Info("reading config files", "dir", args[0])
-			var err error
 			aos, err = config.ReadLocalManifests(args[0], nil)
 			if err != nil {
 				return err
 			}
 		} else {
-			var clientConfig rest.Config
-			aos, clientConfig = config.ConnectToKube()
+			var clientConfig *rest.Config
+			aos, clientConfig, err = config.ConnectToKube()
+			if err != nil {
+				return err
+			}
 			logger.Info("connecting to Kubernetes for resources",
 				"host", clientConfig.Host)
 		}

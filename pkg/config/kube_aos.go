@@ -42,12 +42,6 @@ func init() {
 	// if you want to change override values or bind them to flags, there are methods to help you
 
 	kubeConfig = clientcmd.NewNonInteractiveDeferredLoadingClientConfig(loadingRules, configOverrides)
-
-	var err error
-	clientConfig, err = kubeConfig.ClientConfig()
-	if err != nil {
-		panic(err)
-	}
 }
 
 type kubeApiObjectStore struct {
@@ -56,10 +50,15 @@ type kubeApiObjectStore struct {
 
 var _ ApiObjectStore = &kubeApiObjectStore{}
 
-func ConnectToKube() (ApiObjectStore, rest.Config) {
+func ConnectToKube() (ApiObjectStore, *rest.Config, error) {
+	var err error
+	clientConfig, err = kubeConfig.ClientConfig()
+	if err != nil {
+		return nil, nil, err
+	}
 	return &kubeApiObjectStore{
 		regmanClient: regmanclient.NewForConfigOrDie(clientConfig),
-	}, *clientConfig
+	}, clientConfig, nil
 }
 
 // WriteResource serializes the object specified by the obj parameter.
