@@ -30,71 +30,73 @@ import (
 
 func GetOpenAPIDefinitions(ref common.ReferenceCallback) map[string]common.OpenAPIDefinition {
 	return map[string]common.OpenAPIDefinition{
-		"github.com/kubermatic-labs/registryman/pkg/apis/registryman.kubermatic.com/v1alpha1.MemberStatus":          schema_pkg_apis_registrymankubermaticcom_v1alpha1_MemberStatus(ref),
-		"github.com/kubermatic-labs/registryman/pkg/apis/registryman.kubermatic.com/v1alpha1.Project":               schema_pkg_apis_registrymankubermaticcom_v1alpha1_Project(ref),
-		"github.com/kubermatic-labs/registryman/pkg/apis/registryman.kubermatic.com/v1alpha1.ProjectMember":         schema_pkg_apis_registrymankubermaticcom_v1alpha1_ProjectMember(ref),
-		"github.com/kubermatic-labs/registryman/pkg/apis/registryman.kubermatic.com/v1alpha1.ProjectSpec":           schema_pkg_apis_registrymankubermaticcom_v1alpha1_ProjectSpec(ref),
-		"github.com/kubermatic-labs/registryman/pkg/apis/registryman.kubermatic.com/v1alpha1.ProjectStatus":         schema_pkg_apis_registrymankubermaticcom_v1alpha1_ProjectStatus(ref),
-		"github.com/kubermatic-labs/registryman/pkg/apis/registryman.kubermatic.com/v1alpha1.Registry":              schema_pkg_apis_registrymankubermaticcom_v1alpha1_Registry(ref),
-		"github.com/kubermatic-labs/registryman/pkg/apis/registryman.kubermatic.com/v1alpha1.RegistryList":          schema_pkg_apis_registrymankubermaticcom_v1alpha1_RegistryList(ref),
-		"github.com/kubermatic-labs/registryman/pkg/apis/registryman.kubermatic.com/v1alpha1.RegistrySpec":          schema_pkg_apis_registrymankubermaticcom_v1alpha1_RegistrySpec(ref),
-		"github.com/kubermatic-labs/registryman/pkg/apis/registryman.kubermatic.com/v1alpha1.RegistryStatus":        schema_pkg_apis_registrymankubermaticcom_v1alpha1_RegistryStatus(ref),
-		"github.com/kubermatic-labs/registryman/pkg/apis/registryman.kubermatic.com/v1alpha1.ReplicationRuleStatus": schema_pkg_apis_registrymankubermaticcom_v1alpha1_ReplicationRuleStatus(ref),
-		"github.com/kubermatic-labs/registryman/pkg/apis/registryman.kubermatic.com/v1alpha1.Scanner":               schema_pkg_apis_registrymankubermaticcom_v1alpha1_Scanner(ref),
-		"github.com/kubermatic-labs/registryman/pkg/apis/registryman.kubermatic.com/v1alpha1.ScannerSpec":           schema_pkg_apis_registrymankubermaticcom_v1alpha1_ScannerSpec(ref),
-		"github.com/kubermatic-labs/registryman/pkg/apis/registryman.kubermatic.com/v1alpha1.ScannerStatus":         schema_pkg_apis_registrymankubermaticcom_v1alpha1_ScannerStatus(ref),
-		"k8s.io/apimachinery/pkg/apis/meta/v1.APIGroup":                                                             schema_pkg_apis_meta_v1_APIGroup(ref),
-		"k8s.io/apimachinery/pkg/apis/meta/v1.APIGroupList":                                                         schema_pkg_apis_meta_v1_APIGroupList(ref),
-		"k8s.io/apimachinery/pkg/apis/meta/v1.APIResource":                                                          schema_pkg_apis_meta_v1_APIResource(ref),
-		"k8s.io/apimachinery/pkg/apis/meta/v1.APIResourceList":                                                      schema_pkg_apis_meta_v1_APIResourceList(ref),
-		"k8s.io/apimachinery/pkg/apis/meta/v1.APIVersions":                                                          schema_pkg_apis_meta_v1_APIVersions(ref),
-		"k8s.io/apimachinery/pkg/apis/meta/v1.ApplyOptions":                                                         schema_pkg_apis_meta_v1_ApplyOptions(ref),
-		"k8s.io/apimachinery/pkg/apis/meta/v1.Condition":                                                            schema_pkg_apis_meta_v1_Condition(ref),
-		"k8s.io/apimachinery/pkg/apis/meta/v1.CreateOptions":                                                        schema_pkg_apis_meta_v1_CreateOptions(ref),
-		"k8s.io/apimachinery/pkg/apis/meta/v1.DeleteOptions":                                                        schema_pkg_apis_meta_v1_DeleteOptions(ref),
-		"k8s.io/apimachinery/pkg/apis/meta/v1.Duration":                                                             schema_pkg_apis_meta_v1_Duration(ref),
-		"k8s.io/apimachinery/pkg/apis/meta/v1.FieldsV1":                                                             schema_pkg_apis_meta_v1_FieldsV1(ref),
-		"k8s.io/apimachinery/pkg/apis/meta/v1.GetOptions":                                                           schema_pkg_apis_meta_v1_GetOptions(ref),
-		"k8s.io/apimachinery/pkg/apis/meta/v1.GroupKind":                                                            schema_pkg_apis_meta_v1_GroupKind(ref),
-		"k8s.io/apimachinery/pkg/apis/meta/v1.GroupResource":                                                        schema_pkg_apis_meta_v1_GroupResource(ref),
-		"k8s.io/apimachinery/pkg/apis/meta/v1.GroupVersion":                                                         schema_pkg_apis_meta_v1_GroupVersion(ref),
-		"k8s.io/apimachinery/pkg/apis/meta/v1.GroupVersionForDiscovery":                                             schema_pkg_apis_meta_v1_GroupVersionForDiscovery(ref),
-		"k8s.io/apimachinery/pkg/apis/meta/v1.GroupVersionKind":                                                     schema_pkg_apis_meta_v1_GroupVersionKind(ref),
-		"k8s.io/apimachinery/pkg/apis/meta/v1.GroupVersionResource":                                                 schema_pkg_apis_meta_v1_GroupVersionResource(ref),
-		"k8s.io/apimachinery/pkg/apis/meta/v1.InternalEvent":                                                        schema_pkg_apis_meta_v1_InternalEvent(ref),
-		"k8s.io/apimachinery/pkg/apis/meta/v1.LabelSelector":                                                        schema_pkg_apis_meta_v1_LabelSelector(ref),
-		"k8s.io/apimachinery/pkg/apis/meta/v1.LabelSelectorRequirement":                                             schema_pkg_apis_meta_v1_LabelSelectorRequirement(ref),
-		"k8s.io/apimachinery/pkg/apis/meta/v1.List":                                                                 schema_pkg_apis_meta_v1_List(ref),
-		"k8s.io/apimachinery/pkg/apis/meta/v1.ListMeta":                                                             schema_pkg_apis_meta_v1_ListMeta(ref),
-		"k8s.io/apimachinery/pkg/apis/meta/v1.ListOptions":                                                          schema_pkg_apis_meta_v1_ListOptions(ref),
-		"k8s.io/apimachinery/pkg/apis/meta/v1.ManagedFieldsEntry":                                                   schema_pkg_apis_meta_v1_ManagedFieldsEntry(ref),
-		"k8s.io/apimachinery/pkg/apis/meta/v1.MicroTime":                                                            schema_pkg_apis_meta_v1_MicroTime(ref),
-		"k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta":                                                           schema_pkg_apis_meta_v1_ObjectMeta(ref),
-		"k8s.io/apimachinery/pkg/apis/meta/v1.OwnerReference":                                                       schema_pkg_apis_meta_v1_OwnerReference(ref),
-		"k8s.io/apimachinery/pkg/apis/meta/v1.PartialObjectMetadata":                                                schema_pkg_apis_meta_v1_PartialObjectMetadata(ref),
-		"k8s.io/apimachinery/pkg/apis/meta/v1.PartialObjectMetadataList":                                            schema_pkg_apis_meta_v1_PartialObjectMetadataList(ref),
-		"k8s.io/apimachinery/pkg/apis/meta/v1.Patch":                                                                schema_pkg_apis_meta_v1_Patch(ref),
-		"k8s.io/apimachinery/pkg/apis/meta/v1.PatchOptions":                                                         schema_pkg_apis_meta_v1_PatchOptions(ref),
-		"k8s.io/apimachinery/pkg/apis/meta/v1.Preconditions":                                                        schema_pkg_apis_meta_v1_Preconditions(ref),
-		"k8s.io/apimachinery/pkg/apis/meta/v1.RootPaths":                                                            schema_pkg_apis_meta_v1_RootPaths(ref),
-		"k8s.io/apimachinery/pkg/apis/meta/v1.ServerAddressByClientCIDR":                                            schema_pkg_apis_meta_v1_ServerAddressByClientCIDR(ref),
-		"k8s.io/apimachinery/pkg/apis/meta/v1.Status":                                                               schema_pkg_apis_meta_v1_Status(ref),
-		"k8s.io/apimachinery/pkg/apis/meta/v1.StatusCause":                                                          schema_pkg_apis_meta_v1_StatusCause(ref),
-		"k8s.io/apimachinery/pkg/apis/meta/v1.StatusDetails":                                                        schema_pkg_apis_meta_v1_StatusDetails(ref),
-		"k8s.io/apimachinery/pkg/apis/meta/v1.Table":                                                                schema_pkg_apis_meta_v1_Table(ref),
-		"k8s.io/apimachinery/pkg/apis/meta/v1.TableColumnDefinition":                                                schema_pkg_apis_meta_v1_TableColumnDefinition(ref),
-		"k8s.io/apimachinery/pkg/apis/meta/v1.TableOptions":                                                         schema_pkg_apis_meta_v1_TableOptions(ref),
-		"k8s.io/apimachinery/pkg/apis/meta/v1.TableRow":                                                             schema_pkg_apis_meta_v1_TableRow(ref),
-		"k8s.io/apimachinery/pkg/apis/meta/v1.TableRowCondition":                                                    schema_pkg_apis_meta_v1_TableRowCondition(ref),
-		"k8s.io/apimachinery/pkg/apis/meta/v1.Time":                                                                 schema_pkg_apis_meta_v1_Time(ref),
-		"k8s.io/apimachinery/pkg/apis/meta/v1.Timestamp":                                                            schema_pkg_apis_meta_v1_Timestamp(ref),
-		"k8s.io/apimachinery/pkg/apis/meta/v1.TypeMeta":                                                             schema_pkg_apis_meta_v1_TypeMeta(ref),
-		"k8s.io/apimachinery/pkg/apis/meta/v1.UpdateOptions":                                                        schema_pkg_apis_meta_v1_UpdateOptions(ref),
-		"k8s.io/apimachinery/pkg/apis/meta/v1.WatchEvent":                                                           schema_pkg_apis_meta_v1_WatchEvent(ref),
+		"github.com/kubermatic-labs/registryman/pkg/apis/registryman/v1alpha1.MemberStatus":          schema_pkg_apis_registryman_v1alpha1_MemberStatus(ref),
+		"github.com/kubermatic-labs/registryman/pkg/apis/registryman/v1alpha1.Project":               schema_pkg_apis_registryman_v1alpha1_Project(ref),
+		"github.com/kubermatic-labs/registryman/pkg/apis/registryman/v1alpha1.ProjectList":           schema_pkg_apis_registryman_v1alpha1_ProjectList(ref),
+		"github.com/kubermatic-labs/registryman/pkg/apis/registryman/v1alpha1.ProjectMember":         schema_pkg_apis_registryman_v1alpha1_ProjectMember(ref),
+		"github.com/kubermatic-labs/registryman/pkg/apis/registryman/v1alpha1.ProjectSpec":           schema_pkg_apis_registryman_v1alpha1_ProjectSpec(ref),
+		"github.com/kubermatic-labs/registryman/pkg/apis/registryman/v1alpha1.ProjectStatus":         schema_pkg_apis_registryman_v1alpha1_ProjectStatus(ref),
+		"github.com/kubermatic-labs/registryman/pkg/apis/registryman/v1alpha1.Registry":              schema_pkg_apis_registryman_v1alpha1_Registry(ref),
+		"github.com/kubermatic-labs/registryman/pkg/apis/registryman/v1alpha1.RegistryList":          schema_pkg_apis_registryman_v1alpha1_RegistryList(ref),
+		"github.com/kubermatic-labs/registryman/pkg/apis/registryman/v1alpha1.RegistrySpec":          schema_pkg_apis_registryman_v1alpha1_RegistrySpec(ref),
+		"github.com/kubermatic-labs/registryman/pkg/apis/registryman/v1alpha1.RegistryStatus":        schema_pkg_apis_registryman_v1alpha1_RegistryStatus(ref),
+		"github.com/kubermatic-labs/registryman/pkg/apis/registryman/v1alpha1.ReplicationRuleStatus": schema_pkg_apis_registryman_v1alpha1_ReplicationRuleStatus(ref),
+		"github.com/kubermatic-labs/registryman/pkg/apis/registryman/v1alpha1.Scanner":               schema_pkg_apis_registryman_v1alpha1_Scanner(ref),
+		"github.com/kubermatic-labs/registryman/pkg/apis/registryman/v1alpha1.ScannerList":           schema_pkg_apis_registryman_v1alpha1_ScannerList(ref),
+		"github.com/kubermatic-labs/registryman/pkg/apis/registryman/v1alpha1.ScannerSpec":           schema_pkg_apis_registryman_v1alpha1_ScannerSpec(ref),
+		"github.com/kubermatic-labs/registryman/pkg/apis/registryman/v1alpha1.ScannerStatus":         schema_pkg_apis_registryman_v1alpha1_ScannerStatus(ref),
+		"k8s.io/apimachinery/pkg/apis/meta/v1.APIGroup":                                              schema_pkg_apis_meta_v1_APIGroup(ref),
+		"k8s.io/apimachinery/pkg/apis/meta/v1.APIGroupList":                                          schema_pkg_apis_meta_v1_APIGroupList(ref),
+		"k8s.io/apimachinery/pkg/apis/meta/v1.APIResource":                                           schema_pkg_apis_meta_v1_APIResource(ref),
+		"k8s.io/apimachinery/pkg/apis/meta/v1.APIResourceList":                                       schema_pkg_apis_meta_v1_APIResourceList(ref),
+		"k8s.io/apimachinery/pkg/apis/meta/v1.APIVersions":                                           schema_pkg_apis_meta_v1_APIVersions(ref),
+		"k8s.io/apimachinery/pkg/apis/meta/v1.ApplyOptions":                                          schema_pkg_apis_meta_v1_ApplyOptions(ref),
+		"k8s.io/apimachinery/pkg/apis/meta/v1.Condition":                                             schema_pkg_apis_meta_v1_Condition(ref),
+		"k8s.io/apimachinery/pkg/apis/meta/v1.CreateOptions":                                         schema_pkg_apis_meta_v1_CreateOptions(ref),
+		"k8s.io/apimachinery/pkg/apis/meta/v1.DeleteOptions":                                         schema_pkg_apis_meta_v1_DeleteOptions(ref),
+		"k8s.io/apimachinery/pkg/apis/meta/v1.Duration":                                              schema_pkg_apis_meta_v1_Duration(ref),
+		"k8s.io/apimachinery/pkg/apis/meta/v1.FieldsV1":                                              schema_pkg_apis_meta_v1_FieldsV1(ref),
+		"k8s.io/apimachinery/pkg/apis/meta/v1.GetOptions":                                            schema_pkg_apis_meta_v1_GetOptions(ref),
+		"k8s.io/apimachinery/pkg/apis/meta/v1.GroupKind":                                             schema_pkg_apis_meta_v1_GroupKind(ref),
+		"k8s.io/apimachinery/pkg/apis/meta/v1.GroupResource":                                         schema_pkg_apis_meta_v1_GroupResource(ref),
+		"k8s.io/apimachinery/pkg/apis/meta/v1.GroupVersion":                                          schema_pkg_apis_meta_v1_GroupVersion(ref),
+		"k8s.io/apimachinery/pkg/apis/meta/v1.GroupVersionForDiscovery":                              schema_pkg_apis_meta_v1_GroupVersionForDiscovery(ref),
+		"k8s.io/apimachinery/pkg/apis/meta/v1.GroupVersionKind":                                      schema_pkg_apis_meta_v1_GroupVersionKind(ref),
+		"k8s.io/apimachinery/pkg/apis/meta/v1.GroupVersionResource":                                  schema_pkg_apis_meta_v1_GroupVersionResource(ref),
+		"k8s.io/apimachinery/pkg/apis/meta/v1.InternalEvent":                                         schema_pkg_apis_meta_v1_InternalEvent(ref),
+		"k8s.io/apimachinery/pkg/apis/meta/v1.LabelSelector":                                         schema_pkg_apis_meta_v1_LabelSelector(ref),
+		"k8s.io/apimachinery/pkg/apis/meta/v1.LabelSelectorRequirement":                              schema_pkg_apis_meta_v1_LabelSelectorRequirement(ref),
+		"k8s.io/apimachinery/pkg/apis/meta/v1.List":                                                  schema_pkg_apis_meta_v1_List(ref),
+		"k8s.io/apimachinery/pkg/apis/meta/v1.ListMeta":                                              schema_pkg_apis_meta_v1_ListMeta(ref),
+		"k8s.io/apimachinery/pkg/apis/meta/v1.ListOptions":                                           schema_pkg_apis_meta_v1_ListOptions(ref),
+		"k8s.io/apimachinery/pkg/apis/meta/v1.ManagedFieldsEntry":                                    schema_pkg_apis_meta_v1_ManagedFieldsEntry(ref),
+		"k8s.io/apimachinery/pkg/apis/meta/v1.MicroTime":                                             schema_pkg_apis_meta_v1_MicroTime(ref),
+		"k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta":                                            schema_pkg_apis_meta_v1_ObjectMeta(ref),
+		"k8s.io/apimachinery/pkg/apis/meta/v1.OwnerReference":                                        schema_pkg_apis_meta_v1_OwnerReference(ref),
+		"k8s.io/apimachinery/pkg/apis/meta/v1.PartialObjectMetadata":                                 schema_pkg_apis_meta_v1_PartialObjectMetadata(ref),
+		"k8s.io/apimachinery/pkg/apis/meta/v1.PartialObjectMetadataList":                             schema_pkg_apis_meta_v1_PartialObjectMetadataList(ref),
+		"k8s.io/apimachinery/pkg/apis/meta/v1.Patch":                                                 schema_pkg_apis_meta_v1_Patch(ref),
+		"k8s.io/apimachinery/pkg/apis/meta/v1.PatchOptions":                                          schema_pkg_apis_meta_v1_PatchOptions(ref),
+		"k8s.io/apimachinery/pkg/apis/meta/v1.Preconditions":                                         schema_pkg_apis_meta_v1_Preconditions(ref),
+		"k8s.io/apimachinery/pkg/apis/meta/v1.RootPaths":                                             schema_pkg_apis_meta_v1_RootPaths(ref),
+		"k8s.io/apimachinery/pkg/apis/meta/v1.ServerAddressByClientCIDR":                             schema_pkg_apis_meta_v1_ServerAddressByClientCIDR(ref),
+		"k8s.io/apimachinery/pkg/apis/meta/v1.Status":                                                schema_pkg_apis_meta_v1_Status(ref),
+		"k8s.io/apimachinery/pkg/apis/meta/v1.StatusCause":                                           schema_pkg_apis_meta_v1_StatusCause(ref),
+		"k8s.io/apimachinery/pkg/apis/meta/v1.StatusDetails":                                         schema_pkg_apis_meta_v1_StatusDetails(ref),
+		"k8s.io/apimachinery/pkg/apis/meta/v1.Table":                                                 schema_pkg_apis_meta_v1_Table(ref),
+		"k8s.io/apimachinery/pkg/apis/meta/v1.TableColumnDefinition":                                 schema_pkg_apis_meta_v1_TableColumnDefinition(ref),
+		"k8s.io/apimachinery/pkg/apis/meta/v1.TableOptions":                                          schema_pkg_apis_meta_v1_TableOptions(ref),
+		"k8s.io/apimachinery/pkg/apis/meta/v1.TableRow":                                              schema_pkg_apis_meta_v1_TableRow(ref),
+		"k8s.io/apimachinery/pkg/apis/meta/v1.TableRowCondition":                                     schema_pkg_apis_meta_v1_TableRowCondition(ref),
+		"k8s.io/apimachinery/pkg/apis/meta/v1.Time":                                                  schema_pkg_apis_meta_v1_Time(ref),
+		"k8s.io/apimachinery/pkg/apis/meta/v1.Timestamp":                                             schema_pkg_apis_meta_v1_Timestamp(ref),
+		"k8s.io/apimachinery/pkg/apis/meta/v1.TypeMeta":                                              schema_pkg_apis_meta_v1_TypeMeta(ref),
+		"k8s.io/apimachinery/pkg/apis/meta/v1.UpdateOptions":                                         schema_pkg_apis_meta_v1_UpdateOptions(ref),
+		"k8s.io/apimachinery/pkg/apis/meta/v1.WatchEvent":                                            schema_pkg_apis_meta_v1_WatchEvent(ref),
 	}
 }
 
-func schema_pkg_apis_registrymankubermaticcom_v1alpha1_MemberStatus(ref common.ReferenceCallback) common.OpenAPIDefinition {
+func schema_pkg_apis_registryman_v1alpha1_MemberStatus(ref common.ReferenceCallback) common.OpenAPIDefinition {
 	return common.OpenAPIDefinition{
 		Schema: spec.Schema{
 			SchemaProps: spec.SchemaProps{
@@ -139,7 +141,7 @@ func schema_pkg_apis_registrymankubermaticcom_v1alpha1_MemberStatus(ref common.R
 	}
 }
 
-func schema_pkg_apis_registrymankubermaticcom_v1alpha1_Project(ref common.ReferenceCallback) common.OpenAPIDefinition {
+func schema_pkg_apis_registryman_v1alpha1_Project(ref common.ReferenceCallback) common.OpenAPIDefinition {
 	return common.OpenAPIDefinition{
 		Schema: spec.Schema{
 			SchemaProps: spec.SchemaProps{
@@ -168,7 +170,7 @@ func schema_pkg_apis_registrymankubermaticcom_v1alpha1_Project(ref common.Refere
 					},
 					"spec": {
 						SchemaProps: spec.SchemaProps{
-							Ref: ref("github.com/kubermatic-labs/registryman/pkg/apis/registryman.kubermatic.com/v1alpha1.ProjectSpec"),
+							Ref: ref("github.com/kubermatic-labs/registryman/pkg/apis/registryman/v1alpha1.ProjectSpec"),
 						},
 					},
 				},
@@ -176,11 +178,60 @@ func schema_pkg_apis_registrymankubermaticcom_v1alpha1_Project(ref common.Refere
 			},
 		},
 		Dependencies: []string{
-			"github.com/kubermatic-labs/registryman/pkg/apis/registryman.kubermatic.com/v1alpha1.ProjectSpec", "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"},
+			"github.com/kubermatic-labs/registryman/pkg/apis/registryman/v1alpha1.ProjectSpec", "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"},
 	}
 }
 
-func schema_pkg_apis_registrymankubermaticcom_v1alpha1_ProjectMember(ref common.ReferenceCallback) common.OpenAPIDefinition {
+func schema_pkg_apis_registryman_v1alpha1_ProjectList(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Description: "ProjectList collects Registry resources.",
+				Type:        []string{"object"},
+				Properties: map[string]spec.Schema{
+					"kind": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"apiVersion": {
+						SchemaProps: spec.SchemaProps{
+							Description: "APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"metadata": {
+						SchemaProps: spec.SchemaProps{
+							Default: map[string]interface{}{},
+							Ref:     ref("k8s.io/apimachinery/pkg/apis/meta/v1.ListMeta"),
+						},
+					},
+					"items": {
+						SchemaProps: spec.SchemaProps{
+							Type: []string{"array"},
+							Items: &spec.SchemaOrArray{
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Default: map[string]interface{}{},
+										Ref:     ref("github.com/kubermatic-labs/registryman/pkg/apis/registryman/v1alpha1.Project"),
+									},
+								},
+							},
+						},
+					},
+				},
+				Required: []string{"items"},
+			},
+		},
+		Dependencies: []string{
+			"github.com/kubermatic-labs/registryman/pkg/apis/registryman/v1alpha1.Project", "k8s.io/apimachinery/pkg/apis/meta/v1.ListMeta"},
+	}
+}
+
+func schema_pkg_apis_registryman_v1alpha1_ProjectMember(ref common.ReferenceCallback) common.OpenAPIDefinition {
 	return common.OpenAPIDefinition{
 		Schema: spec.Schema{
 			SchemaProps: spec.SchemaProps{
@@ -224,7 +275,7 @@ func schema_pkg_apis_registrymankubermaticcom_v1alpha1_ProjectMember(ref common.
 	}
 }
 
-func schema_pkg_apis_registrymankubermaticcom_v1alpha1_ProjectSpec(ref common.ReferenceCallback) common.OpenAPIDefinition {
+func schema_pkg_apis_registryman_v1alpha1_ProjectSpec(ref common.ReferenceCallback) common.OpenAPIDefinition {
 	return common.OpenAPIDefinition{
 		Schema: spec.Schema{
 			SchemaProps: spec.SchemaProps{
@@ -274,7 +325,7 @@ func schema_pkg_apis_registrymankubermaticcom_v1alpha1_ProjectSpec(ref common.Re
 							Items: &spec.SchemaOrArray{
 								Schema: &spec.Schema{
 									SchemaProps: spec.SchemaProps{
-										Ref: ref("github.com/kubermatic-labs/registryman/pkg/apis/registryman.kubermatic.com/v1alpha1.ProjectMember"),
+										Ref: ref("github.com/kubermatic-labs/registryman/pkg/apis/registryman/v1alpha1.ProjectMember"),
 									},
 								},
 							},
@@ -292,11 +343,11 @@ func schema_pkg_apis_registrymankubermaticcom_v1alpha1_ProjectSpec(ref common.Re
 			},
 		},
 		Dependencies: []string{
-			"github.com/kubermatic-labs/registryman/pkg/apis/registryman.kubermatic.com/v1alpha1.ProjectMember"},
+			"github.com/kubermatic-labs/registryman/pkg/apis/registryman/v1alpha1.ProjectMember"},
 	}
 }
 
-func schema_pkg_apis_registrymankubermaticcom_v1alpha1_ProjectStatus(ref common.ReferenceCallback) common.OpenAPIDefinition {
+func schema_pkg_apis_registryman_v1alpha1_ProjectStatus(ref common.ReferenceCallback) common.OpenAPIDefinition {
 	return common.OpenAPIDefinition{
 		Schema: spec.Schema{
 			SchemaProps: spec.SchemaProps{
@@ -327,7 +378,7 @@ func schema_pkg_apis_registrymankubermaticcom_v1alpha1_ProjectStatus(ref common.
 								Schema: &spec.Schema{
 									SchemaProps: spec.SchemaProps{
 										Default: map[string]interface{}{},
-										Ref:     ref("github.com/kubermatic-labs/registryman/pkg/apis/registryman.kubermatic.com/v1alpha1.MemberStatus"),
+										Ref:     ref("github.com/kubermatic-labs/registryman/pkg/apis/registryman/v1alpha1.MemberStatus"),
 									},
 								},
 							},
@@ -346,7 +397,7 @@ func schema_pkg_apis_registrymankubermaticcom_v1alpha1_ProjectStatus(ref common.
 								Schema: &spec.Schema{
 									SchemaProps: spec.SchemaProps{
 										Default: map[string]interface{}{},
-										Ref:     ref("github.com/kubermatic-labs/registryman/pkg/apis/registryman.kubermatic.com/v1alpha1.ReplicationRuleStatus"),
+										Ref:     ref("github.com/kubermatic-labs/registryman/pkg/apis/registryman/v1alpha1.ReplicationRuleStatus"),
 									},
 								},
 							},
@@ -364,7 +415,7 @@ func schema_pkg_apis_registrymankubermaticcom_v1alpha1_ProjectStatus(ref common.
 						SchemaProps: spec.SchemaProps{
 							Description: "Scanner of the project.",
 							Default:     map[string]interface{}{},
-							Ref:         ref("github.com/kubermatic-labs/registryman/pkg/apis/registryman.kubermatic.com/v1alpha1.ScannerStatus"),
+							Ref:         ref("github.com/kubermatic-labs/registryman/pkg/apis/registryman/v1alpha1.ScannerStatus"),
 						},
 					},
 				},
@@ -372,11 +423,11 @@ func schema_pkg_apis_registrymankubermaticcom_v1alpha1_ProjectStatus(ref common.
 			},
 		},
 		Dependencies: []string{
-			"github.com/kubermatic-labs/registryman/pkg/apis/registryman.kubermatic.com/v1alpha1.MemberStatus", "github.com/kubermatic-labs/registryman/pkg/apis/registryman.kubermatic.com/v1alpha1.ReplicationRuleStatus", "github.com/kubermatic-labs/registryman/pkg/apis/registryman.kubermatic.com/v1alpha1.ScannerStatus"},
+			"github.com/kubermatic-labs/registryman/pkg/apis/registryman/v1alpha1.MemberStatus", "github.com/kubermatic-labs/registryman/pkg/apis/registryman/v1alpha1.ReplicationRuleStatus", "github.com/kubermatic-labs/registryman/pkg/apis/registryman/v1alpha1.ScannerStatus"},
 	}
 }
 
-func schema_pkg_apis_registrymankubermaticcom_v1alpha1_Registry(ref common.ReferenceCallback) common.OpenAPIDefinition {
+func schema_pkg_apis_registryman_v1alpha1_Registry(ref common.ReferenceCallback) common.OpenAPIDefinition {
 	return common.OpenAPIDefinition{
 		Schema: spec.Schema{
 			SchemaProps: spec.SchemaProps{
@@ -406,12 +457,12 @@ func schema_pkg_apis_registrymankubermaticcom_v1alpha1_Registry(ref common.Refer
 					"spec": {
 						SchemaProps: spec.SchemaProps{
 							Description: "Spec describes the Registry Specification.",
-							Ref:         ref("github.com/kubermatic-labs/registryman/pkg/apis/registryman.kubermatic.com/v1alpha1.RegistrySpec"),
+							Ref:         ref("github.com/kubermatic-labs/registryman/pkg/apis/registryman/v1alpha1.RegistrySpec"),
 						},
 					},
 					"status": {
 						SchemaProps: spec.SchemaProps{
-							Ref: ref("github.com/kubermatic-labs/registryman/pkg/apis/registryman.kubermatic.com/v1alpha1.RegistryStatus"),
+							Ref: ref("github.com/kubermatic-labs/registryman/pkg/apis/registryman/v1alpha1.RegistryStatus"),
 						},
 					},
 				},
@@ -419,11 +470,11 @@ func schema_pkg_apis_registrymankubermaticcom_v1alpha1_Registry(ref common.Refer
 			},
 		},
 		Dependencies: []string{
-			"github.com/kubermatic-labs/registryman/pkg/apis/registryman.kubermatic.com/v1alpha1.RegistrySpec", "github.com/kubermatic-labs/registryman/pkg/apis/registryman.kubermatic.com/v1alpha1.RegistryStatus", "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"},
+			"github.com/kubermatic-labs/registryman/pkg/apis/registryman/v1alpha1.RegistrySpec", "github.com/kubermatic-labs/registryman/pkg/apis/registryman/v1alpha1.RegistryStatus", "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"},
 	}
 }
 
-func schema_pkg_apis_registrymankubermaticcom_v1alpha1_RegistryList(ref common.ReferenceCallback) common.OpenAPIDefinition {
+func schema_pkg_apis_registryman_v1alpha1_RegistryList(ref common.ReferenceCallback) common.OpenAPIDefinition {
 	return common.OpenAPIDefinition{
 		Schema: spec.Schema{
 			SchemaProps: spec.SchemaProps{
@@ -457,7 +508,7 @@ func schema_pkg_apis_registrymankubermaticcom_v1alpha1_RegistryList(ref common.R
 								Schema: &spec.Schema{
 									SchemaProps: spec.SchemaProps{
 										Default: map[string]interface{}{},
-										Ref:     ref("github.com/kubermatic-labs/registryman/pkg/apis/registryman.kubermatic.com/v1alpha1.Registry"),
+										Ref:     ref("github.com/kubermatic-labs/registryman/pkg/apis/registryman/v1alpha1.Registry"),
 									},
 								},
 							},
@@ -468,11 +519,11 @@ func schema_pkg_apis_registrymankubermaticcom_v1alpha1_RegistryList(ref common.R
 			},
 		},
 		Dependencies: []string{
-			"github.com/kubermatic-labs/registryman/pkg/apis/registryman.kubermatic.com/v1alpha1.Registry", "k8s.io/apimachinery/pkg/apis/meta/v1.ListMeta"},
+			"github.com/kubermatic-labs/registryman/pkg/apis/registryman/v1alpha1.Registry", "k8s.io/apimachinery/pkg/apis/meta/v1.ListMeta"},
 	}
 }
 
-func schema_pkg_apis_registrymankubermaticcom_v1alpha1_RegistrySpec(ref common.ReferenceCallback) common.OpenAPIDefinition {
+func schema_pkg_apis_registryman_v1alpha1_RegistrySpec(ref common.ReferenceCallback) common.OpenAPIDefinition {
 	return common.OpenAPIDefinition{
 		Schema: spec.Schema{
 			SchemaProps: spec.SchemaProps{
@@ -526,7 +577,7 @@ func schema_pkg_apis_registrymankubermaticcom_v1alpha1_RegistrySpec(ref common.R
 	}
 }
 
-func schema_pkg_apis_registrymankubermaticcom_v1alpha1_RegistryStatus(ref common.ReferenceCallback) common.OpenAPIDefinition {
+func schema_pkg_apis_registryman_v1alpha1_RegistryStatus(ref common.ReferenceCallback) common.OpenAPIDefinition {
 	return common.OpenAPIDefinition{
 		Schema: spec.Schema{
 			SchemaProps: spec.SchemaProps{
@@ -548,7 +599,7 @@ func schema_pkg_apis_registrymankubermaticcom_v1alpha1_RegistryStatus(ref common
 								Schema: &spec.Schema{
 									SchemaProps: spec.SchemaProps{
 										Default: map[string]interface{}{},
-										Ref:     ref("github.com/kubermatic-labs/registryman/pkg/apis/registryman.kubermatic.com/v1alpha1.ProjectStatus"),
+										Ref:     ref("github.com/kubermatic-labs/registryman/pkg/apis/registryman/v1alpha1.ProjectStatus"),
 									},
 								},
 							},
@@ -559,11 +610,11 @@ func schema_pkg_apis_registrymankubermaticcom_v1alpha1_RegistryStatus(ref common
 			},
 		},
 		Dependencies: []string{
-			"github.com/kubermatic-labs/registryman/pkg/apis/registryman.kubermatic.com/v1alpha1.ProjectStatus"},
+			"github.com/kubermatic-labs/registryman/pkg/apis/registryman/v1alpha1.ProjectStatus"},
 	}
 }
 
-func schema_pkg_apis_registrymankubermaticcom_v1alpha1_ReplicationRuleStatus(ref common.ReferenceCallback) common.OpenAPIDefinition {
+func schema_pkg_apis_registryman_v1alpha1_ReplicationRuleStatus(ref common.ReferenceCallback) common.OpenAPIDefinition {
 	return common.OpenAPIDefinition{
 		Schema: spec.Schema{
 			SchemaProps: spec.SchemaProps{
@@ -601,7 +652,7 @@ func schema_pkg_apis_registrymankubermaticcom_v1alpha1_ReplicationRuleStatus(ref
 	}
 }
 
-func schema_pkg_apis_registrymankubermaticcom_v1alpha1_Scanner(ref common.ReferenceCallback) common.OpenAPIDefinition {
+func schema_pkg_apis_registryman_v1alpha1_Scanner(ref common.ReferenceCallback) common.OpenAPIDefinition {
 	return common.OpenAPIDefinition{
 		Schema: spec.Schema{
 			SchemaProps: spec.SchemaProps{
@@ -631,7 +682,7 @@ func schema_pkg_apis_registrymankubermaticcom_v1alpha1_Scanner(ref common.Refere
 					"spec": {
 						SchemaProps: spec.SchemaProps{
 							Description: "Spec describes the Scanner Specification.",
-							Ref:         ref("github.com/kubermatic-labs/registryman/pkg/apis/registryman.kubermatic.com/v1alpha1.ScannerSpec"),
+							Ref:         ref("github.com/kubermatic-labs/registryman/pkg/apis/registryman/v1alpha1.ScannerSpec"),
 						},
 					},
 				},
@@ -639,11 +690,60 @@ func schema_pkg_apis_registrymankubermaticcom_v1alpha1_Scanner(ref common.Refere
 			},
 		},
 		Dependencies: []string{
-			"github.com/kubermatic-labs/registryman/pkg/apis/registryman.kubermatic.com/v1alpha1.ScannerSpec", "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"},
+			"github.com/kubermatic-labs/registryman/pkg/apis/registryman/v1alpha1.ScannerSpec", "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"},
 	}
 }
 
-func schema_pkg_apis_registrymankubermaticcom_v1alpha1_ScannerSpec(ref common.ReferenceCallback) common.OpenAPIDefinition {
+func schema_pkg_apis_registryman_v1alpha1_ScannerList(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Description: "ScannerList collects Registry resources.",
+				Type:        []string{"object"},
+				Properties: map[string]spec.Schema{
+					"kind": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"apiVersion": {
+						SchemaProps: spec.SchemaProps{
+							Description: "APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"metadata": {
+						SchemaProps: spec.SchemaProps{
+							Default: map[string]interface{}{},
+							Ref:     ref("k8s.io/apimachinery/pkg/apis/meta/v1.ListMeta"),
+						},
+					},
+					"items": {
+						SchemaProps: spec.SchemaProps{
+							Type: []string{"array"},
+							Items: &spec.SchemaOrArray{
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Default: map[string]interface{}{},
+										Ref:     ref("github.com/kubermatic-labs/registryman/pkg/apis/registryman/v1alpha1.Scanner"),
+									},
+								},
+							},
+						},
+					},
+				},
+				Required: []string{"items"},
+			},
+		},
+		Dependencies: []string{
+			"github.com/kubermatic-labs/registryman/pkg/apis/registryman/v1alpha1.Scanner", "k8s.io/apimachinery/pkg/apis/meta/v1.ListMeta"},
+	}
+}
+
+func schema_pkg_apis_registryman_v1alpha1_ScannerSpec(ref common.ReferenceCallback) common.OpenAPIDefinition {
 	return common.OpenAPIDefinition{
 		Schema: spec.Schema{
 			SchemaProps: spec.SchemaProps{
@@ -669,7 +769,7 @@ func schema_pkg_apis_registrymankubermaticcom_v1alpha1_ScannerSpec(ref common.Re
 	}
 }
 
-func schema_pkg_apis_registrymankubermaticcom_v1alpha1_ScannerStatus(ref common.ReferenceCallback) common.OpenAPIDefinition {
+func schema_pkg_apis_registryman_v1alpha1_ScannerStatus(ref common.ReferenceCallback) common.OpenAPIDefinition {
 	return common.OpenAPIDefinition{
 		Schema: spec.Schema{
 			SchemaProps: spec.SchemaProps{

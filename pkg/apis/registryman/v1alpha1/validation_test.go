@@ -26,7 +26,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/serializer/json"
 
-	"github.com/kubermatic-labs/registryman/pkg/apis/registryman.kubermatic.com/v1alpha1"
+	api "github.com/kubermatic-labs/registryman/pkg/apis/registryman/v1alpha1"
 	"k8s.io/kube-openapi/pkg/validation/errors"
 )
 
@@ -34,7 +34,7 @@ var serializer *json.Serializer
 
 func init() {
 	scheme := runtime.NewScheme()
-	err := v1alpha1.Install(scheme)
+	err := api.Install(scheme)
 	if err != nil {
 		panic(err)
 	}
@@ -70,7 +70,7 @@ var _ = Describe("Validation", func() {
 		registry, err := objectFromFile("testdata/global-registry.yaml")
 		Expect(err).ToNot(HaveOccurred())
 
-		results := v1alpha1.RegistryValidator.Validate(registry)
+		results := api.RegistryValidator.Validate(registry)
 		if results.HasErrors() {
 			fmt.Fprintln(GinkgoWriter, results.AsError().Error())
 		}
@@ -79,7 +79,7 @@ var _ = Describe("Validation", func() {
 		registry, err = objectFromFile("testdata/local-registry.yaml")
 		Expect(err).ToNot(HaveOccurred())
 
-		results = v1alpha1.RegistryValidator.Validate(registry)
+		results = api.RegistryValidator.Validate(registry)
 		if results.HasErrors() {
 			fmt.Fprintln(GinkgoWriter, results.AsError().Error())
 		}
@@ -90,7 +90,7 @@ var _ = Describe("Validation", func() {
 		project, err := objectFromFile("testdata/local-project.yaml")
 		Expect(err).ToNot(HaveOccurred())
 
-		results := v1alpha1.ProjectValidator.Validate(project)
+		results := api.ProjectValidator.Validate(project)
 		if results.HasErrors() {
 			fmt.Fprintln(GinkgoWriter, results.AsError().Error())
 		}
@@ -101,7 +101,7 @@ var _ = Describe("Validation", func() {
 		registry, err := objectFromFile("testdata/registry-wrong-apiendpoint.yaml")
 		Expect(err).ToNot(HaveOccurred())
 
-		results := v1alpha1.RegistryValidator.Validate(registry)
+		results := api.RegistryValidator.Validate(registry)
 		Expect(results.HasErrorsOrWarnings()).To(BeTrue())
 		if results.HasErrors() {
 			fmt.Fprintln(GinkgoWriter, results.AsError().Error())
@@ -119,7 +119,7 @@ var _ = Describe("Validation", func() {
 		scanner, err := objectFromFile("testdata/scanner-wrong-url.yaml")
 		Expect(err).ToNot(HaveOccurred())
 
-		results := v1alpha1.ScannerValidator.Validate(scanner)
+		results := api.ScannerValidator.Validate(scanner)
 		Expect(results.HasErrorsOrWarnings()).To(BeTrue())
 		if results.HasErrors() {
 			fmt.Fprintln(GinkgoWriter, results.AsError().Error())

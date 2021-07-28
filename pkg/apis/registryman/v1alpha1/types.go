@@ -21,7 +21,6 @@ import (
 	"fmt"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/runtime"
 )
 
 //
@@ -32,10 +31,12 @@ import (
 // #    " "#mm"  "#m"#  mm#mm  "mmm"    "mm   #      "#
 //                m  #                               m"
 //                 ""                               ""
-//
+
+//+genclient
+// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+// +kubebuilder:resource:categories="registryman"
 // +kubebuilder:object:root=true
 // +kubebuilder:resource:path=registries,scope=Namespaced,singular=registry
-// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 // +kubebuilder:subresource:status
 
 // Registry describes the expected state of a registry Object
@@ -48,7 +49,7 @@ type Registry struct {
 }
 
 // Registry implements the runtime.Object interface
-var _ runtime.Object = &Registry{}
+// var _ runtime.Object = &Registry{}
 
 // RegistrySpec describes the specification of a Registry.
 type RegistrySpec struct {
@@ -173,8 +174,10 @@ type RegistryList struct {
 //                       ""
 //
 
+// +genclient
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 // +kubebuilder:object:root=true
+// +kubebuilder:resource:categories="registryman"
 // +kubebuilder:resource:path=projects,scope=Namespaced,singular=project
 
 // Project describes the expected state of a globalregistry Project
@@ -185,7 +188,7 @@ type Project struct {
 }
 
 // Project implements the runtime.Object interface
-var _ runtime.Object = &Project{}
+// var _ runtime.Object = &Project{}
 
 // ProjectSpec describes the spec field of the Project resource
 type ProjectSpec struct {
@@ -456,13 +459,24 @@ func (mr *MemberRole) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+
+// ProjectList collects Registry resources.
+type ProjectList struct {
+	metav1.TypeMeta `json:",inline"`
+	metav1.ListMeta `json:"metadata,omitempty"`
+	Items           []Project `json:"items"`
+}
+
 //  ____
 // / ___|  ___ __ _ _ __  _ __   ___ _ __
 // \___ \ / __/ _` | '_ \| '_ \ / _ \ '__|
 //  ___) | (_| (_| | | | | | | |  __/ |
 // |____/ \___\__,_|_| |_|_| |_|\___|_|
 
+// +genclient
 // +kubebuilder:resource:path=scanners,scope=Namespaced,singular=scanner
+// +kubebuilder:resource:categories="registryman"
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
 // Scanner resource describes the configuration of an external vulnerability
@@ -483,4 +497,13 @@ type ScannerSpec struct {
 	// An optional value of the HTTP Authorization header sent with each
 	// request to the Scanner Adapter API.
 	AccessCredential string `json:"accessCredential,omitempty"`
+}
+
+// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+
+// ScannerList collects Registry resources.
+type ScannerList struct {
+	metav1.TypeMeta `json:",inline"`
+	metav1.ListMeta `json:"metadata,omitempty"`
+	Items           []Scanner `json:"items"`
 }

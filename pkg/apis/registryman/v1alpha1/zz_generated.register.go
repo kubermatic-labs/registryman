@@ -59,9 +59,11 @@ func init() {
 func addKnownTypes(scheme *runtime.Scheme) error {
 	scheme.AddKnownTypes(SchemeGroupVersion,
 		&Project{},
+		&ProjectList{},
 		&Registry{},
 		&RegistryList{},
 		&Scanner{},
+		&ScannerList{},
 	)
 	// AddToGroupVersion allows the serialization of client types like ListOptions.
 	v1.AddToGroupVersion(scheme, SchemeGroupVersion)

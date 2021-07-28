@@ -18,9 +18,9 @@
 
 // +k8s:openapi-gen=true
 // +k8s:deepcopy-gen=package,register
-// +groupName=registryman.kubermatic.com
 // +versionName=v1alpha1
 
 // package v1alpha1 implements the v1alpha1 version of the resources used by
 // registryman.
-package v1alpha1 // import "github.com/kubermatic-labs/registryman/pkg/apis/registryman.kubermatic.com/v1alpha1"
+// +groupName=registryman.kubermatic.com
+package v1alpha1 // import "github.com/kubermatic-labs/registryman/pkg/apis/registryman/v1alpha1"
