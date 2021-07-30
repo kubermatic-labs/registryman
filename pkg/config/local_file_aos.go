@@ -70,9 +70,8 @@ func (aos *localFileApiObjectStore) WriteResource(obj runtime.Object) error {
 // from the object name by appending .yaml to it. The path where the file is
 // removed from is set when the ReadLocalManifests function creates the
 // ApiObjectStore.
-func (aos *localFileApiObjectStore) RemoveResource(objectName string) error {
-	fName := filepath.Join(aos.path, fmt.Sprintf("%s.yaml", objectName))
-	return os.Remove(fName)
+func (aos *localFileApiObjectStore) RemoveResource(obj runtime.Object) error {
+	return os.Remove(getFileName(obj))
 }
 
 // ReadLocalManifests creates a new ApiObjectStore. It reads all files under path.
@@ -403,7 +402,8 @@ func (aos *localFileApiObjectStore) GetScanners() []*api.Scanner {
 	return scanners
 }
 
-// GetCliOptions returns the ApiObjectStore related CLI options of an apply.
+// GetGlobalRegistryOptions returns the ApiObjectStore related CLI options of an
+// apply.
 func (aos *localFileApiObjectStore) GetGlobalRegistryOptions() globalregistry.RegistryOptions {
-	return (*localFileApiObjectStore)(aos).options
+	return aos.options
 }

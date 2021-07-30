@@ -57,7 +57,7 @@ type ApiObjectStore interface {
 	// RemoveResource removes the file from the filesystem. The path where
 	// the file is removed from is set when the ReadManifests function
 	// creates the ApiObjectStore.
-	RemoveResource(objectName string) error
+	RemoveResource(obj runtime.Object) error
 
 	// GetRegistries returns the parsed registries as API objects.
 	GetRegistries() []*api.Registry

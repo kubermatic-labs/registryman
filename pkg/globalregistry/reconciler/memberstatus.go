@@ -96,7 +96,7 @@ var _ SideEffect = &persistMemberCredentials{}
 
 type manifestManipulator interface {
 	WriteResource(obj runtime.Object) error
-	RemoveResource(objectName string) error
+	RemoveResource(obj runtime.Object) error
 }
 
 func (pmc *persistMemberCredentials) Perform(ctx context.Context) error {
@@ -130,7 +130,7 @@ func (pmc *persistMemberCredentials) Perform(ctx context.Context) error {
 		},
 		Type: "kubernetes.io/dockerconfigjson",
 	}
-	name := fmt.Sprintf("%s_%s_%s_creds",
+	name := fmt.Sprintf("%s---%s---%s---creds",
 		pmc.registry.GetName(),
 		pmc.action.projectName,
 		pmc.action.Name,
@@ -183,13 +183,19 @@ func (rmc *removeMemberCredentials) Perform(ctx context.Context) error {
 	if !ok {
 		return fmt.Errorf("SideEffectManifestManipulator is not a proper manifestManipulator")
 	}
-
-	filename := fmt.Sprintf("%s_%s_%s_creds",
+	secret := &corev1.Secret{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       "Secret",
+			APIVersion: "v1",
+		},
+	}
+	name := fmt.Sprintf("%s---%s---%s---creds",
 		rmc.registry.GetName(),
 		rmc.action.projectName,
 		rmc.action.Name,
 	)
-	return manifestManipulator.RemoveResource(filename)
+	secret.SetName(name)
+	return manifestManipulator.RemoveResource(secret)
 }
 
 type memberRemoveAction struct {

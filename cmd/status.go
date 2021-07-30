@@ -45,7 +45,7 @@ var statusCmd = &cobra.Command{
 			}
 		} else {
 			var clientConfig *rest.Config
-			aos, clientConfig, err = config.ConnectToKube()
+			aos, clientConfig, err = config.ConnectToKube(nil)
 			if err != nil {
 				return err
 			}

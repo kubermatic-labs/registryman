@@ -18,13 +18,18 @@ package config
 
 import (
 	"context"
+	"fmt"
 
 	api "github.com/kubermatic-labs/registryman/pkg/apis/registryman/v1alpha1"
 	regmanclient "github.com/kubermatic-labs/registryman/pkg/apis/registryman/v1alpha1/clientset/versioned"
 	"github.com/kubermatic-labs/registryman/pkg/globalregistry"
 	"github.com/spf13/pflag"
+	corev1 "k8s.io/api/core/v1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/runtime/schema"
+	applyCoreV1 "k8s.io/client-go/applyconfigurations/core/v1"
+	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
 )
@@ -46,18 +51,22 @@ func init() {
 
 type kubeApiObjectStore struct {
 	regmanClient *regmanclient.Clientset
+	kubeClient   *kubernetes.Clientset
+	options      globalregistry.RegistryOptions
 }
 
 var _ ApiObjectStore = &kubeApiObjectStore{}
 
-func ConnectToKube() (ApiObjectStore, *rest.Config, error) {
+func ConnectToKube(options globalregistry.RegistryOptions) (ApiObjectStore, *rest.Config, error) {
 	var err error
 	clientConfig, err = kubeConfig.ClientConfig()
 	if err != nil {
 		return nil, nil, err
 	}
 	return &kubeApiObjectStore{
+		options:      options,
 		regmanClient: regmanclient.NewForConfigOrDie(clientConfig),
+		kubeClient:   kubernetes.NewForConfigOrDie(clientConfig),
 	}, clientConfig, nil
 }
 
@@ -66,14 +75,85 @@ func ConnectToKube() (ApiObjectStore, *rest.Config, error) {
 // The path where the file is created is set when the ReadManifests
 // function creates the ApiObjectStore.
 func (aos *kubeApiObjectStore) WriteResource(obj runtime.Object) error {
-	panic("not implemented") // TODO: Implement
+	gvk := obj.GetObjectKind().GroupVersionKind()
+	logger.V(1).Info("WriteResource",
+		"group", gvk.Group,
+		"version", gvk.Version,
+		"kind", gvk.Kind,
+	)
+	switch gvk {
+	default:
+		logger.V(-1).Info("WriterResource invoked, unsupported resource",
+			"group", gvk.Group,
+			"version", gvk.Version,
+			"kind", gvk.Kind,
+		)
+	case schema.GroupVersionKind{
+		Group:   "",
+		Version: "v1",
+		Kind:    "Secret",
+	}:
+		secret := obj.(*corev1.Secret)
+		namespace, _, err := kubeConfig.Namespace()
+		if err != nil {
+			return fmt.Errorf("cannot get Kubernetes namespace: %w", err)
+		}
+		logger.V(1).Info("creating a new secret",
+			"name", secret.GetName(),
+		)
+		applyConfig := applyCoreV1.Secret(secret.Name, namespace).
+			WithData(secret.Data).
+			WithStringData(secret.StringData).
+			WithType(secret.Type)
+		if err != nil {
+			return fmt.Errorf("error creating SecretApplyConfiguration: %w", err)
+		}
+		_, err = aos.kubeClient.CoreV1().Secrets(namespace).Apply(context.Background(), applyConfig, v1.ApplyOptions{
+			FieldManager: "regman",
+		})
+		if err != nil {
+			return fmt.Errorf("error applying secret: %w", err)
+		}
+	}
+	return nil
 }
 
 // RemoveResource removes the file from the filesystem. The path where
 // the file is removed from is set when the ReadManifests function
 // creates the ApiObjectStore.
-func (aos *kubeApiObjectStore) RemoveResource(objectName string) error {
-	panic("not implemented") // TODO: Implement
+func (aos *kubeApiObjectStore) RemoveResource(obj runtime.Object) error {
+	gvk := obj.GetObjectKind().GroupVersionKind()
+	logger.V(1).Info("WriteResource",
+		"group", gvk.Group,
+		"version", gvk.Version,
+		"kind", gvk.Kind,
+	)
+	switch gvk {
+	default:
+		logger.V(-1).Info("WriterResource invoked, unsupported resource",
+			"group", gvk.Group,
+			"version", gvk.Version,
+			"kind", gvk.Kind,
+		)
+	case schema.GroupVersionKind{
+		Group:   "",
+		Version: "v1",
+		Kind:    "Secret",
+	}:
+		secret := obj.(*corev1.Secret)
+		namespace, _, err := kubeConfig.Namespace()
+		if err != nil {
+			return fmt.Errorf("cannot get Kubernetes namespace: %w", err)
+		}
+		logger.V(1).Info("removing secret",
+			"name", secret.GetName(),
+		)
+		err = aos.kubeClient.CoreV1().Secrets(namespace).Delete(context.Background(), secret.GetName(), v1.DeleteOptions{})
+		if err != nil {
+			return fmt.Errorf("error removing secret: %w", err)
+		}
+	}
+	return nil
 }
 
 // GetRegistries returns the parsed registries as API objects.
@@ -95,16 +175,40 @@ func (aos *kubeApiObjectStore) GetRegistries() []*api.Registry {
 
 // GetProjects returns the parsed projects as API objects.
 func (aos *kubeApiObjectStore) GetProjects() []*api.Project {
-	panic("not implemented") // TODO: Implement
+	namespace, _, err := kubeConfig.Namespace()
+	if err != nil {
+		panic(err)
+	}
+	projectList, err := aos.regmanClient.RegistrymanV1alpha1().Projects(namespace).List(context.Background(), v1.ListOptions{})
+	if err != nil {
+		panic(err)
+	}
+	apiProjects := make([]*api.Project, len(projectList.Items))
+	for i, reg := range projectList.Items {
+		apiProjects[i] = &reg
+	}
+	return apiProjects
 }
 
 // GetScanners returns the parsed scanners as API objects.
 func (aos *kubeApiObjectStore) GetScanners() []*api.Scanner {
-	panic("not implemented") // TODO: Implement
+	namespace, _, err := kubeConfig.Namespace()
+	if err != nil {
+		panic(err)
+	}
+	scannerList, err := aos.regmanClient.RegistrymanV1alpha1().Scanners(namespace).List(context.Background(), v1.ListOptions{})
+	if err != nil {
+		panic(err)
+	}
+	apiScanners := make([]*api.Scanner, len(scannerList.Items))
+	for i, reg := range scannerList.Items {
+		apiScanners[i] = &reg
+	}
+	return apiScanners
 }
 
 // GetGlobalRegistryOptions returns the ApiObjectStore related CLI options of an
 // apply.
 func (aos *kubeApiObjectStore) GetGlobalRegistryOptions() globalregistry.RegistryOptions {
-	panic("not implemented") // TODO: Implement
+	return aos.options
 }
