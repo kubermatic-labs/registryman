@@ -6,7 +6,6 @@ on:
       - 'release-*'
       - 'master'
       - 'main'
-      - 'basic-ci'
     tags:
       - 'v*'
 env:
@@ -28,7 +27,7 @@ jobs:
         uses: golangci/golangci-lint-action@v2
         with:
           version: v1.40.1
-          args: --timeout 10m0s
+          args: --timeout 10m0s --build-tags "exclude_graphdriver_devicemapper exclude_graphdriver_btrfs containers_image_openpgp"
   build:
     runs-on: ubuntu-latest
     name: Build binary
@@ -37,7 +36,7 @@ jobs:
     - uses: actions/setup-go@v2
       with:
         go-version: ${{ env.golang-version }}
-    - run: go build -v .
+    - run: go build -v -tags "exclude_graphdriver_devicemapper exclude_graphdriver_btrfs containers_image_openpgp" .
   checks:
     runs-on: ubuntu-latest
     name: Go checks
@@ -49,7 +48,7 @@ jobs:
       with:
         go-version: ${{ env.golang-version }}
     - name: Go vet
-      run: go vet -v ./... && git diff --exit-code
+      run: go vet -v -tags "exclude_graphdriver_devicemapper exclude_graphdriver_btrfs containers_image_openpgp" ./... && git diff --exit-code
     - name: Codegen
       run: go mod vendor && hack/update-codegen.sh && git diff --exit-code
   unit-tests:
@@ -60,4 +59,4 @@ jobs:
     - uses: actions/setup-go@v2
       with:
         go-version: ${{ env.golang-version }}
-    - run: go test -v ./... -race
+    - run: go test -v ./... -race -tags "exclude_graphdriver_devicemapper exclude_graphdriver_btrfs containers_image_openpgp"

@@ -42,12 +42,28 @@ func (p *project) GetName() string {
 
 // Delete removes the project from registry
 func (p *project) Delete() error {
-	repos, err := p.getRepositories()
+	repos, err := p.GetRepositories()
 	if err != nil {
 		return err
 	}
+
 	if len(repos) > 0 {
-		return fmt.Errorf("%s: repositories are present, please delete them before deleting the project, %w", p.Name, globalregistry.ErrRecoverableError)
+		switch opt := p.api.reg.GetOptions().(type) {
+		case globalregistry.CanForceDelete:
+			if f := opt.ForceDeleteProjects(); !f {
+				return fmt.Errorf("%s: repositories are present, please delete them before deleting the project, %w", p.Name, globalregistry.ErrRecoverableError)
+			}
+			for _, repo := range repos {
+				p.api.reg.logger.V(1).Info("deleting repository",
+					"repositoryName", repos,
+				)
+				err = p.deleteRepository(repo)
+				if err != nil {
+					return err
+				}
+			}
+		}
+
 	}
 	return p.api.delete(p.id)
 }
@@ -244,8 +260,12 @@ func (p *project) AssignReplicationRule(remoteReg globalregistry.RegistryConfig,
 	return p.api.reg.ReplicationAPI().(*replicationAPI).create(p, remoteReg, trigger, direction)
 }
 
-func (p *project) getRepositories() ([]*projectRepositoryRespBody, error) {
+func (p *project) GetRepositories() ([]string, error) {
 	return p.api.listProjectRepositories(p)
+}
+
+func (p *project) deleteRepository(r string) error {
+	return p.api.deleteProjectRepository(p, r)
 }
 
 func (p *project) GetReplicationRules(

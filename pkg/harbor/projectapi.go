@@ -99,6 +99,9 @@ func (p *projectAPI) GetByName(name string) (globalregistry.Project, error) {
 }
 
 func (p *projectAPI) List() ([]globalregistry.Project, error) {
+	p.reg.logger.V(1).Info("listing projects",
+		"registry", p.reg.GetName(),
+	)
 	url := *p.reg.parsedUrl
 	url.Path = path
 	req, err := http.NewRequest(http.MethodGet, url.String(), nil)
@@ -106,7 +109,6 @@ func (p *projectAPI) List() ([]globalregistry.Project, error) {
 		return nil, err
 	}
 
-	// p.registry.AddBasicAuth(req)
 	req.SetBasicAuth(p.reg.GetUsername(), p.reg.GetPassword())
 
 	resp, err := p.reg.do(req)
@@ -232,10 +234,9 @@ func (p *projectAPI) delete(id int) error {
 
 type projectRepositoryRespBody struct {
 	Name string `json:"name"`
-	proj *project
 }
 
-func (p *projectAPI) listProjectRepositories(proj *project) ([]*projectRepositoryRespBody, error) {
+func (p *projectAPI) listProjectRepositories(proj *project) ([]string, error) {
 	url := *p.reg.parsedUrl
 	url.Path = fmt.Sprintf("%s/%s/repositories", path, proj.Name)
 	req, err := http.NewRequest(http.MethodGet, url.String(), nil)
@@ -260,11 +261,36 @@ func (p *projectAPI) listProjectRepositories(proj *project) ([]*projectRepositor
 		p.reg.logger.Error(err, "json decoding failed")
 		p.reg.logger.Info(buf.String())
 	}
+
+	var repositoryNames []string
 	for _, rep := range repositories {
-		rep.proj = proj
-		rep.Name = strings.TrimPrefix(
-			rep.Name,
-			proj.Name+"/")
+		repositoryNames = append(
+			repositoryNames,
+			strings.TrimPrefix(
+				rep.Name,
+				proj.Name+"/",
+			),
+		)
 	}
-	return repositories, err
+	return repositoryNames, err
+}
+
+func (p *projectAPI) deleteProjectRepository(proj *project, repo string) error {
+	url := *p.reg.parsedUrl
+	url.Path = fmt.Sprintf("%s/%s/repositories/%s", path, proj.Name, repo)
+	req, err := http.NewRequest(http.MethodDelete, url.String(), nil)
+	if err != nil {
+		return err
+	}
+
+	req.SetBasicAuth(p.reg.GetUsername(), p.reg.GetPassword())
+
+	resp, err := p.reg.do(req)
+	if err != nil {
+		return err
+	}
+
+	defer resp.Body.Close()
+
+	return nil
 }

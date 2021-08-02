@@ -110,6 +110,10 @@ func (reg *remoteRegistryStatus) GetProvider() string {
 	return reg.Type
 }
 
+func (reg *remoteRegistryStatus) GetOptions() globalregistry.RegistryOptions {
+	panic("not implemented")
+}
+
 func newRemoteRegistries(reg *registry) *remoteRegistries {
 	return &remoteRegistries{
 		reg: reg,

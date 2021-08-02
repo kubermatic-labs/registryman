@@ -42,7 +42,7 @@ registries.
 
 Currently, the following Registry providers are supported:
 - Harbor (https://goharbor.io)
-- Azure Container Registry (in progress)
+- Azure Container Registry
 
 The Project resources describe the members of the project. Each member has a type
 (User, Group or Robot) and a Role. The role shows the capabilities for the given
@@ -115,6 +115,30 @@ $ registryman apply <path-to-configuration-dir>
 1.6230652135111215e+09	info	removing project os-images	{"dry-run": true}
 ```
 
+With the `force-delete` flag, you can remove projects, even if they have repositories under them.
+In this case, they will be deleted before of the removal of the project.
+
+You can use `registryman.kubermatic.com/forceDelete` annotation in Registry resources
+with `true` or `false` value, to control this behaviour per repository.
+Annotations are always prioritized, CLI flags are used only when they are omitted.
+
+Annotation usage example:
+```yaml
+apiVersion: registryman.kubermatic.com/v1alpha1
+kind: Registry
+metadata:
+  name: global
+  annotations:
+    "registryman.kubermatic.com/forceDelete": "true"
+spec:
+  provider: harbor
+  role: GlobalHub
+  apiEndpoint: http://core.harbor-1.demo
+  username: admin
+  password: admin
+```
+
+
 ### Checking the actual registry state
 
 Registryman can generate the state of the managed registries using the `state`
@@ -123,6 +147,19 @@ files describing the registries reside.
 
 ```bash
 $ registryman status <path-to-configuration-dir>
+```
+
+### Validating the config files
+
+Registryman can validate the configuration files using the `validate` command.
+
+```bash
+$ registryman validate <path-to-configuration-dir>
+
+1.6251336698573446e+09	info	validating config files	{"dir": "<path-to-configuration-dir>"}
+1.6251336698603425e+09	warn	Local registry does not exist	{"project_name": "node", "registry_name": "global"}
+1.6251336698603656e+09	warn	Local registry does not exist	{"project_name": "node", "registry_name": "global2"}
+1.6251336698603873e+09	warn	config files are not valid	{"error": "validation error: project contains invalid registry name"}
 ```
 
 ### Generating the Swagger API

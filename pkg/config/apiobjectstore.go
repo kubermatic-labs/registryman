@@ -19,6 +19,7 @@ package config
 import (
 	"fmt"
 	"io"
+	"net/url"
 	"os"
 	"path/filepath"
 	"strings"
@@ -26,6 +27,7 @@ import (
 	_ "github.com/kubermatic-labs/registryman/pkg/acr"
 	api "github.com/kubermatic-labs/registryman/pkg/apis/registryman.kubermatic.com/v1alpha1"
 	"github.com/kubermatic-labs/registryman/pkg/config/registry"
+	"github.com/kubermatic-labs/registryman/pkg/globalregistry"
 	_ "github.com/kubermatic-labs/registryman/pkg/harbor"
 
 	corev1 "k8s.io/api/core/v1"
@@ -59,6 +61,7 @@ func init() {
 type ApiObjectStore struct {
 	store      map[schema.GroupVersionKind][]runtime.Object
 	serializer *json.Serializer
+	options    globalregistry.RegistryOptions
 	path       string
 }
 
@@ -91,9 +94,10 @@ func (aos *ApiObjectStore) RemoveManifest(filename string) error {
 
 // ReadManifests creates a new ApiObjectStore. It reads all files under path.
 // The files are deserialized and validated.
-func ReadManifests(path string) (*ApiObjectStore, error) {
+func ReadManifests(path string, options globalregistry.RegistryOptions) (*ApiObjectStore, error) {
 	aos := &ApiObjectStore{
-		path: path,
+		path:    path,
+		options: options,
 	}
 	aos.serializer = json.NewSerializerWithOptions(
 		json.DefaultMetaFactory,
@@ -169,7 +173,7 @@ func checkGlobalRegistryCount(registries []*api.Registry) error {
 	}
 	if len(globalRegistries) >= 2 {
 		for _, registry := range globalRegistries {
-			logger.V(-2).Info("Multiple Global Registries found",
+			logger.V(-1).Info("Multiple Global Registries found",
 				"registry_name", registry)
 		}
 		return ErrValidationMultipleGlobalRegistries
@@ -180,13 +184,13 @@ func checkGlobalRegistryCount(registries []*api.Registry) error {
 // checkLocalRegistryNamesInProjects checks that the registries referenced by
 // the local projects exist.
 func checkLocalRegistryNamesInProjects(registries []*api.Registry, projects []*api.Project) error {
+	var err error
 	localRegistries := make([]string, 0)
 	for _, registry := range registries {
 		if registry.Spec.Role == "Local" {
 			localRegistries = append(localRegistries, registry.Name)
 		}
 	}
-	invalidProjects := make([]string, 0)
 	for _, project := range projects {
 		if project.Spec.Type == api.LocalProjectType {
 			localRegistryExists := false
@@ -198,26 +202,23 @@ func checkLocalRegistryNamesInProjects(registries []*api.Registry, projects []*a
 					}
 				}
 				if !localRegistryExists {
-					invalidProjects = append(invalidProjects, project.Name)
-					logger.V(-2).Info("Local registry not exists",
+					logger.V(-1).Info("Local registry does not exist",
 						"project_name", project.Name,
 						"registry_name", localRegistry)
+					err = ErrValidationInvalidLocalRegistryInProject
 				}
 				localRegistryExists = false
 			}
 		}
 	}
 
-	if len(invalidProjects) > 0 {
-		return ErrValidationInvalidLocalRegistryInProject
-	}
-	return nil
+	return err
 }
 
 // checkScannerNamesInProjects checks that the scanners referenced by the
 // projects exist.
 func checkScannerNamesInProjects(projects []*api.Project, scanners []*api.Scanner) error {
-	isProjectInvalid := false
+	var err error
 	scannerNames := map[string]*api.Scanner{}
 	for _, scanner := range scanners {
 		scannerNames[scanner.GetName()] = scanner
@@ -226,68 +227,68 @@ func checkScannerNamesInProjects(projects []*api.Project, scanners []*api.Scanne
 		if project.Spec.Scanner != "" &&
 			scannerNames[project.Spec.Scanner] == nil {
 			// there is a project with invalid scanner name
-			logger.V(-2).Info("Project refers to non-existing scanner",
+			logger.V(-1).Info("Project refers to non-existing scanner",
 				"project_name", project.Name,
 				"scanner_name", project.Spec.Scanner)
-			isProjectInvalid = true
+			err = ErrValidationScannerNameReference
 		}
 	}
 
-	if isProjectInvalid {
-		return ErrValidationScannerNameReference
-	}
-	return nil
+	return err
 }
 
 // checkScannerNameUniqueness checks that there are no 2 scanners with the same
 // name.
 func checkScannerNameUniqueness(scanners []*api.Scanner) error {
+	var err error
 	scannerNames := map[string]*api.Scanner{}
 	for _, scanner := range scanners {
 		scannerName := scanner.GetName()
 		if scannerNames[scannerName] != nil {
-			logger.V(-2).Info("Multiple scanners configured with the same name",
+			logger.V(-1).Info("Multiple scanners configured with the same name",
 				"scanner_name", scannerName,
 			)
-			return ErrValidationScannerNameNotUnique
+			err = ErrValidationScannerNameNotUnique
 		}
 		scannerNames[scannerName] = scanner
 	}
-	return nil
+	return err
 }
 
 // checkProjectNameUniqueness checks that there are no 2 projects with the same
 // name.
 func checkProjectNameUniqueness(projects []*api.Project) error {
+	var err error
 	projectNames := map[string]*api.Project{}
 	for _, project := range projects {
 		projectName := project.GetName()
 		if projectNames[projectName] != nil {
-			logger.V(-2).Info("Multiple projects configured with the same name",
+			logger.V(-1).Info("Multiple projects configured with the same name",
 				"project_name", projectName,
 			)
-			return ErrValidationProjectNameNotUnique
+			err = ErrValidationProjectNameNotUnique
 		}
 		projectNames[projectName] = project
 	}
-	return nil
+	return err
 }
 
 // checkRegistryNameUniqueness checks that there are no 2 registries with the
 // same name.
 func checkRegistryNameUniqueness(registries []*api.Registry) error {
+	var err error
 	registryNames := map[string]*api.Registry{}
 	for _, registry := range registries {
 		registryName := registry.GetName()
 		if registryNames[registryName] != nil {
-			logger.V(-2).Info("Multiple registries configured with the same name",
+			logger.V(-1).Info("Multiple registries configured with the same name",
 				"registry_name", registryName,
 			)
-			return ErrValidationRegistryNameNotUnique
+			err = ErrValidationRegistryNameNotUnique
 		}
 		registryNames[registryName] = registry
 	}
-	return nil
+	return err
 }
 
 // validate performs all validations that require the full context, i.e. all
@@ -339,12 +340,17 @@ func (aos *ApiObjectStore) validate() error {
 // function contains the checks that can be performed on a single Project
 // resource.
 func checkProject(project *api.Project) error {
+	var err error
 	for _, member := range project.Spec.Members {
 		if member.Type == api.GroupMemberType && member.DN == "" {
-			return ErrValidationGroupWithoutDN
+			logger.V(-1).Info("project has group member without DN",
+				"project", project.GetName(),
+				"member", member.Name,
+			)
+			err = ErrValidationGroupWithoutDN
 		}
 	}
-	return nil
+	return err
 }
 
 // validateObjects perform the CRD level validation on each object.
@@ -412,6 +418,73 @@ func (aos *ApiObjectStore) GetScanners() []*api.Scanner {
 		scanners[i] = reg.(*api.Scanner)
 	}
 	return scanners
+}
+
+// ProjectOfRegistry struct describes a connection between a globalregistry.Registry and globalregistry.Project object.
+type ProjectOfRegistry struct {
+	Registry globalregistry.Registry
+	Project  globalregistry.Project
+}
+
+// GenerateProjectRepoName generates a project-level repository URL for a given project.
+func (p *ProjectOfRegistry) GenerateProjectRepoName() (string, error) {
+	url, err := url.Parse(p.Registry.GetAPIEndpoint())
+	if err != nil {
+		return "", err
+	}
+	return fmt.Sprintf("%s/%s", url.Host, p.Project.GetName()), nil
+}
+
+func (aos *ApiObjectStore) newProject(reg *api.Registry, proj *api.Project) (*ProjectOfRegistry, error) {
+	realRegistry, err := registry.New(reg, aos).ToReal(logger)
+	if err != nil {
+		return nil, err
+	}
+	realProject, err := realRegistry.ProjectAPI().GetByName(proj.GetName())
+	if err != nil {
+		return nil, err
+	}
+	if realProject == nil {
+		return nil, fmt.Errorf("%v Project doesn't exists in %v Registry, actual state differs from the expected state",
+			proj.GetName(), realRegistry.GetAPIEndpoint())
+	}
+	return &ProjectOfRegistry{Registry: realRegistry, Project: realProject}, nil
+}
+
+// GetProjectByName returns a Project struct for a matching project name.
+func (aos *ApiObjectStore) GetProjectByName(projectName string) (*ProjectOfRegistry, error) {
+	projects := aos.GetProjects()
+	registries := aos.GetRegistries()
+	for _, project := range projects {
+		if project.GetName() == projectName {
+			switch project.Spec.Type {
+			case api.GlobalProjectType:
+				for _, reg := range registries {
+					if reg.Spec.Role == "GlobalHub" {
+						return aos.newProject(reg, project)
+					}
+				}
+			case api.LocalProjectType:
+				if len(project.Spec.LocalRegistries) == 0 {
+					return nil, fmt.Errorf("local project with no local registries")
+				}
+				localRegistryName := project.Spec.LocalRegistries[0]
+				for _, reg := range registries {
+					if reg.Spec.Role == "Local" && reg.GetName() == localRegistryName {
+						return aos.newProject(reg, project)
+					}
+				}
+			default:
+				panic(fmt.Sprintf("unhandled project type: %s", project.Spec.Type.String()))
+			}
+		}
+	}
+	return nil, fmt.Errorf("project %s not found", projectName)
+}
+
+// GetCliOptions returns the ApiObjectStore related CLI options of an apply.
+func (aos *ApiObjectStore) GetCliOptions() globalregistry.RegistryOptions {
+	return (*ApiObjectStore)(aos).options
 }
 
 // ExpectedProvider is a database of the resources which implement the

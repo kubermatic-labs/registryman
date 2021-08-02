@@ -6,3 +6,7 @@
 *kubeconfig.yaml
 Makefile
 .golangci.yaml
+*.tar
+.vscode/
+registryman-test
+exported-registry

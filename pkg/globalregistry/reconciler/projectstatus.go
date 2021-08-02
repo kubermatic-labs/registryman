@@ -17,6 +17,7 @@
 package reconciler
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/kubermatic-labs/registryman/pkg/config"
@@ -54,10 +55,12 @@ func (pa *projectAddAction) String() string {
 
 func (pa *projectAddAction) Perform(reg globalregistry.Registry) (SideEffect, error) {
 	_, err := reg.ProjectAPI().Create(pa.Name)
-	if err != nil {
+	switch {
+	case errors.Is(err, globalregistry.ErrNotImplemented):
+		return nilEffect, nil
+	default:
 		return nilEffect, err
 	}
-	return nilEffect, nil
 }
 
 type projectRemoveAction struct {

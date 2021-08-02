@@ -54,7 +54,7 @@ func (p *projectAPI) GetByName(name string) (globalregistry.Project, error) {
 			return project, nil
 		}
 	}
-	return nil, nil
+	return nil, fmt.Errorf("no project found: %w", globalregistry.ErrRecoverableError)
 }
 
 type bytesBody struct {
@@ -82,7 +82,12 @@ func (s *registry) do(req *http.Request) (*http.Response, error) {
 	}
 	resp.Body = buf
 
-	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
+	switch {
+	case resp.StatusCode == 401:
+		// Unauthorized
+		return nil, globalregistry.ErrUnauthorized
+	case resp.StatusCode < 200 || resp.StatusCode >= 300:
+		// Any other error code
 		s.logger.V(-1).Info("HTTP response status code is not OK",
 			"status-code", resp.StatusCode,
 			"resp-body-size", n,
@@ -166,4 +171,21 @@ func (p *projectAPI) collectReposOfProject(projectName string, repoNames []strin
 		}
 	}
 	return reposOfProject
+}
+
+func (p *projectAPI) deleteRepoOfProject(proj *project, repoName string) error {
+	p.reg.logger.V(1).Info("deleting ACR repository",
+		"repositoryName", repoName,
+	)
+	url := *p.reg.parsedUrl
+	url.Path = fmt.Sprintf("/acr/v1/%s", repoName)
+	req, err := http.NewRequest(http.MethodDelete, url.String(), nil)
+	if err != nil {
+		return err
+	}
+
+	req.SetBasicAuth(p.reg.GetUsername(), p.reg.GetPassword())
+
+	_, err = p.reg.do(req)
+	return err
 }

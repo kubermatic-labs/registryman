@@ -43,9 +43,23 @@ func (p *project) Delete() error {
 	}
 	reposOfProject := p.api.collectReposOfProject(p.name, repoNames)
 	if len(reposOfProject) == 0 {
-		return nil
+		switch opt := p.api.reg.GetOptions().(type) {
+		case globalregistry.CanForceDelete:
+			if f := opt.ForceDeleteProjects(); !f {
+				return fmt.Errorf("%s: repositories are present, please delete them before deleting the project, %w", p.GetName(), globalregistry.ErrRecoverableError)
+			}
+			for _, repo := range repoNames {
+				p.api.reg.logger.V(1).Info("deleting repository",
+					"repositoryName", repoNames,
+				)
+				err = p.deleteRepository(repo)
+				if err != nil {
+					return err
+				}
+			}
+		}
 	}
-	return fmt.Errorf("%s: repositories are present, please delete them before deleting the project, %w", p.name, globalregistry.ErrRecoverableError)
+	return nil
 }
 
 // AssignMember implements the globalregistry.Project interface. Currently, it
@@ -92,9 +106,17 @@ func (p *project) UnassignScanner(s globalregistry.Scanner) error {
 	return fmt.Errorf("method ACR.UnassignScanner not implemented: %w", globalregistry.ErrRecoverableError)
 }
 
+func (p *project) GetRepositories() ([]string, error) {
+	return p.api.getRepositories()
+}
+
 // GetUsedStorage implements the globalregistry.Project interface. Currently, it
 // is not implemented.
 func (p *project) GetUsedStorage() (int, error) {
 	return -1, fmt.Errorf("cannot get used storage of a project in ACR: %w",
 		globalregistry.ErrNotImplemented)
+}
+
+func (p *project) deleteRepository(repoName string) error {
+	return p.api.deleteRepoOfProject(p, repoName)
 }
