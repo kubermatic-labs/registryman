@@ -119,11 +119,14 @@ func ReadManifests(path string, options globalregistry.RegistryOptions) (*ApiObj
 	}
 	aos.store = make(map[schema.GroupVersionKind][]runtime.Object)
 	for _, entry := range entries {
-		if !entry.Type().IsRegular() {
-			continue
-		}
+		logger.V(1).Info("reading file",
+			"name", entry.Name(),
+		)
 		if !strings.HasSuffix(entry.Name(), ".yaml") {
 			// skip the non-yaml files
+			logger.V(1).Info("file is not a yaml file",
+				"name", entry.Name(),
+			)
 			continue
 		}
 		f, err := os.Open(filepath.Join(path, entry.Name()))

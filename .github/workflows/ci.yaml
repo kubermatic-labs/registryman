@@ -11,6 +11,14 @@ on:
 env:
   golang-version: '1.16'
 jobs:
+  dockercheck:
+    name: Dockerfile linter
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - uses: ghe-actions/dockerfile-validator@v1
+      with:
+        dockerfile: 'Dockerfile'
   shellcheck:
     name: Shellcheck
     runs-on: ubuntu-latest
