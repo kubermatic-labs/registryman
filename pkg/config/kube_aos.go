@@ -20,6 +20,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/go-logr/logr"
 	api "github.com/kubermatic-labs/registryman/pkg/apis/registryman/v1alpha1"
 	regmanclient "github.com/kubermatic-labs/registryman/pkg/apis/registryman/v1alpha1/clientset/versioned"
 	"github.com/kubermatic-labs/registryman/pkg/globalregistry"
@@ -211,4 +212,8 @@ func (aos *kubeApiObjectStore) GetScanners() []*api.Scanner {
 // apply.
 func (aos *kubeApiObjectStore) GetGlobalRegistryOptions() globalregistry.RegistryOptions {
 	return aos.options
+}
+
+func (aos *kubeApiObjectStore) GetLogger() logr.Logger {
+	return logger
 }

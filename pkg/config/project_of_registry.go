@@ -43,7 +43,7 @@ func (p *ProjectOfRegistry) GenerateProjectRepoName() (string, error) {
 }
 
 func newProject(aos ApiObjectStore, reg *api.Registry, proj *api.Project) (*ProjectOfRegistry, error) {
-	realRegistry, err := registry.New(reg, aos).ToReal(logger)
+	realRegistry, err := registry.New(reg, aos).ToReal()
 	if err != nil {
 		return nil, err
 	}

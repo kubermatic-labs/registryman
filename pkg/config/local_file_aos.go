@@ -23,6 +23,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/go-logr/logr"
 	api "github.com/kubermatic-labs/registryman/pkg/apis/registryman/v1alpha1"
 	"github.com/kubermatic-labs/registryman/pkg/globalregistry"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -406,4 +407,8 @@ func (aos *localFileApiObjectStore) GetScanners() []*api.Scanner {
 // apply.
 func (aos *localFileApiObjectStore) GetGlobalRegistryOptions() globalregistry.RegistryOptions {
 	return aos.options
+}
+
+func (aos *localFileApiObjectStore) GetLogger() logr.Logger {
+	return logger
 }

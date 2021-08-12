@@ -10,9 +10,9 @@ Before storing the Registry, Project and Scanner resources, we shall deploy the
 Custom Resource Definitions (CRD).
 
 ```bash
-kubectl apply -f pkg/apis/registryman.kubermatic.com/v1alpha1/registryman.kubermatic.com_registries.yaml \
-              -f pkg/apis/registryman.kubermatic.com/v1alpha1/registryman.kubermatic.com_projects.yaml   \ 
-              -f pkg/apis/registryman.kubermatic.com/v1alpha1/registryman.kubermatic.com_scanners.yaml
+kubectl apply -f pkg/apis/registryman/v1alpha1/registryman.kubermatic.com_registries.yaml \
+              -f pkg/apis/registryman/v1alpha1/registryman.kubermatic.com_projects.yaml   \ 
+              -f pkg/apis/registryman/v1alpha1/registryman.kubermatic.com_scanners.yaml
 ```
 
 # Deploy Custom Resources

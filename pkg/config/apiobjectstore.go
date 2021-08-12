@@ -17,6 +17,7 @@
 package config
 
 import (
+	"github.com/go-logr/logr"
 	_ "github.com/kubermatic-labs/registryman/pkg/acr"
 	api "github.com/kubermatic-labs/registryman/pkg/apis/registryman/v1alpha1"
 	"github.com/kubermatic-labs/registryman/pkg/globalregistry"
@@ -71,4 +72,8 @@ type ApiObjectStore interface {
 	// GetGlobalRegistryOptions returns the ApiObjectStore related CLI options of an
 	// apply.
 	GetGlobalRegistryOptions() globalregistry.RegistryOptions
+
+	// GetLogger returns the logr.Logger interface that the ApiObjectStore is using
+	// for logging.
+	GetLogger() logr.Logger
 }
