@@ -75,16 +75,6 @@ type projectCreateReqBody struct {
 	Public       bool         `json:"public"`
 }
 
-// type projectAPI struct {
-// 	reg *registry
-// }
-
-// func newProjectAPI(reg *registry) (*projectAPI, error) {
-// 	return &projectAPI{
-// 		reg: reg,
-// 	}, nil
-// }
-
 func (r *registry) GetProjectByName(name string) (globalregistry.Project, error) {
 	if name == "" {
 		return &project{

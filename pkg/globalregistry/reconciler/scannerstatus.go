@@ -90,23 +90,25 @@ var _ Action = &scannerUnassignAction{}
 // CompareScannerStatuses compares the actual and expected status of the scanner
 // of a project. The function returns the actions that are needed to synchronize
 // the actual state to the expected state.
-func CompareScannerStatuses(projectName string, actual, expected api.ScannerStatus) []Action {
+func CompareScannerStatuses(projectName string, actual, expected api.ScannerStatus, regCapabilities api.RegistryCapabilities) []Action {
 	actions := make([]Action, 0)
 
-	// Old scanner shall be deleted
-	if actual.Name != "" && actual != expected {
-		actions = append(actions, &scannerUnassignAction{
-			projectName:   projectName,
-			ScannerStatus: &actual,
-		})
-	}
+	if regCapabilities.CanManipulateProjectScanners {
+		// Old scanner shall be deleted
+		if actual.Name != "" && actual != expected {
+			actions = append(actions, &scannerUnassignAction{
+				projectName:   projectName,
+				ScannerStatus: &actual,
+			})
+		}
 
-	// New scanner shall be configured
-	if expected.Name != "" && actual != expected {
-		actions = append(actions, &scannerAssignAction{
-			projectName:   projectName,
-			ScannerStatus: &expected,
-		})
+		// New scanner shall be configured
+		if expected.Name != "" && actual != expected {
+			actions = append(actions, &scannerAssignAction{
+				projectName:   projectName,
+				ScannerStatus: &expected,
+			})
+		}
 	}
 	return actions
 }

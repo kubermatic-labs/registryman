@@ -235,7 +235,7 @@ func (ma *memberRemoveAction) Perform(reg globalregistry.Registry) (SideEffect, 
 // CompareMemberStatuses compares the actual and expected status of the members
 // of a project. The function returns the actions that are needed to synchronize
 // the actual state to the expected state.
-func CompareMemberStatuses(projectName string, actual, expected []api.MemberStatus) []Action {
+func CompareMemberStatuses(projectName string, actual, expected []api.MemberStatus, regCapabilities api.RegistryCapabilities) []Action {
 	actualDiff := []api.MemberStatus{}
 	expectedDiff := []api.MemberStatus{}
 ActLoop:
@@ -260,21 +260,22 @@ ExpLoop:
 	}
 	actions := make([]Action, 0)
 
-	// actualDiff contains the members which are there but are not needed
-	for _, act := range actualDiff {
-		actions = append(actions, &memberRemoveAction{
-			act,
-			projectName,
-		})
-	}
-
-	// expectedClone contains the members which are missing and thus they
-	// shall be created
-	for _, exp := range expectedDiff {
-		actions = append(actions, &memberAddAction{
-			exp,
-			projectName,
-		})
+	if regCapabilities.CanManipulateProjectMembers {
+		// actualDiff contains the members which are there but are not needed
+		for _, act := range actualDiff {
+			actions = append(actions, &memberRemoveAction{
+				act,
+				projectName,
+			})
+		}
+		// expectedClone contains the members which are missing and thus they
+		// shall be created
+		for _, exp := range expectedDiff {
+			actions = append(actions, &memberAddAction{
+				exp,
+				projectName,
+			})
+		}
 	}
 
 	return actions

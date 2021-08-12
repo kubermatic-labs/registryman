@@ -138,7 +138,7 @@ var _ = Describe("Projectstatus", func() {
 	It("returns no action for the same projects", func() {
 		act := []api.ProjectStatus{}
 		exp := []api.ProjectStatus{}
-		actions := reconciler.CompareProjectStatuses(nil, act, exp)
+		actions := reconciler.CompareProjectStatuses(nil, act, exp, api.RegistryCapabilities{})
 		Expect(actions).ToNot(BeNil())
 		Expect(len(actions)).To(Equal(0))
 
@@ -148,7 +148,7 @@ var _ = Describe("Projectstatus", func() {
 		exp = []api.ProjectStatus{
 			proj1,
 		}
-		actions = reconciler.CompareProjectStatuses(nil, act, exp)
+		actions = reconciler.CompareProjectStatuses(nil, act, exp, api.RegistryCapabilities{})
 		Expect(actions).ToNot(BeNil())
 		Expect(len(actions)).To(Equal(0))
 
@@ -160,7 +160,7 @@ var _ = Describe("Projectstatus", func() {
 			proj1,
 			proj2,
 		}
-		actions = reconciler.CompareProjectStatuses(nil, act, exp)
+		actions = reconciler.CompareProjectStatuses(nil, act, exp, api.RegistryCapabilities{})
 		Expect(actions).ToNot(BeNil())
 		Expect(len(actions)).To(Equal(0))
 	})
@@ -170,7 +170,10 @@ var _ = Describe("Projectstatus", func() {
 		exp := []api.ProjectStatus{
 			proj1,
 		}
-		actions := reconciler.CompareProjectStatuses(nil, act, exp)
+		actions := reconciler.CompareProjectStatuses(nil, act, exp, api.RegistryCapabilities{
+			CanCreateProject:            true,
+			CanManipulateProjectMembers: true,
+		})
 		Expect(actions).ToNot(BeNil())
 		Expect(len(actions)).To(Equal(2))
 		Expect(actionsToStrings(actions)).To(Equal([]string{
@@ -185,7 +188,10 @@ var _ = Describe("Projectstatus", func() {
 			proj1,
 			proj2,
 		}
-		actions = reconciler.CompareProjectStatuses(nil, act, exp)
+		actions = reconciler.CompareProjectStatuses(nil, act, exp, api.RegistryCapabilities{
+			CanCreateProject:            true,
+			CanManipulateProjectMembers: true,
+		})
 		Expect(actions).ToNot(BeNil())
 		Expect(len(actions)).To(Equal(2))
 		Expect(actionsToStrings(actions)).To(Equal([]string{
@@ -199,7 +205,9 @@ var _ = Describe("Projectstatus", func() {
 			proj1,
 		}
 		exp := []api.ProjectStatus{}
-		actions := reconciler.CompareProjectStatuses(nil, act, exp)
+		actions := reconciler.CompareProjectStatuses(nil, act, exp, api.RegistryCapabilities{
+			CanDeleteProject: true,
+		})
 		Expect(actions).ToNot(BeNil())
 		Expect(len(actions)).To(Equal(1))
 		Expect(actionsToStrings(actions)).To(Equal([]string{
@@ -213,7 +221,9 @@ var _ = Describe("Projectstatus", func() {
 		exp = []api.ProjectStatus{
 			proj2,
 		}
-		actions = reconciler.CompareProjectStatuses(nil, act, exp)
+		actions = reconciler.CompareProjectStatuses(nil, act, exp, api.RegistryCapabilities{
+			CanDeleteProject: true,
+		})
 		Expect(actions).ToNot(BeNil())
 		Expect(len(actions)).To(Equal(1))
 		Expect(actionsToStrings(actions)).To(Equal([]string{
@@ -227,7 +237,9 @@ var _ = Describe("Projectstatus", func() {
 		exp := []api.ProjectStatus{
 			proj1Prime,
 		}
-		actions := reconciler.CompareProjectStatuses(nil, act, exp)
+		actions := reconciler.CompareProjectStatuses(nil, act, exp, api.RegistryCapabilities{
+			CanManipulateProjectMembers: true,
+		})
 		Expect(actions).ToNot(BeNil())
 		Expect(len(actions)).To(Equal(1))
 		Expect(actionsToStrings(actions)).To(Equal([]string{
@@ -241,7 +253,7 @@ var _ = Describe("Projectstatus", func() {
 		exp := []api.ProjectStatus{
 			proj1Local,
 		}
-		actions := reconciler.CompareProjectStatuses(nil, act, exp)
+		actions := reconciler.CompareProjectStatuses(nil, act, exp, api.RegistryCapabilities{})
 		Expect(actions).ToNot(BeNil())
 		Expect(len(actions)).To(Equal(0))
 		Expect(actionsToStrings(actions)).To(Equal([]string{}))
@@ -255,7 +267,10 @@ var _ = Describe("Projectstatus", func() {
 		exp := []api.ProjectStatus{
 			proj1,
 		}
-		actions := reconciler.CompareProjectStatuses(nil, act, exp)
+		actions := reconciler.CompareProjectStatuses(nil, act, exp, api.RegistryCapabilities{
+			CanDeleteProject:            true,
+			CanManipulateProjectMembers: true,
+		})
 		Expect(actions).ToNot(BeNil())
 		Expect(len(actions)).To(Equal(2))
 		Expect(actionsToStrings(actions)).To(Equal([]string{
@@ -266,7 +281,9 @@ var _ = Describe("Projectstatus", func() {
 	It("acts as expected for bug1", func() {
 		act := bug1_actual
 		exp := bug1_expected
-		actions := reconciler.CompareProjectStatuses(nil, act, exp)
+		actions := reconciler.CompareProjectStatuses(nil, act, exp, api.RegistryCapabilities{
+			CanDeleteProject: true,
+		})
 		Expect(actions).ToNot(BeNil())
 		Expect(len(actions)).To(Equal(1))
 		Expect(actionsToStrings(actions)).To(Equal([]string{

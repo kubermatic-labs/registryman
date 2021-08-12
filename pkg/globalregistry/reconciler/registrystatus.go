@@ -26,7 +26,7 @@ import (
 // returns the actions that are needed to synchronize the actual state to the
 // expected state.
 func Compare(store *config.ExpectedProvider, actual, expected *api.RegistryStatus) []Action {
-	return CompareProjectStatuses(store, actual.Projects, expected.Projects)
+	return CompareProjectStatuses(store, actual.Projects, expected.Projects, actual.Capabilities)
 }
 
 func getRegistryCapabilities(reg globalregistry.Registry) (api.RegistryCapabilities, error) {
