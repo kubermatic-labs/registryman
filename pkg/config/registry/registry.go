@@ -53,18 +53,6 @@ func New(reg *api.Registry, store ApiObjectProvider) *Registry {
 	}
 }
 
-// ReplicationAPI method implements the globalregistry.Registry interface.
-func (reg *Registry) ReplicationAPI() globalregistry.ReplicationAPI {
-	return &replicationAPI{}
-}
-
-// ProjectAPI method implements the globalregistry.Registry interface.
-func (reg *Registry) ProjectAPI() globalregistry.ProjectAPI {
-	return &projectAPI{
-		registry: reg,
-	}
-}
-
 // GetName method implements the globalregistry.RegistryConfig interface.
 func (reg *Registry) GetName() string {
 	return reg.apiRegistry.GetName()

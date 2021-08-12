@@ -67,6 +67,7 @@ func (rule *replicationRule) GetProjectName() string {
 func (rule *replicationRule) GetName() string {
 	panic("not implemented")
 }
+
 func (rule *replicationRule) Trigger() globalregistry.ReplicationTrigger {
 	switch rule.calculatedReplication {
 	case noReplication:
@@ -103,8 +104,4 @@ func (rule *replicationRule) Direction() globalregistry.ReplicationDirection {
 
 func (rule *replicationRule) RemoteRegistry() globalregistry.Registry {
 	return rule.remote
-}
-
-func (rule *replicationRule) Delete() error {
-	panic("not implemented")
 }

@@ -57,11 +57,15 @@ func (a *scannerAssignAction) String() string {
 }
 
 func (a *scannerAssignAction) Perform(reg globalregistry.Registry) (SideEffect, error) {
-	project, err := reg.ProjectAPI().GetByName(a.projectName)
+	project, err := reg.(globalregistry.RegistryWithProjects).GetProjectByName(a.projectName)
 	if err != nil {
 		return nilEffect, err
 	}
-	err = project.AssignScanner(a)
+	scannerManipulatorProject, ok := project.(globalregistry.ScannerManipulatorProject)
+	if !ok {
+		return nilEffect, nil
+	}
+	err = scannerManipulatorProject.AssignScanner(a)
 	return nilEffect, err
 }
 
@@ -76,11 +80,15 @@ func (a *scannerUnassignAction) String() string {
 }
 
 func (a *scannerUnassignAction) Perform(reg globalregistry.Registry) (SideEffect, error) {
-	project, err := reg.ProjectAPI().GetByName(a.projectName)
+	project, err := reg.(globalregistry.RegistryWithProjects).GetProjectByName(a.projectName)
 	if err != nil {
 		return nilEffect, err
 	}
-	err = project.UnassignScanner(a)
+	scannerManipulatorProject, ok := project.(globalregistry.ScannerManipulatorProject)
+	if !ok {
+		return nilEffect, nil
+	}
+	err = scannerManipulatorProject.UnassignScanner(a)
 	return nilEffect, err
 }
 

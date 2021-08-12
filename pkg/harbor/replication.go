@@ -87,13 +87,16 @@ func (rp *replicationResponseBody) remote() (*remoteRegistryStatus, error) {
 //replicationRule implements the globalregistry.replicationRule.
 type replicationRule struct {
 	ID          int
-	api         *replicationAPI
+	registry    *registry
 	name        string
 	projectName string
 	Dir         globalregistry.ReplicationDirection
 	ReplTrigger *replicationTrigger
 	Remote      *remoteRegistryStatus
 }
+
+var _ globalregistry.ReplicationRule = &replicationRule{}
+var _ globalregistry.DestructibleReplicationRule = &replicationRule{}
 
 func (r *replicationRule) GetProjectName() string {
 	return r.projectName
@@ -116,5 +119,5 @@ func (r *replicationRule) RemoteRegistry() globalregistry.Registry {
 }
 
 func (r *replicationRule) Delete() error {
-	return r.api.delete(r.ID)
+	return r.registry.deleteReplicationRule(r.ID)
 }

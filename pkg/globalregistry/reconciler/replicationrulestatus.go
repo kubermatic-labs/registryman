@@ -55,7 +55,7 @@ func (ra *rRuleAddAction) String() string {
 }
 
 func (ra *rRuleAddAction) Perform(reg globalregistry.Registry) (SideEffect, error) {
-	project, err := reg.ProjectAPI().GetByName(ra.projectName)
+	project, err := reg.(globalregistry.RegistryWithProjects).GetProjectByName(ra.projectName)
 	if err != nil {
 		return nilEffect, err
 	}
@@ -63,7 +63,12 @@ func (ra *rRuleAddAction) Perform(reg globalregistry.Registry) (SideEffect, erro
 	if remoteRegistry == nil {
 		return nilEffect, fmt.Errorf("registry %s not found in object store", ra.RemoteRegistryName)
 	}
-	_, err = project.AssignReplicationRule(remoteRegistry, ra.Trigger, ra.Direction)
+	replicationRuleManipulatorProject, ok := project.(globalregistry.ReplicationRuleManipulatorProject)
+	if !ok {
+		// registry does not support project level replication
+		return nilEffect, nil
+	}
+	_, err = replicationRuleManipulatorProject.AssignReplicationRule(remoteRegistry, ra.Trigger, ra.Direction)
 	return nilEffect, err
 }
 
@@ -85,16 +90,26 @@ func (ra *rRuleRemoveAction) String() string {
 }
 
 func (ra *rRuleRemoveAction) Perform(reg globalregistry.Registry) (SideEffect, error) {
-	project, err := reg.ProjectAPI().GetByName(ra.projectName)
+	project, err := reg.(globalregistry.RegistryWithProjects).GetProjectByName(ra.projectName)
 	if err != nil {
 		return nilEffect, err
 	}
-	rRules, err := project.GetReplicationRules(&ra.Trigger, &ra.Direction)
+	projectWithReplication, ok := project.(globalregistry.ProjectWithReplication)
+	if !ok {
+		// registry does not support project level replication
+		return nilEffect, nil
+	}
+	rRules, err := projectWithReplication.GetReplicationRules(&ra.Trigger, &ra.Direction)
 	if err != nil {
 		return nilEffect, err
 	}
 	for _, rRule := range rRules {
-		err := rRule.Delete()
+		destructibleReplicationRule, ok := rRule.(globalregistry.DestructibleReplicationRule)
+		if !ok {
+			// TODO: error handling
+			continue
+		}
+		err := destructibleReplicationRule.Delete()
 		if err != nil {
 			return nilEffect, err
 		}

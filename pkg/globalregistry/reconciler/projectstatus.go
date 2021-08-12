@@ -17,7 +17,6 @@
 package reconciler
 
 import (
-	"errors"
 	"fmt"
 
 	"github.com/kubermatic-labs/registryman/pkg/config"
@@ -54,13 +53,13 @@ func (pa *projectAddAction) String() string {
 }
 
 func (pa *projectAddAction) Perform(reg globalregistry.Registry) (SideEffect, error) {
-	_, err := reg.ProjectAPI().Create(pa.Name)
-	switch {
-	case errors.Is(err, globalregistry.ErrNotImplemented):
+	papi, ok := reg.(globalregistry.ProjectCreater)
+	if !ok {
+		// registry provider does not implement project creation
 		return nilEffect, nil
-	default:
-		return nilEffect, err
 	}
+	_, err := papi.CreateProject(pa.Name)
+	return nilEffect, err
 }
 
 type projectRemoveAction struct {
@@ -74,11 +73,15 @@ func (pa *projectRemoveAction) String() string {
 }
 
 func (pa *projectRemoveAction) Perform(reg globalregistry.Registry) (SideEffect, error) {
-	project, err := reg.ProjectAPI().GetByName(pa.Name)
+	project, err := reg.(globalregistry.RegistryWithProjects).GetProjectByName(pa.Name)
 	if err != nil {
 		return nilEffect, err
 	}
-	return nilEffect, project.Delete()
+	destructibleProject, ok := project.(globalregistry.DestructibleProject)
+	if !ok {
+		return nilEffect, nil
+	}
+	return nilEffect, destructibleProject.Delete()
 }
 
 // CompareProjectStatuses compares the actual and expected status of the projects

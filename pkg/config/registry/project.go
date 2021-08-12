@@ -29,14 +29,9 @@ type project struct {
 }
 
 var _ globalregistry.Project = &project{}
-
-func (proj *project) AssignMember(globalregistry.ProjectMember) (*globalregistry.ProjectMemberCredentials, error) {
-	panic("not implemented")
-}
-
-func (proj *project) UnassignMember(globalregistry.ProjectMember) error {
-	panic("not implemented")
-}
+var _ globalregistry.ProjectWithMembers = &project{}
+var _ globalregistry.ProjectWithReplication = &project{}
+var _ globalregistry.ProjectWithScanner = &project{}
 
 func (proj *project) GetMembers() ([]globalregistry.ProjectMember, error) {
 	members := make([]globalregistry.ProjectMember, len(proj.Spec.Members))
@@ -54,14 +49,6 @@ func (proj *project) GetMembers() ([]globalregistry.ProjectMember, error) {
 		}
 	}
 	return members, nil
-}
-
-func (proj *project) AssignReplicationRule(globalregistry.RegistryConfig, globalregistry.ReplicationTrigger, globalregistry.ReplicationDirection) (globalregistry.ReplicationRule, error) {
-	panic("not implemented")
-}
-
-func (proj *project) Delete() error {
-	panic("not implemented")
 }
 
 func (proj *project) GetReplicationRules(trigger *globalregistry.ReplicationTrigger, direction *globalregistry.ReplicationDirection) ([]globalregistry.ReplicationRule, error) {
@@ -109,23 +96,4 @@ func (p *project) GetScanner() (globalregistry.Scanner, error) {
 		}
 	}
 	return nil, fmt.Errorf("project %s has invalid scanner configuration (%s)", p.GetName(), p.Spec.Scanner)
-}
-
-func (p *project) AssignScanner(globalregistry.Scanner) error {
-	panic("config.registry.project.AssignScanner() not implemented")
-}
-
-func (p *project) UnassignScanner(globalregistry.Scanner) error {
-	panic("config.registry.project.UnassignScanner() not implemented")
-}
-
-func (p *project) GetRepositories() ([]string, error) {
-	panic("config.registry.project.GetRepositories() not implemented")
-}
-
-// GetUsedStorage implements the globalregistry.Project interface. Currently, it
-// is not implemented.
-func (p *project) GetUsedStorage() (int, error) {
-	return -1, fmt.Errorf("cannot get used storage of an expected project: %w",
-		globalregistry.ErrNotImplemented)
 }

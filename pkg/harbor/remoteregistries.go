@@ -30,10 +30,6 @@ import (
 
 const registriesPath = "/api/v2.0/registries"
 
-type remoteRegistries struct {
-	reg *registry
-}
-
 type registryCredential struct {
 	AccessKey    string `json:"access_key"`
 	AccessSecret string `json:"access_secret"`
@@ -53,7 +49,7 @@ type remoteRegistryStatus struct {
 	Description  string             `json:"description"`
 }
 
-func remoteRegistryStatusFromRegistry(reg globalregistry.RegistryConfig) *remoteRegistryStatus {
+func remoteRegistryStatusFromRegistry(reg globalregistry.Registry) *remoteRegistryStatus {
 	var regType string
 	switch reg.GetProvider() {
 	case "harbor":
@@ -82,11 +78,11 @@ func remoteRegistryStatusFromRegistry(reg globalregistry.RegistryConfig) *remote
 	}
 }
 
-func (reg *remoteRegistryStatus) ReplicationAPI() globalregistry.ReplicationAPI {
-	panic("not implemented") // TODO: Implement
-}
+// func (reg *remoteRegistryStatus) ReplicationAPI() globalregistry.ReplicationAPI {
+// 	panic("not implemented") // TODO: Implement
+// }
 
-func (reg *remoteRegistryStatus) ProjectAPI() globalregistry.ProjectAPI {
+func (reg *remoteRegistryStatus) ProjectAPI() globalregistry.RegistryWithProjects {
 	panic("not implemented") // TODO: Implement
 }
 
@@ -114,19 +110,13 @@ func (reg *remoteRegistryStatus) GetOptions() globalregistry.RegistryOptions {
 	panic("not implemented")
 }
 
-func newRemoteRegistries(reg *registry) *remoteRegistries {
-	return &remoteRegistries{
-		reg: reg,
-	}
-}
-
-func (r *remoteRegistries) getByNameOrCreate(greg globalregistry.RegistryConfig) (*remoteRegistryStatus, error) {
-	reg, err := r.getByName(greg.GetName())
+func (r *registry) getRemoteRegistryByNameOrCreate(greg globalregistry.Registry) (*remoteRegistryStatus, error) {
+	reg, err := r.getRemoteRegistryByName(greg.GetName())
 	if err != nil {
 		return nil, err
 	}
 	if reg == nil {
-		reg, err = r.create(greg)
+		reg, err = r.createRemoteRegistry(greg)
 		if err != nil {
 			return nil, err
 		}
@@ -134,8 +124,8 @@ func (r *remoteRegistries) getByNameOrCreate(greg globalregistry.RegistryConfig)
 	return reg, nil
 }
 
-func (r *remoteRegistries) getByName(name string) (*remoteRegistryStatus, error) {
-	registries, err := r.list()
+func (r *registry) getRemoteRegistryByName(name string) (*remoteRegistryStatus, error) {
+	registries, err := r.listRemoteRegistries()
 	if err != nil {
 		return nil, err
 	}
@@ -147,26 +137,26 @@ func (r *remoteRegistries) getByName(name string) (*remoteRegistryStatus, error)
 	return nil, nil
 }
 
-func (r *remoteRegistries) create(reg globalregistry.RegistryConfig) (*remoteRegistryStatus, error) {
+func (r *registry) createRemoteRegistry(reg globalregistry.Registry) (*remoteRegistryStatus, error) {
 	regStatus := remoteRegistryStatusFromRegistry(reg)
 	reqBodyBuf := bytes.NewBuffer(nil)
 	err := json.NewEncoder(reqBodyBuf).Encode(regStatus)
 	if err != nil {
 		return nil, err
 	}
-	r.reg.logger.V(1).Info(reqBodyBuf.String())
-	url := *r.reg.parsedUrl
+	r.logger.V(1).Info(reqBodyBuf.String())
+	url := *r.parsedUrl
 	url.Path = registriesPath
 	req, err := http.NewRequest(http.MethodPost, url.String(), reqBodyBuf)
 	if err != nil {
 		return nil, err
 	}
 
-	r.reg.logger.V(1).Info("sending HTTP request", "req-uri", req.RequestURI)
+	r.logger.V(1).Info("sending HTTP request", "req-uri", req.RequestURI)
 
-	req.SetBasicAuth(r.reg.GetUsername(), r.reg.GetPassword())
+	req.SetBasicAuth(r.GetUsername(), r.GetPassword())
 
-	resp, err := r.reg.do(req)
+	resp, err := r.do(req)
 	if err != nil {
 		return nil, err
 	}
@@ -175,7 +165,7 @@ func (r *remoteRegistries) create(reg globalregistry.RegistryConfig) (*remoteReg
 
 	registryID, err := strconv.Atoi(strings.TrimPrefix(resp.Header.Get("Location"), registriesPath+"/"))
 	if err != nil {
-		r.reg.logger.Error(err, "cannot parse project ID from response Location header",
+		r.logger.Error(err, "cannot parse project ID from response Location header",
 			"location-header", resp.Header.Get("Location"))
 		return nil, err
 	}
@@ -183,19 +173,19 @@ func (r *remoteRegistries) create(reg globalregistry.RegistryConfig) (*remoteReg
 	return regStatus, err
 }
 
-func (r *remoteRegistries) list() ([]*remoteRegistryStatus, error) {
-	url := *r.reg.parsedUrl
+func (r *registry) listRemoteRegistries() ([]*remoteRegistryStatus, error) {
+	url := *r.parsedUrl
 	url.Path = registriesPath
-	r.reg.logger.V(1).Info("creating new request", "url", url.String())
+	r.logger.V(1).Info("creating new request", "url", url.String())
 	req, err := http.NewRequest(http.MethodGet, url.String(), nil)
 	if err != nil {
 		return nil, err
 	}
-	r.reg.logger.V(1).Info("sending HTTP request", "req-uri", req.RequestURI)
+	r.logger.V(1).Info("sending HTTP request", "req-uri", req.RequestURI)
 
-	req.SetBasicAuth(r.reg.GetUsername(), r.reg.GetPassword())
+	req.SetBasicAuth(r.GetUsername(), r.GetPassword())
 
-	resp, err := r.reg.do(req)
+	resp, err := r.do(req)
 	if err != nil {
 		return nil, err
 	}
@@ -206,13 +196,13 @@ func (r *remoteRegistries) list() ([]*remoteRegistryStatus, error) {
 
 	err = json.NewDecoder(resp.Body).Decode(&registriesResults)
 	if err != nil {
-		r.reg.logger.Error(err, "json decoding failed")
+		r.logger.Error(err, "json decoding failed")
 		b := bytes.NewBuffer(nil)
 		_, err := b.ReadFrom(resp.Body)
 		if err != nil {
 			panic(err)
 		}
-		r.reg.logger.Info(b.String())
+		r.logger.Info(b.String())
 		fmt.Printf("body: %+v\n", b.String())
 	}
 

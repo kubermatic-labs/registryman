@@ -17,8 +17,6 @@
 package reconciler
 
 import (
-	"errors"
-
 	"github.com/kubermatic-labs/registryman/pkg/config"
 	"github.com/kubermatic-labs/registryman/pkg/globalregistry"
 )
@@ -40,7 +38,7 @@ func Compare(store *config.ExpectedProvider, actual, expected *RegistryStatus) [
 // status is returned. If the registry represents an actual (real) registry, the
 // actual status is returned.
 func GetRegistryStatus(reg globalregistry.Registry) (*RegistryStatus, error) {
-	projects, err := reg.ProjectAPI().List()
+	projects, err := reg.(globalregistry.RegistryWithProjects).ListProjects()
 	if err != nil {
 		return nil, err
 	}
@@ -48,49 +46,58 @@ func GetRegistryStatus(reg globalregistry.Registry) (*RegistryStatus, error) {
 	for i, project := range projects {
 		projectStatuses[i].Name = project.GetName()
 
-		members, err := project.GetMembers()
-		if err != nil {
-			return nil, err
-		}
-		projectStatuses[i].Members = make([]MemberStatus, len(members))
-		for n, member := range members {
-			projectStatuses[i].Members[n].Name = member.GetName()
-			projectStatuses[i].Members[n].Type = member.GetType()
-			projectStatuses[i].Members[n].Role = member.GetRole()
-			switch m := member.(type) {
-			case globalregistry.LdapMember:
-				projectStatuses[i].Members[n].DN = m.GetDN()
+		projectWithMembers, ok := project.(globalregistry.ProjectWithMembers)
+		if ok {
+			// registry supports projects with members
+			members, err := projectWithMembers.GetMembers()
+			if err != nil {
+				return nil, err
+			}
+			projectStatuses[i].Members = make([]MemberStatus, len(members))
+			for n, member := range members {
+				projectStatuses[i].Members[n].Name = member.GetName()
+				projectStatuses[i].Members[n].Type = member.GetType()
+				projectStatuses[i].Members[n].Role = member.GetRole()
+				switch m := member.(type) {
+				case globalregistry.LdapMember:
+					projectStatuses[i].Members[n].DN = m.GetDN()
+				}
 			}
 		}
-		replicationRules, err := project.GetReplicationRules(nil, nil)
-		if err != nil {
-			return nil, err
-		}
-		projectStatuses[i].ReplicationRules = make([]ReplicationRuleStatus, len(replicationRules))
-		for n, rule := range replicationRules {
-			projectStatuses[i].ReplicationRules[n].RemoteRegistryName = rule.RemoteRegistry().GetName()
-			projectStatuses[i].ReplicationRules[n].Trigger = rule.Trigger()
-			projectStatuses[i].ReplicationRules[n].Direction = rule.Direction()
+		projectWithReplication, ok := project.(globalregistry.ProjectWithReplication)
+		if ok {
+			replicationRules, err := projectWithReplication.GetReplicationRules(nil, nil)
+			if err != nil {
+				return nil, err
+			}
+			projectStatuses[i].ReplicationRules = make([]ReplicationRuleStatus, len(replicationRules))
+			for n, rule := range replicationRules {
+				projectStatuses[i].ReplicationRules[n].RemoteRegistryName = rule.RemoteRegistry().GetName()
+				projectStatuses[i].ReplicationRules[n].Trigger = rule.Trigger()
+				projectStatuses[i].ReplicationRules[n].Direction = rule.Direction()
+			}
 		}
 
-		storageUsed, err := project.GetUsedStorage()
-		switch {
-		case errors.Is(err, globalregistry.ErrNotImplemented):
-			// we use the default value, if GetUsedStorage is not implemented
-		case err == nil:
+		projectWithStorage, ok := project.(globalregistry.ProjectWithStorage)
+		if ok {
+			storageUsed, err := projectWithStorage.GetUsedStorage()
+			if err != nil {
+				return nil, err
+			}
 			projectStatuses[i].StorageUsed = storageUsed
-		default:
-			return nil, err
 		}
 
-		projectScanner, err := project.GetScanner()
-		if err != nil {
-			return nil, err
-		}
-		if projectScanner != nil {
-			projectStatuses[i].ScannerStatus = ScannerStatus{
-				Name: projectScanner.GetName(),
-				URL:  projectScanner.GetURL(),
+		projectWithScanner, ok := project.(globalregistry.ProjectWithScanner)
+		if ok {
+			projectScanner, err := projectWithScanner.GetScanner()
+			if err != nil {
+				return nil, err
+			}
+			if projectScanner != nil {
+				projectStatuses[i].ScannerStatus = ScannerStatus{
+					Name: projectScanner.GetName(),
+					URL:  projectScanner.GetURL(),
+				}
 			}
 		}
 	}

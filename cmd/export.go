@@ -20,6 +20,7 @@ import (
 	"fmt"
 
 	"github.com/kubermatic-labs/registryman/pkg/config"
+	"github.com/kubermatic-labs/registryman/pkg/globalregistry"
 	"github.com/kubermatic-labs/registryman/pkg/skopeo"
 	"github.com/spf13/cobra"
 )
@@ -57,7 +58,11 @@ path/filename of the generated tar file can also be overwritten with the '-o' fl
 		}
 		transfer := skopeo.New(project.Registry.GetUsername(), project.Registry.GetPassword())
 
-		repositories, err := project.Project.GetRepositories()
+		projectWithRepositories, ok := project.Project.(globalregistry.ProjectWithRepositories)
+		if !ok {
+			return fmt.Errorf("%s does not have repositories", projectFullPath)
+		}
+		repositories, err := projectWithRepositories.GetRepositories()
 		if err != nil {
 			return err
 		}
