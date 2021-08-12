@@ -67,7 +67,7 @@ func (rule *replicationRule) GetProjectName() string {
 func (rule *replicationRule) GetName() string {
 	panic("not implemented")
 }
-func (rule *replicationRule) Trigger() globalregistry.ReplicationTrigger {
+func (rule *replicationRule) Trigger() string {
 	switch rule.calculatedReplication {
 	case noReplication:
 		panic("noReplication not handled")
@@ -75,26 +75,26 @@ func (rule *replicationRule) Trigger() globalregistry.ReplicationTrigger {
 		// In case of push replication we always configure event-based
 		// replication triger
 	case pushReplication:
-		return globalregistry.EventReplicationTrigger
+		return "event_based"
 
 		// In case of pull replication we always configure manual
 		// replication triger
 	case pullReplication:
-		return globalregistry.ManualReplicationTrigger
+		return "manual"
 	default:
 		panic("unhandled case")
 	}
 
 }
 
-func (rule *replicationRule) Direction() globalregistry.ReplicationDirection {
+func (rule *replicationRule) Direction() string {
 	switch rule.calculatedReplication {
 	case noReplication:
 		panic("noReplication not handled")
 	case pushReplication:
-		return globalregistry.PushReplication
+		return "Push"
 	case pullReplication:
-		return globalregistry.PullReplication
+		return "Pull"
 	default:
 		panic("unhandled case")
 	}

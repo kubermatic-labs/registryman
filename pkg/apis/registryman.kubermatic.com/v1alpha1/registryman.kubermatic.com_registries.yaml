@@ -71,11 +71,102 @@ spec:
             - provider
             - username
             type: object
+          status:
+            description: RegistryStatus specifies the status of a registry.
+            properties:
+              projects:
+                items:
+                  description: ProjectStatus specifies the status of a registry project.
+                  properties:
+                    members:
+                      description: Members of the project.
+                      items:
+                        description: MemberStatus specifies the status of a project
+                          member.
+                        properties:
+                          dn:
+                            description: Distinguished name of the project member.
+                              Empty when omitted.
+                            type: string
+                          name:
+                            description: Name of the project member.
+                            type: string
+                          role:
+                            description: Role of the project member, like admin, developer,
+                              maintainer, etc.
+                            type: string
+                          type:
+                            description: Type of the project membership, like user,
+                              group, robot.
+                            type: string
+                        required:
+                        - name
+                        - role
+                        - type
+                        type: object
+                      type: array
+                    name:
+                      description: Name of the project.
+                      type: string
+                    replication-rules:
+                      description: Replication rules of the project.
+                      items:
+                        description: ReplicationRuleStatus specifies the status of
+                          project replication rule.
+                        properties:
+                          direction:
+                            description: Direction shows whether the replication is
+                              of type pull or push.
+                            type: string
+                          remote-registry:
+                            description: RemoteRegistryName indicates the name of
+                              the remote registry which the current registry shall
+                              synchronize with.
+                            type: string
+                          trigger:
+                            description: Trigger describes the event that shall trigger
+                              the replication.
+                            type: string
+                        required:
+                        - direction
+                        - remote-registry
+                        - trigger
+                        type: object
+                      type: array
+                    scanner-status:
+                      description: Scanner of the project.
+                      properties:
+                        name:
+                          description: Name of the scanner.
+                          type: string
+                        url:
+                          description: URL of the scanner.
+                          type: string
+                      required:
+                      - name
+                      - url
+                      type: object
+                    storage-used:
+                      description: Storage used by the project in bytes.
+                      type: integer
+                  required:
+                  - members
+                  - name
+                  - replication-rules
+                  - scanner-status
+                  - storage-used
+                  type: object
+                type: array
+            required:
+            - projects
+            type: object
         required:
         - spec
         type: object
     served: true
     storage: true
+    subresources:
+      status: {}
 status:
   acceptedNames:
     kind: ""

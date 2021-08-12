@@ -80,7 +80,7 @@ func (p *project) UnassignMember(member globalregistry.ProjectMember) error {
 
 // AssignReplicationRule implements the globalregistry.Project interface.
 // Currently, it is not implemented.
-func (p *project) AssignReplicationRule(remoteReg globalregistry.RegistryConfig, trigger globalregistry.ReplicationTrigger, direction globalregistry.ReplicationDirection) (globalregistry.ReplicationRule, error) {
+func (p *project) AssignReplicationRule(remoteReg globalregistry.RegistryConfig, trigger, direction string) (globalregistry.ReplicationRule, error) {
 	return nil, fmt.Errorf("cannot assign the replication rule to a project in ACR: %w", globalregistry.ErrNotImplemented)
 }
 
@@ -89,9 +89,7 @@ func (p *project) GetMembers() ([]globalregistry.ProjectMember, error) {
 	return []globalregistry.ProjectMember{}, nil
 }
 
-func (p *project) GetReplicationRules(
-	trigger *globalregistry.ReplicationTrigger,
-	direction *globalregistry.ReplicationDirection) ([]globalregistry.ReplicationRule, error) {
+func (p *project) GetReplicationRules(trigger, direction string) ([]globalregistry.ReplicationRule, error) {
 
 	return nil, nil
 }

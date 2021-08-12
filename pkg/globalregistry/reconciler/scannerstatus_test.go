@@ -20,16 +20,17 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
+	api "github.com/kubermatic-labs/registryman/pkg/apis/registryman.kubermatic.com/v1alpha1"
 	"github.com/kubermatic-labs/registryman/pkg/globalregistry/reconciler"
 )
 
 var _ = Describe("ScannerStatus", func() {
 	It("returns no action for the same ScannerStatus values", func() {
-		act := reconciler.ScannerStatus{
+		act := api.ScannerStatus{
 			Name: "scanner",
 			URL:  "http://scanner.com",
 		}
-		exp := reconciler.ScannerStatus{
+		exp := api.ScannerStatus{
 			Name: "scanner",
 			URL:  "http://scanner.com",
 		}
@@ -38,8 +39,8 @@ var _ = Describe("ScannerStatus", func() {
 		Expect(len(actions)).To(Equal(0))
 
 		By("empty ScannerStatus")
-		act = reconciler.ScannerStatus{}
-		exp = reconciler.ScannerStatus{}
+		act = api.ScannerStatus{}
+		exp = api.ScannerStatus{}
 
 		actions = reconciler.CompareScannerStatuses("proj", act, exp)
 		Expect(actions).ToNot(BeNil())
@@ -47,8 +48,8 @@ var _ = Describe("ScannerStatus", func() {
 	})
 
 	It("can detect missing scanner configuration", func() {
-		act := reconciler.ScannerStatus{}
-		exp := reconciler.ScannerStatus{
+		act := api.ScannerStatus{}
+		exp := api.ScannerStatus{
 			Name: "scanner",
 			URL:  "http://scanner.com",
 		}
@@ -61,11 +62,11 @@ var _ = Describe("ScannerStatus", func() {
 	})
 
 	It("can remove scanner configuration", func() {
-		act := reconciler.ScannerStatus{
+		act := api.ScannerStatus{
 			Name: "scanner",
 			URL:  "http://scanner.com",
 		}
-		exp := reconciler.ScannerStatus{}
+		exp := api.ScannerStatus{}
 
 		actions := reconciler.CompareScannerStatuses("proj", act, exp)
 		Expect(actions).ToNot(BeNil())
@@ -76,11 +77,11 @@ var _ = Describe("ScannerStatus", func() {
 	})
 
 	It("can detect scanner misconfiguration", func() {
-		act := reconciler.ScannerStatus{
+		act := api.ScannerStatus{
 			Name: "scanner",
 			URL:  "http://scanner.com",
 		}
-		exp := reconciler.ScannerStatus{
+		exp := api.ScannerStatus{
 			Name: "scanner",
 			URL:  "http://scanner-new.com",
 		}
@@ -93,11 +94,11 @@ var _ = Describe("ScannerStatus", func() {
 			"assigning scanner scanner to project proj",
 		}))
 
-		act = reconciler.ScannerStatus{
+		act = api.ScannerStatus{
 			Name: "scanner",
 			URL:  "http://scanner.com",
 		}
-		exp = reconciler.ScannerStatus{
+		exp = api.ScannerStatus{
 			Name: "scanner-new",
 			URL:  "http://scanner.com",
 		}
@@ -110,11 +111,11 @@ var _ = Describe("ScannerStatus", func() {
 			"assigning scanner scanner-new to project proj",
 		}))
 
-		act = reconciler.ScannerStatus{
+		act = api.ScannerStatus{
 			Name: "scanner",
 			URL:  "http://scanner.com",
 		}
-		exp = reconciler.ScannerStatus{
+		exp = api.ScannerStatus{
 			Name: "scanner-new",
 			URL:  "http://scanner-new.com",
 		}

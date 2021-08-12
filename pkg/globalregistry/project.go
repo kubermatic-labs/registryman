@@ -69,11 +69,13 @@ type Project interface {
 	UnassignMember(ProjectMember) error
 
 	// GetReplicationRules returns the list of replication rule concerning
-	// the project of the registry.
-	GetReplicationRules(*ReplicationTrigger, *ReplicationDirection) ([]ReplicationRule, error)
+	// the project of the registry. When trigger and/or direction is an
+	// empty string, then trigger or direction parameter is (are) not
+	// considered respectively.
+	GetReplicationRules(trigger, direction string) ([]ReplicationRule, error)
 
 	// AssignReplicationRule assigns a replication rule to the project.
-	AssignReplicationRule(RegistryConfig, ReplicationTrigger, ReplicationDirection) (ReplicationRule, error)
+	AssignReplicationRule(config RegistryConfig, trigger, direction string) (ReplicationRule, error)
 
 	// GetScanner returns the scanner assigned to the project.
 	GetScanner() (Scanner, error)
