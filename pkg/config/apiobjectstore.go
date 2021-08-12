@@ -24,6 +24,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/go-logr/logr"
 	_ "github.com/kubermatic-labs/registryman/pkg/acr"
 	api "github.com/kubermatic-labs/registryman/pkg/apis/registryman.kubermatic.com/v1alpha1"
 	"github.com/kubermatic-labs/registryman/pkg/config/registry"
@@ -439,7 +440,7 @@ func (p *ProjectOfRegistry) GenerateProjectRepoName() (string, error) {
 }
 
 func (aos *ApiObjectStore) newProject(reg *api.Registry, proj *api.Project) (*ProjectOfRegistry, error) {
-	realRegistry, err := registry.New(reg, aos).ToReal(logger)
+	realRegistry, err := registry.New(reg, aos).ToReal()
 	if err != nil {
 		return nil, err
 	}
@@ -488,6 +489,12 @@ func (aos *ApiObjectStore) GetProjectByName(projectName string) (*ProjectOfRegis
 // GetCliOptions returns the ApiObjectStore related CLI options of an apply.
 func (aos *ApiObjectStore) GetCliOptions() globalregistry.RegistryOptions {
 	return (*ApiObjectStore)(aos).options
+}
+
+// GetLogger returns the logr.Logger interface that the ApiObjectStore is using
+// for logging.
+func (aos *ApiObjectStore) GetLogger() logr.Logger {
+	return logger
 }
 
 // ExpectedProvider is a database of the resources which implement the
