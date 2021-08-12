@@ -86,6 +86,13 @@ type projectCreateReqBody struct {
 // }
 
 func (r *registry) GetProjectByName(name string) (globalregistry.Project, error) {
+	if name == "" {
+		return &project{
+			id:       -1,
+			registry: r,
+			Name:     "",
+		}, nil
+	}
 	projects, err := r.ListProjects()
 	if err != nil {
 		return nil, err

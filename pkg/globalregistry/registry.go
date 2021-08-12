@@ -63,9 +63,9 @@ type Registry interface {
 	GetOptions() RegistryOptions
 }
 
-// ProjectCreater interface defines the methods of a registry that can create a
+// ProjectCreator interface defines the methods of a registry that can create a
 // new project.
-type ProjectCreater interface {
+type ProjectCreator interface {
 	// Create creates a new project with the given name.
 	CreateProject(name string) (Project, error)
 }

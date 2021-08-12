@@ -36,6 +36,7 @@ func GetOpenAPIDefinitions(ref common.ReferenceCallback) map[string]common.OpenA
 		"github.com/kubermatic-labs/registryman/pkg/apis/registryman.kubermatic.com/v1alpha1.ProjectSpec":           schema_pkg_apis_registrymankubermaticcom_v1alpha1_ProjectSpec(ref),
 		"github.com/kubermatic-labs/registryman/pkg/apis/registryman.kubermatic.com/v1alpha1.ProjectStatus":         schema_pkg_apis_registrymankubermaticcom_v1alpha1_ProjectStatus(ref),
 		"github.com/kubermatic-labs/registryman/pkg/apis/registryman.kubermatic.com/v1alpha1.Registry":              schema_pkg_apis_registrymankubermaticcom_v1alpha1_Registry(ref),
+		"github.com/kubermatic-labs/registryman/pkg/apis/registryman.kubermatic.com/v1alpha1.RegistryCapabilities":  schema_pkg_apis_registrymankubermaticcom_v1alpha1_RegistryCapabilities(ref),
 		"github.com/kubermatic-labs/registryman/pkg/apis/registryman.kubermatic.com/v1alpha1.RegistryList":          schema_pkg_apis_registrymankubermaticcom_v1alpha1_RegistryList(ref),
 		"github.com/kubermatic-labs/registryman/pkg/apis/registryman.kubermatic.com/v1alpha1.RegistrySpec":          schema_pkg_apis_registrymankubermaticcom_v1alpha1_RegistrySpec(ref),
 		"github.com/kubermatic-labs/registryman/pkg/apis/registryman.kubermatic.com/v1alpha1.RegistryStatus":        schema_pkg_apis_registrymankubermaticcom_v1alpha1_RegistryStatus(ref),
@@ -397,6 +398,107 @@ func schema_pkg_apis_registrymankubermaticcom_v1alpha1_Registry(ref common.Refer
 	}
 }
 
+func schema_pkg_apis_registrymankubermaticcom_v1alpha1_RegistryCapabilities(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Type: []string{"object"},
+				Properties: map[string]spec.Schema{
+					"canCreateProject": {
+						SchemaProps: spec.SchemaProps{
+							Description: "CanCreateProject shows whether the registry can create projects.",
+							Default:     false,
+							Type:        []string{"boolean"},
+							Format:      "",
+						},
+					},
+					"canDeleteProject": {
+						SchemaProps: spec.SchemaProps{
+							Description: "CanDeleteProject shows whether the registry can delete projects.",
+							Default:     false,
+							Type:        []string{"boolean"},
+							Format:      "",
+						},
+					},
+					"canPullReplicate": {
+						SchemaProps: spec.SchemaProps{
+							Description: "CanPullReplicate shows whether the registry can pull repositories from remote registries.",
+							Default:     false,
+							Type:        []string{"boolean"},
+							Format:      "",
+						},
+					},
+					"canPushReplicate": {
+						SchemaProps: spec.SchemaProps{
+							Description: "CanPushReplicate shows whether the registry can push repositories from remote registries.",
+							Default:     false,
+							Type:        []string{"boolean"},
+							Format:      "",
+						},
+					},
+					"canManipulateProjectMembers": {
+						SchemaProps: spec.SchemaProps{
+							Description: "CanManipulateProjectMembers shows whether the registry can add/remove members to the projects.",
+							Default:     false,
+							Type:        []string{"boolean"},
+							Format:      "",
+						},
+					},
+					"canManipulateScanners": {
+						SchemaProps: spec.SchemaProps{
+							Description: "CanManipulateProjectScanners shows whether the registry can add/remove scanners to the projects.",
+							Default:     false,
+							Type:        []string{"boolean"},
+							Format:      "",
+						},
+					},
+					"canManipulateReplicationRules": {
+						SchemaProps: spec.SchemaProps{
+							Description: "CanManipulateProjectReplicationRules shows whether the registry can add/remove replication rules to the projects.",
+							Default:     false,
+							Type:        []string{"boolean"},
+							Format:      "",
+						},
+					},
+					"hasProjectMembers": {
+						SchemaProps: spec.SchemaProps{
+							Description: "HasProjectMembers shows whether the registry understands the concept of project membership.",
+							Default:     false,
+							Type:        []string{"boolean"},
+							Format:      "",
+						},
+					},
+					"hasProjectScanners": {
+						SchemaProps: spec.SchemaProps{
+							Description: "HasProjectScanners shows whether the registry understands the concept of project level vulnerability scanners.",
+							Default:     false,
+							Type:        []string{"boolean"},
+							Format:      "",
+						},
+					},
+					"hasProjectReplicationRules": {
+						SchemaProps: spec.SchemaProps{
+							Description: "HasProjectReplicationRules shows whether the registry understands the concept of project level replication rules.",
+							Default:     false,
+							Type:        []string{"boolean"},
+							Format:      "",
+						},
+					},
+					"hasProjectStorageReport": {
+						SchemaProps: spec.SchemaProps{
+							Description: "HasProjectStorageReport shows whether the registry understands the concept of project level storage reporting.",
+							Default:     false,
+							Type:        []string{"boolean"},
+							Format:      "",
+						},
+					},
+				},
+				Required: []string{"canCreateProject", "canDeleteProject", "canPullReplicate", "canPushReplicate", "canManipulateProjectMembers", "canManipulateScanners", "canManipulateReplicationRules", "hasProjectMembers", "hasProjectScanners", "hasProjectReplicationRules", "hasProjectStorageReport"},
+			},
+		},
+	}
+}
+
 func schema_pkg_apis_registrymankubermaticcom_v1alpha1_RegistryList(ref common.ReferenceCallback) common.OpenAPIDefinition {
 	return common.OpenAPIDefinition{
 		Schema: spec.Schema{
@@ -520,12 +622,18 @@ func schema_pkg_apis_registrymankubermaticcom_v1alpha1_RegistryStatus(ref common
 							},
 						},
 					},
+					"capabilities": {
+						SchemaProps: spec.SchemaProps{
+							Default: map[string]interface{}{},
+							Ref:     ref("github.com/kubermatic-labs/registryman/pkg/apis/registryman.kubermatic.com/v1alpha1.RegistryCapabilities"),
+						},
+					},
 				},
-				Required: []string{"projects"},
+				Required: []string{"projects", "capabilities"},
 			},
 		},
 		Dependencies: []string{
-			"github.com/kubermatic-labs/registryman/pkg/apis/registryman.kubermatic.com/v1alpha1.ProjectStatus"},
+			"github.com/kubermatic-labs/registryman/pkg/apis/registryman.kubermatic.com/v1alpha1.ProjectStatus", "github.com/kubermatic-labs/registryman/pkg/apis/registryman.kubermatic.com/v1alpha1.RegistryCapabilities"},
 	}
 }
 

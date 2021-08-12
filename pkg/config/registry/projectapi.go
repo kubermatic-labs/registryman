@@ -24,12 +24,14 @@ import (
 var _ globalregistry.RegistryWithProjects = &Registry{}
 
 func (r *Registry) GetProjectByName(name string) (globalregistry.Project, error) {
+	if name == "" {
+		return &project{
+			Project:  nil,
+			registry: r,
+		}, nil
+	}
 	projects := r.apiProvider.GetProjects()
 	for _, proj := range projects {
-		// projectApi, ok := project.(*api.Project)
-		// if !ok {
-		// 	return nil, fmt.Errorf("project is not *api.Project")
-		// }
 		if proj.GetName() == name {
 			return &project{
 				Project:  proj,

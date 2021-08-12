@@ -85,7 +85,52 @@ type RegistrySpec struct {
 
 // RegistryStatus specifies the status of a registry.
 type RegistryStatus struct {
-	Projects []ProjectStatus `json:"projects"`
+	Projects     []ProjectStatus      `json:"projects"`
+	Capabilities RegistryCapabilities `json:"capabilities"`
+}
+
+type RegistryCapabilities struct {
+	// CanCreateProject shows whether the registry can create projects.
+	CanCreateProject bool `json:"canCreateProject"`
+
+	// CanDeleteProject shows whether the registry can delete projects.
+	CanDeleteProject bool `json:"canDeleteProject"`
+
+	// CanPullReplicate shows whether the registry can pull repositories
+	// from remote registries.
+	CanPullReplicate bool `json:"canPullReplicate"`
+
+	// CanPushReplicate shows whether the registry can push repositories
+	// from remote registries.
+	CanPushReplicate bool `json:"canPushReplicate"`
+
+	// CanManipulateProjectMembers shows whether the registry can add/remove
+	// members to the projects.
+	CanManipulateProjectMembers bool `json:"canManipulateProjectMembers"`
+
+	// CanManipulateProjectScanners shows whether the registry can add/remove
+	// scanners to the projects.
+	CanManipulateProjectScanners bool `json:"canManipulateScanners"`
+
+	// CanManipulateProjectReplicationRules shows whether the registry can
+	// add/remove replication rules to the projects.
+	CanManipulateProjectReplicationRules bool `json:"canManipulateReplicationRules"`
+
+	// HasProjectMembers shows whether the registry understands the concept
+	// of project membership.
+	HasProjectMembers bool `json:"hasProjectMembers"`
+
+	// HasProjectScanners shows whether the registry understands the concept
+	// of project level vulnerability scanners.
+	HasProjectScanners bool `json:"hasProjectScanners"`
+
+	// HasProjectReplicationRules shows whether the registry understands the
+	// concept of project level replication rules.
+	HasProjectReplicationRules bool `json:"hasProjectReplicationRules"`
+
+	// HasProjectStorageReport shows whether the registry understands the concept
+	// of project level storage reporting.
+	HasProjectStorageReport bool `json:"hasProjectStorageReport"`
 }
 
 // ProjectStatus specifies the status of a registry project.

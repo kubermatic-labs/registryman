@@ -35,7 +35,7 @@ func (pa *projectAddAction) String() string {
 }
 
 func (pa *projectAddAction) Perform(reg globalregistry.Registry) (SideEffect, error) {
-	papi, ok := reg.(globalregistry.ProjectCreater)
+	papi, ok := reg.(globalregistry.ProjectCreator)
 	if !ok {
 		// registry provider does not implement project creation
 		return nilEffect, nil

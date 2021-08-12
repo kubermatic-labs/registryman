@@ -134,5 +134,8 @@ type RegistryWithProjects interface {
 
 	// GetByName returns the project with the given name. If no project is
 	// present with the given name (nil, nil) is returned.
+	//
+	// For empty project name a dummy Project is created that can be used
+	// for testing the registry's capabilities.
 	GetProjectByName(name string) (Project, error)
 }

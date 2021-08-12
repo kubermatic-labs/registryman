@@ -49,7 +49,7 @@ type registry struct {
 
 var _ globalregistry.Registry = &registry{}
 var _ globalregistry.RegistryWithProjects = &registry{}
-var _ globalregistry.ProjectCreater = &registry{}
+var _ globalregistry.ProjectCreator = &registry{}
 
 // newRegistry is the constructor if the registry type. It is a globalregistry RegistryCreator.
 func newRegistry(logger logr.Logger, config globalregistry.Registry) (globalregistry.Registry, error) {

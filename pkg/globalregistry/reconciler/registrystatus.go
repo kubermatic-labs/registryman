@@ -29,12 +29,59 @@ func Compare(store *config.ExpectedProvider, actual, expected *api.RegistryStatu
 	return CompareProjectStatuses(store, actual.Projects, expected.Projects)
 }
 
+func getRegistryCapabilities(reg globalregistry.Registry) (api.RegistryCapabilities, error) {
+	replCap := globalregistry.GetReplicationCapability(reg.GetProvider())
+	regWithProjects := reg.(globalregistry.RegistryWithProjects)
+	registryCapabilities := api.RegistryCapabilities{
+		CanPullReplicate: replCap.CanPull(),
+		CanPushReplicate: replCap.CanPush(),
+	}
+	dummyProject, err := regWithProjects.GetProjectByName("")
+	if err != nil {
+		return registryCapabilities, err
+	}
+
+	if _, ok := reg.(globalregistry.ProjectCreator); ok {
+		registryCapabilities.CanCreateProject = true
+	}
+	if _, ok := dummyProject.(globalregistry.DestructibleProject); ok {
+		registryCapabilities.CanDeleteProject = true
+	}
+	if _, ok := dummyProject.(globalregistry.ProjectWithMembers); ok {
+		registryCapabilities.HasProjectMembers = true
+	}
+	if _, ok := dummyProject.(globalregistry.MemberManipulatorProject); ok {
+		registryCapabilities.CanManipulateProjectMembers = true
+	}
+	if _, ok := dummyProject.(globalregistry.ProjectWithScanner); ok {
+		registryCapabilities.HasProjectScanners = true
+	}
+	if _, ok := dummyProject.(globalregistry.ScannerManipulatorProject); ok {
+		registryCapabilities.CanManipulateProjectScanners = true
+	}
+	if _, ok := dummyProject.(globalregistry.ProjectWithReplication); ok {
+		registryCapabilities.HasProjectReplicationRules = true
+	}
+	if _, ok := dummyProject.(globalregistry.ReplicationRuleManipulatorProject); ok {
+		registryCapabilities.CanManipulateProjectReplicationRules = true
+	}
+	if _, ok := dummyProject.(globalregistry.ProjectWithStorage); ok {
+		registryCapabilities.HasProjectStorageReport = true
+	}
+	return registryCapabilities, nil
+}
+
 // GetRegistryStatus function calculate the status of a registry. If the
 // registry represents a configuration of registry, then the expected registry
 // status is returned. If the registry represents an actual (real) registry, the
 // actual status is returned.
 func GetRegistryStatus(reg globalregistry.Registry) (*api.RegistryStatus, error) {
-	projects, err := reg.(globalregistry.RegistryWithProjects).ListProjects()
+	regWithProjects := reg.(globalregistry.RegistryWithProjects)
+	registryCapabilities, err := getRegistryCapabilities(reg)
+	if err != nil {
+		return nil, err
+	}
+	projects, err := regWithProjects.ListProjects()
 	if err != nil {
 		return nil, err
 	}
@@ -98,6 +145,7 @@ func GetRegistryStatus(reg globalregistry.Registry) (*api.RegistryStatus, error)
 		}
 	}
 	return &api.RegistryStatus{
-		Projects: projectStatuses,
+		Projects:     projectStatuses,
+		Capabilities: registryCapabilities,
 	}, nil
 }

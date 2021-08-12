@@ -27,6 +27,12 @@ import (
 )
 
 func (r *registry) GetProjectByName(name string) (globalregistry.Project, error) {
+	if name == "" {
+		return &project{
+			name:     "",
+			registry: r,
+		}, nil
+	}
 	projects, err := r.ListProjects()
 	if err != nil {
 		return nil, err
