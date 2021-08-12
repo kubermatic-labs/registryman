@@ -21,6 +21,7 @@ import (
 	"fmt"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
 )
 
 //
@@ -49,7 +50,7 @@ type Registry struct {
 }
 
 // Registry implements the runtime.Object interface
-// var _ runtime.Object = &Registry{}
+var _ runtime.Object = &Registry{}
 
 // RegistrySpec describes the specification of a Registry.
 type RegistrySpec struct {
@@ -188,7 +189,7 @@ type Project struct {
 }
 
 // Project implements the runtime.Object interface
-// var _ runtime.Object = &Project{}
+var _ runtime.Object = &Project{}
 
 // ProjectSpec describes the spec field of the Project resource
 type ProjectSpec struct {
