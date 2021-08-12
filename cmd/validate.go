@@ -36,6 +36,7 @@ var validateCmd = &cobra.Command{
 		} else {
 			logger.V(-1).Info("config files are not valid",
 				"error", err.Error())
+			return err
 		}
 		return nil
 

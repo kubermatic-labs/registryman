@@ -44,10 +44,10 @@ func (p *project) Delete() error {
 		return err
 	}
 	reposOfProject := collectReposOfProject(p.name, repoNames)
-	if len(reposOfProject) == 0 {
+	if len(reposOfProject) != 0 {
 		switch opt := p.registry.GetOptions().(type) {
 		case globalregistry.CanForceDelete:
-			if f := opt.ForceDeleteProjects(); !f {
+			if !opt.ForceDeleteProjects() {
 				return fmt.Errorf("%s: repositories are present, please delete them before deleting the project, %w", p.GetName(), globalregistry.ErrRecoverableError)
 			}
 			for _, repo := range repoNames {
@@ -59,6 +59,8 @@ func (p *project) Delete() error {
 					return err
 				}
 			}
+		default:
+			return globalregistry.ErrNotImplemented
 		}
 	}
 	return nil
