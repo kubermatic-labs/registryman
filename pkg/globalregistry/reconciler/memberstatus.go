@@ -23,7 +23,7 @@ import (
 
 	"encoding/base64"
 
-	api "github.com/kubermatic-labs/registryman/pkg/apis/registryman.kubermatic.com/v1alpha1"
+	api "github.com/kubermatic-labs/registryman/pkg/apis/registryman/v1alpha1"
 	"github.com/kubermatic-labs/registryman/pkg/globalregistry"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -95,8 +95,8 @@ type persistMemberCredentials struct {
 var _ SideEffect = &persistMemberCredentials{}
 
 type manifestManipulator interface {
-	WriteManifest(filename string, obj runtime.Object) error
-	RemoveManifest(filename string) error
+	WriteResource(obj runtime.Object) error
+	RemoveResource(obj runtime.Object) error
 }
 
 func (pmc *persistMemberCredentials) Perform(ctx context.Context) error {
@@ -130,18 +130,18 @@ func (pmc *persistMemberCredentials) Perform(ctx context.Context) error {
 		},
 		Type: "kubernetes.io/dockerconfigjson",
 	}
-	secret.SetName(pmc.action.Name)
+	name := fmt.Sprintf("%s---%s---%s---creds",
+		pmc.registry.GetName(),
+		pmc.action.projectName,
+		pmc.action.Name,
+	)
+	secret.SetName(name)
 	secret.SetAnnotations(map[string]string{
 		"globalregistry.org/project-name":  pmc.action.projectName,
 		"globalregistry.org/registry-name": pmc.registry.GetName(),
 	})
 
-	filename := fmt.Sprintf("%s_%s_%s_creds.yaml",
-		pmc.registry.GetName(),
-		pmc.action.projectName,
-		pmc.action.Name,
-	)
-	return manifestManipulator.WriteManifest(filename, secret)
+	return manifestManipulator.WriteResource(secret)
 }
 
 func (ma *memberAddAction) Perform(reg globalregistry.Registry) (SideEffect, error) {
@@ -188,13 +188,19 @@ func (rmc *removeMemberCredentials) Perform(ctx context.Context) error {
 	if !ok {
 		return fmt.Errorf("SideEffectManifestManipulator is not a proper manifestManipulator")
 	}
-
-	filename := fmt.Sprintf("%s_%s_%s_creds.yaml",
+	secret := &corev1.Secret{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       "Secret",
+			APIVersion: "v1",
+		},
+	}
+	name := fmt.Sprintf("%s---%s---%s---creds",
 		rmc.registry.GetName(),
 		rmc.action.projectName,
 		rmc.action.Name,
 	)
-	return manifestManipulator.RemoveManifest(filename)
+	secret.SetName(name)
+	return manifestManipulator.RemoveResource(secret)
 }
 
 type memberRemoveAction struct {

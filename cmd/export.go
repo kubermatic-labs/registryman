@@ -42,12 +42,12 @@ path/filename of the generated tar file can also be overwritten with the '-o' fl
 		logger.Info("reading config files", "dir", configDir)
 		config.SetLogger(logger)
 
-		manifests, err := config.ReadManifests(configDir, nil)
+		aos, err := config.ReadLocalManifests(configDir, nil)
 		if err != nil {
 			return err
 		}
 
-		project, err := manifests.GetProjectByName(projectName)
+		project, err := config.GetProjectByName(aos, projectName)
 		if err != nil {
 			return err
 		}

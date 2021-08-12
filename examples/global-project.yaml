@@ -2,6 +2,7 @@ apiVersion: registryman.kubermatic.com/v1alpha1
 kind: Project
 metadata:
   name: global-project
+  namespace: default
 spec:
   type: Global
   members:

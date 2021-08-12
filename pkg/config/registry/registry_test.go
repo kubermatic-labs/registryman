@@ -6,7 +6,7 @@ import (
 
 	"github.com/go-logr/logr"
 	"github.com/go-logr/zapr"
-	api "github.com/kubermatic-labs/registryman/pkg/apis/registryman.kubermatic.com/v1alpha1"
+	api "github.com/kubermatic-labs/registryman/pkg/apis/registryman/v1alpha1"
 	"github.com/kubermatic-labs/registryman/pkg/globalregistry"
 	"go.uber.org/zap"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -16,12 +16,12 @@ type mockApiProvider struct {
 	forceDelete bool
 }
 
-func (ap *mockApiProvider) GetProjects() []*api.Project                   { return nil }
-func (ap *mockApiProvider) GetRegistries() []*api.Registry                { return nil }
-func (ap *mockApiProvider) GetScanners() []*api.Scanner                   { return nil }
-func (ap *mockApiProvider) GetCliOptions() globalregistry.RegistryOptions { return ap }
-func (ap *mockApiProvider) GetLogger() logr.Logger                        { return logger }
-func (ap *mockApiProvider) ForceDeleteProjects() bool                     { return ap.forceDelete }
+func (ap *mockApiProvider) GetProjects() []*api.Project                              { return nil }
+func (ap *mockApiProvider) GetRegistries() []*api.Registry                           { return nil }
+func (ap *mockApiProvider) GetScanners() []*api.Scanner                              { return nil }
+func (ap *mockApiProvider) GetGlobalRegistryOptions() globalregistry.RegistryOptions { return ap }
+func (ap *mockApiProvider) GetLogger() logr.Logger                                   { return logger }
+func (ap *mockApiProvider) ForceDeleteProjects() bool                                { return ap.forceDelete }
 
 var _ ApiObjectProvider = &mockApiProvider{}
 

@@ -19,7 +19,7 @@ package cmd
 import (
 	"fmt"
 
-	"github.com/kubermatic-labs/registryman/pkg/apis/registryman.kubermatic.com/v1alpha1"
+	"github.com/kubermatic-labs/registryman/pkg/apis/registryman/v1alpha1"
 	"github.com/spf13/cobra"
 	"k8s.io/kube-openapi/pkg/builder"
 	"k8s.io/kube-openapi/pkg/common"
