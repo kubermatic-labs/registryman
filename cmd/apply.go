@@ -59,7 +59,7 @@ state of the system.`,
 				return err
 			}
 			logger.V(1).Info("expected registry status acquired", "status", regStatusExpected)
-			actualRegistry, err := expectedRegistry.ToReal(logger)
+			actualRegistry, err := expectedRegistry.ToReal()
 			if err != nil {
 				return err
 			}
