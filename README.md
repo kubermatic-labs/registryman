@@ -27,8 +27,9 @@ GO111MODULE=on go get github.com/kubermatic-labs/registryman
 
 ## Concept
 
-Registryman parses the given directory for configuration (.yaml) files. The yaml
-files are defined as custom Kubernetes resources.
+Registryman can get the configuration from 2 kinds of source. It can either read
+Kubernetes resources from a Kubernetes API server or read the same Kubernetes
+resource definitions as yaml files from the filesystem.
 
 Registryman supports three types of resources:
   * Registry
@@ -75,7 +76,14 @@ state as configuration (.yaml) files and then you apply them.
 $ registryman apply <path-to-configuration-dir>
 ```
 
-An example output of this run could be:
+If you omit the path to the configuration directory, the resources definitions
+will be fetched from the configured Kubernetes API server.
+
+```bash
+$ registryman apply --context my-kubernetes
+```
+
+An example output of such executions could be:
 ```bash
 1.6230650316837864e+09	info	reading config files	{"dir": "testdata/state1/"}
 1.6230650316861527e+09	info	inspecting registry	{"registry_name": "harbor-1"}
@@ -102,7 +110,7 @@ With the `dry-run` flag you can simulate the operation without performing any
 action on the Docker registries, e.g.
 
 ```bash
-$ registryman apply <path-to-configuration-dir>
+$ registryman apply <path-to-configuration-dir> --dry-run
 
 1.623065212853344e+09	info	reading config files	{"dir": "testdata/init"}
 1.6230652128544164e+09	info	inspecting registry	{"registry_name": "harbor-1"}
@@ -137,7 +145,6 @@ spec:
   username: admin
   password: admin
 ```
-
 
 ### Checking the actual registry state
 
