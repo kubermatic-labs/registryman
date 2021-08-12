@@ -16,80 +16,6 @@
 
 package globalregistry
 
-import (
-	"fmt"
-)
-
-// ReplicationDirection shows the Project replication direction. In case of
-// PullReplication, the registry of the project will pull the repositories from
-// a remote registry. In case of PushReplication, the registry will push the
-// repos.
-type ReplicationDirection int
-
-const (
-	PullReplication ReplicationDirection = iota
-	PushReplication
-)
-
-func (rd ReplicationDirection) string() (string, error) {
-	switch rd {
-	case PullReplication:
-		return "Pull", nil
-	case PushReplication:
-		return "Push", nil
-	default:
-		return "", fmt.Errorf("unknown ReplicationType: %d", int(rd))
-	}
-}
-
-func (rd ReplicationDirection) String() string {
-	s, err := rd.string()
-	if err != nil {
-		panic(err.Error())
-	}
-	return s
-}
-
-// MarshalText method implements the encoding.TextMarshaler interface.
-func (rd ReplicationDirection) MarshalText() ([]byte, error) {
-	s, err := rd.string()
-	return []byte(s), err
-}
-
-// ReplicationTrigger describes the trigger event that starts the
-// synchronization mechanism of the project.
-type ReplicationTrigger int
-
-const (
-	ManualReplicationTrigger ReplicationTrigger = iota
-	EventReplicationTrigger
-)
-
-func (rt ReplicationTrigger) string() (string, error) {
-	switch rt {
-	case ManualReplicationTrigger:
-		return "Manual", nil
-	case EventReplicationTrigger:
-		return "EventBased", nil
-	default:
-		return "", fmt.Errorf("unhandled ReplicationTrigger value: %d", rt)
-	}
-}
-
-func (rt ReplicationTrigger) String() string {
-	s, err := rt.string()
-	if err != nil {
-		panic(err.Error())
-	}
-	return s
-}
-
-// MarshalText method implements the encoding.TextMarshaler interface.
-func (rt ReplicationTrigger) MarshalText() ([]byte, error) {
-	s, err := rt.string()
-	return []byte(s), err
-}
-
 // ReplicationRule interface declares the methods that can be used to manipulate
 // the replication rule of a project.
 type ReplicationRule interface {
@@ -102,10 +28,10 @@ type ReplicationRule interface {
 	GetName() string
 
 	// Trigger returns the event that starts the replication.
-	Trigger() ReplicationTrigger
+	Trigger() string
 
 	// Direction returns the direction of the synchronization.
-	Direction() ReplicationDirection
+	Direction() string
 
 	// RemoteRegistry returns the remote registry which is subject to the
 	// replication.

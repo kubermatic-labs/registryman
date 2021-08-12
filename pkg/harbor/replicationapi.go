@@ -90,13 +90,12 @@ func (r *registry) listReplicationRules() ([]globalregistry.ReplicationRule, err
 	return replicationRules, err
 }
 
-func (r *registry) createReplicationRule(project globalregistry.Project, remoteReg globalregistry.Registry, trigger globalregistry.ReplicationTrigger, direction globalregistry.ReplicationDirection) (globalregistry.ReplicationRule, error) {
-
+func (r *registry) createReplicationRule(project globalregistry.Project, remoteReg globalregistry.Registry, trigger, direction string) (globalregistry.ReplicationRule, error) {
 	r.logger.V(1).Info("ReplicationAPI.Create invoked",
 		"project_name", project.GetName(),
 		"remoteReg_name", remoteReg.GetName(),
-		"trigger", trigger.String(),
-		"direction", direction.String(),
+		"trigger", trigger,
+		"direction", direction,
 	)
 	local := &remoteRegistryStatus{
 		Name:         "Local",
@@ -105,16 +104,16 @@ func (r *registry) createReplicationRule(project globalregistry.Project, remoteR
 	}
 	var replTrigger *replicationTrigger
 	switch trigger {
-	case globalregistry.ManualReplicationTrigger:
+	case "manual":
 		replTrigger = &replicationTrigger{
 			Type: "manual",
 		}
-	case globalregistry.EventReplicationTrigger:
+	case "event_based":
 		replTrigger = &replicationTrigger{
 			Type: "event_based",
 		}
 	default:
-		return nil, fmt.Errorf("invalid replication trigger: %d", trigger)
+		return nil, fmt.Errorf("invalid replication trigger: %s", trigger)
 	}
 	n := time.Now()
 	now := n.Format(time.RFC3339)
@@ -140,7 +139,7 @@ func (r *registry) createReplicationRule(project globalregistry.Project, remoteR
 	}
 	var name string
 	switch direction {
-	case globalregistry.PushReplication:
+	case "Push":
 		replicationPolicy.Description = fmt.Sprintf("Pushing %s project to %s on %s",
 			project.GetName(),
 			remoteReg.GetName(),
@@ -155,7 +154,7 @@ func (r *registry) createReplicationRule(project globalregistry.Project, remoteR
 			nowStamp,
 		)
 		replicationPolicy.Name = name
-	case globalregistry.PullReplication:
+	case "Pull":
 		replicationPolicy.Description = fmt.Sprintf("Pulling %s project from %s on %s",
 			project.GetName(),
 			remoteReg.GetName(),
@@ -171,7 +170,7 @@ func (r *registry) createReplicationRule(project globalregistry.Project, remoteR
 		)
 		replicationPolicy.Name = name
 	default:
-		return nil, fmt.Errorf("unhandled replication direction: %d", direction)
+		return nil, fmt.Errorf("unhandled replication direction: %s", direction)
 	}
 
 	reqBodyBuf := bytes.NewBuffer(nil)

@@ -109,14 +109,14 @@ type ScannerManipulatorProject interface {
 type ProjectWithReplication interface {
 	// GetReplicationRules returns the list of replication rule concerning
 	// the project of the registry.
-	GetReplicationRules(*ReplicationTrigger, *ReplicationDirection) ([]ReplicationRule, error)
+	GetReplicationRules(trigger, direction string) ([]ReplicationRule, error)
 }
 
 // ReplicationRuleManipulatorProject interface contains the methods that we use
 // for project-level replication related read-write manipulations.
 type ReplicationRuleManipulatorProject interface {
 	// AssignReplicationRule assigns a replication rule to the project.
-	AssignReplicationRule(Registry, ReplicationTrigger, ReplicationDirection) (ReplicationRule, error)
+	AssignReplicationRule(remote Registry, trigger, direction string) (ReplicationRule, error)
 }
 
 // ProjectWithStorage interface contains the methods that we use for

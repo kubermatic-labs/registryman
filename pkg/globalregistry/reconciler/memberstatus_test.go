@@ -20,21 +20,22 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
+	api "github.com/kubermatic-labs/registryman/pkg/apis/registryman.kubermatic.com/v1alpha1"
 	"github.com/kubermatic-labs/registryman/pkg/globalregistry/reconciler"
 )
 
 var (
-	alpha = reconciler.MemberStatus{
+	alpha = api.MemberStatus{
 		Name: "alpha",
 		Type: "type",
 		Role: "role",
 	}
-	alphaPrime = reconciler.MemberStatus{
+	alphaPrime = api.MemberStatus{
 		Name: "alpha",
 		Type: "otherType",
 		Role: "role",
 	}
-	beta = reconciler.MemberStatus{
+	beta = api.MemberStatus{
 		Name: "beta",
 		Type: "type",
 		Role: "role",
@@ -43,27 +44,27 @@ var (
 
 var _ = Describe("Memberstatus", func() {
 	It("returns no action for the same MemberStatus slice", func() {
-		act := []reconciler.MemberStatus{}
-		exp := []reconciler.MemberStatus{}
+		act := []api.MemberStatus{}
+		exp := []api.MemberStatus{}
 		actions := reconciler.CompareMemberStatuses("proj", act, exp)
 		Expect(actions).ToNot(BeNil())
 		Expect(len(actions)).To(Equal(0))
 
-		act = []reconciler.MemberStatus{
+		act = []api.MemberStatus{
 			alpha,
 		}
-		exp = []reconciler.MemberStatus{
+		exp = []api.MemberStatus{
 			alpha,
 		}
 		actions = reconciler.CompareMemberStatuses("proj", act, exp)
 		Expect(actions).ToNot(BeNil())
 		Expect(len(actions)).To(Equal(0))
 
-		act = []reconciler.MemberStatus{
+		act = []api.MemberStatus{
 			alpha,
 			beta,
 		}
-		exp = []reconciler.MemberStatus{
+		exp = []api.MemberStatus{
 			alpha,
 			beta,
 		}
@@ -71,11 +72,11 @@ var _ = Describe("Memberstatus", func() {
 		Expect(actions).ToNot(BeNil())
 		Expect(len(actions)).To(Equal(0))
 
-		act = []reconciler.MemberStatus{
+		act = []api.MemberStatus{
 			beta,
 			alpha,
 		}
-		exp = []reconciler.MemberStatus{
+		exp = []api.MemberStatus{
 			alpha,
 			beta,
 		}
@@ -85,8 +86,8 @@ var _ = Describe("Memberstatus", func() {
 	})
 
 	It("can detect missing users", func() {
-		act := []reconciler.MemberStatus{}
-		exp := []reconciler.MemberStatus{
+		act := []api.MemberStatus{}
+		exp := []api.MemberStatus{
 			alpha,
 		}
 		actions := reconciler.CompareMemberStatuses("proj", act, exp)
@@ -96,10 +97,10 @@ var _ = Describe("Memberstatus", func() {
 			"adding member alpha to proj",
 		}))
 
-		act = []reconciler.MemberStatus{
+		act = []api.MemberStatus{
 			beta,
 		}
-		exp = []reconciler.MemberStatus{
+		exp = []api.MemberStatus{
 			alpha,
 			beta,
 		}
@@ -112,10 +113,10 @@ var _ = Describe("Memberstatus", func() {
 	})
 
 	It("can detect surplus users", func() {
-		act := []reconciler.MemberStatus{
+		act := []api.MemberStatus{
 			alpha,
 		}
-		exp := []reconciler.MemberStatus{}
+		exp := []api.MemberStatus{}
 		actions := reconciler.CompareMemberStatuses("proj", act, exp)
 		Expect(actions).ToNot(BeNil())
 		Expect(len(actions)).To(Equal(1))
@@ -123,11 +124,11 @@ var _ = Describe("Memberstatus", func() {
 			"removing member alpha from proj",
 		}))
 
-		act = []reconciler.MemberStatus{
+		act = []api.MemberStatus{
 			alpha,
 			beta,
 		}
-		exp = []reconciler.MemberStatus{
+		exp = []api.MemberStatus{
 			beta,
 		}
 		actions = reconciler.CompareMemberStatuses("proj", act, exp)
@@ -139,10 +140,10 @@ var _ = Describe("Memberstatus", func() {
 	})
 
 	It("can detect different users", func() {
-		act := []reconciler.MemberStatus{
+		act := []api.MemberStatus{
 			alpha,
 		}
-		exp := []reconciler.MemberStatus{
+		exp := []api.MemberStatus{
 			alphaPrime,
 		}
 		actions := reconciler.CompareMemberStatuses("proj", act, exp)

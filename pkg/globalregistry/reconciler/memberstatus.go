@@ -23,29 +23,14 @@ import (
 
 	"encoding/base64"
 
+	api "github.com/kubermatic-labs/registryman/pkg/apis/registryman.kubermatic.com/v1alpha1"
 	"github.com/kubermatic-labs/registryman/pkg/globalregistry"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 )
 
-// MemberStatus specifies the status of a project member.
-type MemberStatus struct {
-
-	// Name of the project member.
-	Name string `json:"name"`
-
-	// Type of the project membership, like user, group, robot.
-	Type string `json:"type"`
-
-	// Role of the project member, like admin, developer, maintainer, etc.
-	Role string `json:"role"`
-
-	// Distinguished name of the project member. Empty when omitted.
-	DN string `json:"dn,omitempty"`
-}
-
-func (ms *MemberStatus) toProjectMember() globalregistry.ProjectMember {
+func toProjectMember(ms *api.MemberStatus) globalregistry.ProjectMember {
 	if ms.DN == "" {
 		return (*projectMemberStatus)(ms)
 	} else {
@@ -53,7 +38,7 @@ func (ms *MemberStatus) toProjectMember() globalregistry.ProjectMember {
 	}
 }
 
-type projectMemberStatus MemberStatus
+type projectMemberStatus api.MemberStatus
 
 var _ globalregistry.ProjectMember = &projectMemberStatus{}
 
@@ -69,7 +54,7 @@ func (m *projectMemberStatus) GetType() string {
 	return m.Type
 }
 
-type ldapStatus MemberStatus
+type ldapStatus api.MemberStatus
 
 var _ globalregistry.LdapMember = &ldapStatus{}
 
@@ -90,7 +75,7 @@ func (m *ldapStatus) GetDN() string {
 }
 
 type memberAddAction struct {
-	MemberStatus
+	api.MemberStatus
 	projectName string
 }
 
@@ -173,7 +158,7 @@ func (ma *memberAddAction) Perform(reg globalregistry.Registry) (SideEffect, err
 		// registry does not support projects with members
 		return nilEffect, nil
 	}
-	creds, err := memberManipulatorProject.AssignMember(ma.toProjectMember())
+	creds, err := memberManipulatorProject.AssignMember(toProjectMember(&ma.MemberStatus))
 	if err != nil {
 		return nilEffect, err
 	}
@@ -213,7 +198,7 @@ func (rmc *removeMemberCredentials) Perform(ctx context.Context) error {
 }
 
 type memberRemoveAction struct {
-	MemberStatus
+	api.MemberStatus
 	projectName string
 }
 
@@ -234,7 +219,7 @@ func (ma *memberRemoveAction) Perform(reg globalregistry.Registry) (SideEffect, 
 		// registry does not support projects with members
 		return nilEffect, nil
 	}
-	err = memberManipulatorProject.UnassignMember(ma.toProjectMember())
+	err = memberManipulatorProject.UnassignMember(toProjectMember(&ma.MemberStatus))
 	if err != nil {
 		return nilEffect, err
 	}
@@ -250,9 +235,9 @@ func (ma *memberRemoveAction) Perform(reg globalregistry.Registry) (SideEffect, 
 // CompareMemberStatuses compares the actual and expected status of the members
 // of a project. The function returns the actions that are needed to synchronize
 // the actual state to the expected state.
-func CompareMemberStatuses(projectName string, actual, expected []MemberStatus) []Action {
-	actualDiff := []MemberStatus{}
-	expectedDiff := []MemberStatus{}
+func CompareMemberStatuses(projectName string, actual, expected []api.MemberStatus) []Action {
+	actualDiff := []api.MemberStatus{}
+	expectedDiff := []api.MemberStatus{}
 ActLoop:
 	for _, act := range actual {
 		for _, exp := range expected {

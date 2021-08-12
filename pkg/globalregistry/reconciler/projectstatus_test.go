@@ -20,14 +20,15 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
+	api "github.com/kubermatic-labs/registryman/pkg/apis/registryman.kubermatic.com/v1alpha1"
 	"github.com/kubermatic-labs/registryman/pkg/globalregistry/reconciler"
 )
 
 var (
-	proj1 = reconciler.ProjectStatus{
+	proj1 = api.ProjectStatus{
 		Name: "proj1",
-		Members: []reconciler.MemberStatus{
-			reconciler.MemberStatus{
+		Members: []api.MemberStatus{
+			api.MemberStatus{
 				Name: "admin",
 				Type: "User",
 				Role: "admin",
@@ -35,10 +36,10 @@ var (
 		},
 	}
 
-	proj2 = reconciler.ProjectStatus{
+	proj2 = api.ProjectStatus{
 		Name: "proj2",
-		Members: []reconciler.MemberStatus{
-			reconciler.MemberStatus{
+		Members: []api.MemberStatus{
+			api.MemberStatus{
 				Name: "admin",
 				Type: "User",
 				Role: "admin",
@@ -46,15 +47,15 @@ var (
 		},
 	}
 
-	proj1Prime = reconciler.ProjectStatus{
+	proj1Prime = api.ProjectStatus{
 		Name: "proj1",
-		Members: []reconciler.MemberStatus{
-			reconciler.MemberStatus{
+		Members: []api.MemberStatus{
+			api.MemberStatus{
 				Name: "admin",
 				Type: "User",
 				Role: "admin",
 			},
-			reconciler.MemberStatus{
+			api.MemberStatus{
 				Name: "alpha",
 				Type: "User",
 				Role: "Developer",
@@ -62,10 +63,10 @@ var (
 		},
 	}
 
-	proj1Local = reconciler.ProjectStatus{
+	proj1Local = api.ProjectStatus{
 		Name: "proj1",
-		Members: []reconciler.MemberStatus{
-			reconciler.MemberStatus{
+		Members: []api.MemberStatus{
+			api.MemberStatus{
 				Name: "admin",
 				Type: "User",
 				Role: "admin",
@@ -73,89 +74,89 @@ var (
 		},
 	}
 
-	bug1_actual = []reconciler.ProjectStatus{
-		reconciler.ProjectStatus{
+	bug1_actual = []api.ProjectStatus{
+		api.ProjectStatus{
 			Name: "app-images",
-			Members: []reconciler.MemberStatus{
-				reconciler.MemberStatus{
+			Members: []api.MemberStatus{
+				api.MemberStatus{
 					Name: "alpha",
 					Type: "User",
 					Role: "Maintainer",
 				},
-				reconciler.MemberStatus{
+				api.MemberStatus{
 					Name: "beta",
 					Type: "User",
 					Role: "Developer",
 				},
 			},
-			ReplicationRules: []reconciler.ReplicationRuleStatus{},
+			ReplicationRules: []api.ReplicationRuleStatus{},
 		},
-		reconciler.ProjectStatus{
+		api.ProjectStatus{
 			Name: "os-images",
-			Members: []reconciler.MemberStatus{
-				reconciler.MemberStatus{
+			Members: []api.MemberStatus{
+				api.MemberStatus{
 					Name: "admin",
 					Type: "User",
 					Role: "ProjectAdmin",
 				},
-				reconciler.MemberStatus{
+				api.MemberStatus{
 					Name: "alpha",
 					Type: "User",
 					Role: "Maintainer",
 				},
-				reconciler.MemberStatus{
+				api.MemberStatus{
 					Name: "beta",
 					Type: "User",
 					Role: "Developer",
 				},
 			},
-			ReplicationRules: []reconciler.ReplicationRuleStatus{},
+			ReplicationRules: []api.ReplicationRuleStatus{},
 		},
 	}
 
-	bug1_expected = []reconciler.ProjectStatus{
-		reconciler.ProjectStatus{
+	bug1_expected = []api.ProjectStatus{
+		api.ProjectStatus{
 			Name: "app-images",
-			Members: []reconciler.MemberStatus{
-				reconciler.MemberStatus{
+			Members: []api.MemberStatus{
+				api.MemberStatus{
 					Name: "alpha",
 					Type: "User",
 					Role: "Maintainer",
 				},
-				reconciler.MemberStatus{
+				api.MemberStatus{
 					Name: "beta",
 					Type: "User",
 					Role: "Developer",
 				},
 			},
-			ReplicationRules: []reconciler.ReplicationRuleStatus{},
+			ReplicationRules: []api.ReplicationRuleStatus{},
 		},
 	}
 )
 
 var _ = Describe("Projectstatus", func() {
 	It("returns no action for the same projects", func() {
-		act := []reconciler.ProjectStatus{}
-		exp := []reconciler.ProjectStatus{}
+		act := []api.ProjectStatus{}
+		exp := []api.ProjectStatus{}
 		actions := reconciler.CompareProjectStatuses(nil, act, exp)
 		Expect(actions).ToNot(BeNil())
 		Expect(len(actions)).To(Equal(0))
 
-		act = []reconciler.ProjectStatus{
+		act = []api.ProjectStatus{
 			proj1,
 		}
-		exp = []reconciler.ProjectStatus{
+		exp = []api.ProjectStatus{
 			proj1,
 		}
 		actions = reconciler.CompareProjectStatuses(nil, act, exp)
 		Expect(actions).ToNot(BeNil())
 		Expect(len(actions)).To(Equal(0))
 
-		act = []reconciler.ProjectStatus{
+		act = []api.ProjectStatus{
 			proj2,
 			proj1,
 		}
-		exp = []reconciler.ProjectStatus{
+		exp = []api.ProjectStatus{
 			proj1,
 			proj2,
 		}
@@ -165,8 +166,8 @@ var _ = Describe("Projectstatus", func() {
 	})
 
 	It("can detect missing projects", func() {
-		act := []reconciler.ProjectStatus{}
-		exp := []reconciler.ProjectStatus{
+		act := []api.ProjectStatus{}
+		exp := []api.ProjectStatus{
 			proj1,
 		}
 		actions := reconciler.CompareProjectStatuses(nil, act, exp)
@@ -177,10 +178,10 @@ var _ = Describe("Projectstatus", func() {
 			"adding member admin to proj1",
 		}))
 
-		act = []reconciler.ProjectStatus{
+		act = []api.ProjectStatus{
 			proj2,
 		}
-		exp = []reconciler.ProjectStatus{
+		exp = []api.ProjectStatus{
 			proj1,
 			proj2,
 		}
@@ -194,10 +195,10 @@ var _ = Describe("Projectstatus", func() {
 
 	})
 	It("can detect surplus projects", func() {
-		act := []reconciler.ProjectStatus{
+		act := []api.ProjectStatus{
 			proj1,
 		}
-		exp := []reconciler.ProjectStatus{}
+		exp := []api.ProjectStatus{}
 		actions := reconciler.CompareProjectStatuses(nil, act, exp)
 		Expect(actions).ToNot(BeNil())
 		Expect(len(actions)).To(Equal(1))
@@ -205,11 +206,11 @@ var _ = Describe("Projectstatus", func() {
 			"removing project proj1",
 		}))
 
-		act = []reconciler.ProjectStatus{
+		act = []api.ProjectStatus{
 			proj1,
 			proj2,
 		}
-		exp = []reconciler.ProjectStatus{
+		exp = []api.ProjectStatus{
 			proj2,
 		}
 		actions = reconciler.CompareProjectStatuses(nil, act, exp)
@@ -220,10 +221,10 @@ var _ = Describe("Projectstatus", func() {
 		}))
 	})
 	It("can detect changed members", func() {
-		act := []reconciler.ProjectStatus{
+		act := []api.ProjectStatus{
 			proj1,
 		}
-		exp := []reconciler.ProjectStatus{
+		exp := []api.ProjectStatus{
 			proj1Prime,
 		}
 		actions := reconciler.CompareProjectStatuses(nil, act, exp)
@@ -234,10 +235,10 @@ var _ = Describe("Projectstatus", func() {
 		}))
 	})
 	It("does nothing when just the project type is changed", func() {
-		act := []reconciler.ProjectStatus{
+		act := []api.ProjectStatus{
 			proj1,
 		}
-		exp := []reconciler.ProjectStatus{
+		exp := []api.ProjectStatus{
 			proj1Local,
 		}
 		actions := reconciler.CompareProjectStatuses(nil, act, exp)
@@ -247,11 +248,11 @@ var _ = Describe("Projectstatus", func() {
 
 	})
 	It("removes extra project and updates members in a single run", func() {
-		act := []reconciler.ProjectStatus{
+		act := []api.ProjectStatus{
 			proj1Prime,
 			proj2,
 		}
-		exp := []reconciler.ProjectStatus{
+		exp := []api.ProjectStatus{
 			proj1,
 		}
 		actions := reconciler.CompareProjectStatuses(nil, act, exp)

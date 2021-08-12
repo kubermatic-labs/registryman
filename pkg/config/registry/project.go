@@ -51,7 +51,7 @@ func (proj *project) GetMembers() ([]globalregistry.ProjectMember, error) {
 	return members, nil
 }
 
-func (proj *project) GetReplicationRules(trigger *globalregistry.ReplicationTrigger, direction *globalregistry.ReplicationDirection) ([]globalregistry.ReplicationRule, error) {
+func (proj *project) GetReplicationRules(trigger, direction string) ([]globalregistry.ReplicationRule, error) {
 	rules := []globalregistry.ReplicationRule{}
 	switch proj.Spec.Type {
 	case api.GlobalProjectType:
@@ -68,10 +68,10 @@ func (proj *project) GetReplicationRules(trigger *globalregistry.ReplicationTrig
 						project:               proj,
 						remote:                remoteReg,
 					}
-					if trigger != nil && *trigger != repRule.Trigger() {
+					if trigger != "" && trigger != repRule.Trigger() {
 						continue
 					}
-					if direction != nil && *direction != repRule.Direction() {
+					if direction != "" && direction != repRule.Direction() {
 						continue
 					}
 					rules = append(rules, repRule)
