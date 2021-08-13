@@ -106,6 +106,8 @@ func GetRegistryStatus(reg globalregistry.Registry) (*api.RegistryStatus, error)
 					projectStatuses[i].Members[n].DN = m.GetDN()
 				}
 			}
+		} else {
+			projectStatuses[i].Members = make([]api.MemberStatus, 0)
 		}
 		projectWithReplication, ok := project.(globalregistry.ProjectWithReplication)
 		if ok {
@@ -119,6 +121,8 @@ func GetRegistryStatus(reg globalregistry.Registry) (*api.RegistryStatus, error)
 				projectStatuses[i].ReplicationRules[n].Trigger = string(rule.Trigger())
 				projectStatuses[i].ReplicationRules[n].Direction = rule.Direction()
 			}
+		} else {
+			projectStatuses[i].ReplicationRules = make([]api.ReplicationRuleStatus, 0)
 		}
 
 		projectWithStorage, ok := project.(globalregistry.ProjectWithStorage)

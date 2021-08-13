@@ -17,6 +17,8 @@
 package config
 
 import (
+	"context"
+
 	"github.com/go-logr/logr"
 	_ "github.com/kubermatic-labs/registryman/pkg/acr"
 	api "github.com/kubermatic-labs/registryman/pkg/apis/registryman/v1alpha1"
@@ -50,18 +52,13 @@ func init() {
 // between the local file and Kubernetes resource based config management.
 type ApiObjectStore interface {
 	// WriteResource serializes the object specified by the obj parameter.
-	// The filename parameter specifies the name of the file to be created.
-	// The path where the file is created is set when the ReadManifests
-	// function creates the ApiObjectStore.
 	WriteResource(obj runtime.Object) error
 
-	// RemoveResource removes the file from the filesystem. The path where
-	// the file is removed from is set when the ReadManifests function
-	// creates the ApiObjectStore.
+	// RemoveResource removes the file from the filesystem.
 	RemoveResource(obj runtime.Object) error
 
 	// GetRegistries returns the parsed registries as API objects.
-	GetRegistries() []*api.Registry
+	GetRegistries(context.Context) []*api.Registry
 
 	// GetProjects returns the parsed projects as API objects.
 	GetProjects() []*api.Project
@@ -76,4 +73,8 @@ type ApiObjectStore interface {
 	// GetLogger returns the logr.Logger interface that the ApiObjectStore is using
 	// for logging.
 	GetLogger() logr.Logger
+
+	// UpdateRegistryStatus persists the registry status of the given
+	// Registry resource.
+	UpdateRegistryStatus(context.Context, *api.Registry) error
 }

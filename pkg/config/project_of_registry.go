@@ -17,6 +17,7 @@
 package config
 
 import (
+	"context"
 	"fmt"
 	"net/url"
 
@@ -62,7 +63,7 @@ func newProject(aos ApiObjectStore, reg *api.Registry, proj *api.Project) (*Proj
 // GetProjectByName returns a Project struct for a matching project name.
 func GetProjectByName(aos ApiObjectStore, projectName string) (*ProjectOfRegistry, error) {
 	projects := aos.GetProjects()
-	registries := aos.GetRegistries()
+	registries := aos.GetRegistries(context.Background())
 	for _, project := range projects {
 		if project.GetName() == projectName {
 			switch project.Spec.Type {

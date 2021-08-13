@@ -1,6 +1,7 @@
 package registry
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
@@ -17,7 +18,7 @@ type mockApiProvider struct {
 }
 
 func (ap *mockApiProvider) GetProjects() []*api.Project                              { return nil }
-func (ap *mockApiProvider) GetRegistries() []*api.Registry                           { return nil }
+func (ap *mockApiProvider) GetRegistries(context.Context) []*api.Registry            { return nil }
 func (ap *mockApiProvider) GetScanners() []*api.Scanner                              { return nil }
 func (ap *mockApiProvider) GetGlobalRegistryOptions() globalregistry.RegistryOptions { return ap }
 func (ap *mockApiProvider) GetLogger() logr.Logger                                   { return logger }

@@ -17,6 +17,7 @@
 package config
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"os"
@@ -277,7 +278,7 @@ func checkRegistryNameUniqueness(registries []*api.Registry) error {
 // validate performs all validations that require the full context, i.e. all
 // resources parsed.
 func (aos *localFileApiObjectStore) validate() error {
-	registries := aos.GetRegistries()
+	registries := aos.GetRegistries(context.Background())
 	projects := aos.GetProjects()
 	scanners := aos.GetScanners()
 
@@ -365,7 +366,7 @@ func validateObjects(o runtime.Object, gvk *schema.GroupVersionKind) error {
 }
 
 // GetRegistries returns the parsed registries as API objects.
-func (aos *localFileApiObjectStore) GetRegistries() []*api.Registry {
+func (aos *localFileApiObjectStore) GetRegistries(ctx context.Context) []*api.Registry {
 	registryObjects, found := aos.store[api.SchemeGroupVersion.WithKind("Registry")]
 	if !found {
 		return []*api.Registry{}
@@ -411,4 +412,9 @@ func (aos *localFileApiObjectStore) GetGlobalRegistryOptions() globalregistry.Re
 
 func (aos *localFileApiObjectStore) GetLogger() logr.Logger {
 	return logger
+}
+
+func (aos *localFileApiObjectStore) UpdateRegistryStatus(ctx context.Context, reg *api.Registry) error {
+	// We don't persist the status for filesystem based resources.
+	return nil
 }

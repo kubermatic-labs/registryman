@@ -17,6 +17,7 @@
 package registry
 
 import (
+	"context"
 	"fmt"
 
 	api "github.com/kubermatic-labs/registryman/pkg/apis/registryman/v1alpha1"
@@ -55,7 +56,7 @@ func (proj *project) GetReplicationRules(trigger, direction string) ([]globalreg
 	rules := []globalregistry.ReplicationRule{}
 	switch proj.Spec.Type {
 	case api.GlobalProjectType:
-		for _, r := range proj.registry.apiProvider.GetRegistries() {
+		for _, r := range proj.registry.apiProvider.GetRegistries(context.Background()) {
 			remoteReg := New(r, proj.registry.apiProvider)
 			if proj.registry.GetName() != r.GetName() {
 				calcRepl := calculateReplicationRule(

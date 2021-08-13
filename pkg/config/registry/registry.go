@@ -19,6 +19,7 @@
 package registry
 
 import (
+	"context"
 	"strconv"
 
 	"github.com/go-logr/logr"
@@ -30,7 +31,7 @@ import (
 // different API resources.
 type ApiObjectProvider interface {
 	GetProjects() []*api.Project
-	GetRegistries() []*api.Registry
+	GetRegistries(context.Context) []*api.Registry
 	GetScanners() []*api.Scanner
 	GetGlobalRegistryOptions() globalregistry.RegistryOptions
 	GetLogger() logr.Logger
