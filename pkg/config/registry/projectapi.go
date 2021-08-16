@@ -17,20 +17,22 @@
 package registry
 
 import (
+	"context"
+
 	api "github.com/kubermatic-labs/registryman/pkg/apis/registryman/v1alpha1"
 	"github.com/kubermatic-labs/registryman/pkg/globalregistry"
 )
 
 var _ globalregistry.RegistryWithProjects = &Registry{}
 
-func (r *Registry) GetProjectByName(name string) (globalregistry.Project, error) {
+func (r *Registry) GetProjectByName(ctx context.Context, name string) (globalregistry.Project, error) {
 	if name == "" {
 		return &project{
 			Project:  nil,
 			registry: r,
 		}, nil
 	}
-	projects := r.apiProvider.GetProjects()
+	projects := r.apiProvider.GetProjects(ctx)
 	for _, proj := range projects {
 		if proj.GetName() == name {
 			return &project{
@@ -42,8 +44,8 @@ func (r *Registry) GetProjectByName(name string) (globalregistry.Project, error)
 	return nil, nil
 }
 
-func (r *Registry) ListProjects() ([]globalregistry.Project, error) {
-	projects := r.apiProvider.GetProjects()
+func (r *Registry) ListProjects(ctx context.Context) ([]globalregistry.Project, error) {
+	projects := r.apiProvider.GetProjects(ctx)
 	result := make([]globalregistry.Project, 0)
 	for _, proj := range projects {
 		myProject := false

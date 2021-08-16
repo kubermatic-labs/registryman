@@ -54,7 +54,7 @@ func getFileName(obj runtime.Object) string {
 // filename is generated from the object name by appending .yaml to it. The path
 // where the file is created is set when the ReadLocalManifests function creates the
 // ApiObjectStore.
-func (aos *localFileApiObjectStore) WriteResource(obj runtime.Object) error {
+func (aos *localFileApiObjectStore) WriteResource(_ context.Context, obj runtime.Object) error {
 	f, err := os.Create(getFileName(obj))
 	if err != nil {
 		return err
@@ -72,7 +72,7 @@ func (aos *localFileApiObjectStore) WriteResource(obj runtime.Object) error {
 // from the object name by appending .yaml to it. The path where the file is
 // removed from is set when the ReadLocalManifests function creates the
 // ApiObjectStore.
-func (aos *localFileApiObjectStore) RemoveResource(obj runtime.Object) error {
+func (aos *localFileApiObjectStore) RemoveResource(_ context.Context, obj runtime.Object) error {
 	return os.Remove(getFileName(obj))
 }
 
@@ -279,8 +279,8 @@ func checkRegistryNameUniqueness(registries []*api.Registry) error {
 // resources parsed.
 func (aos *localFileApiObjectStore) validate() error {
 	registries := aos.GetRegistries(context.Background())
-	projects := aos.GetProjects()
-	scanners := aos.GetScanners()
+	projects := aos.GetProjects(context.Background())
+	scanners := aos.GetScanners(context.Background())
 
 	// Forcing maximum one Global registry
 	err := checkGlobalRegistryCount(registries)
@@ -379,7 +379,7 @@ func (aos *localFileApiObjectStore) GetRegistries(ctx context.Context) []*api.Re
 }
 
 // GetProjects returns the parsed projects as API objects.
-func (aos *localFileApiObjectStore) GetProjects() []*api.Project {
+func (aos *localFileApiObjectStore) GetProjects(context.Context) []*api.Project {
 	projectObjects, found := aos.store[api.SchemeGroupVersion.WithKind("Project")]
 	if !found {
 		return []*api.Project{}
@@ -392,7 +392,7 @@ func (aos *localFileApiObjectStore) GetProjects() []*api.Project {
 }
 
 // GetScanners returns the parsed scanners as API objects.
-func (aos *localFileApiObjectStore) GetScanners() []*api.Scanner {
+func (aos *localFileApiObjectStore) GetScanners(context.Context) []*api.Scanner {
 	scannerObjects, found := aos.store[api.SchemeGroupVersion.WithKind("Scanner")]
 	if !found {
 		return []*api.Scanner{}

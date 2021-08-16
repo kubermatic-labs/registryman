@@ -67,7 +67,7 @@ func (sup *StatusUpdater) updateRegistryStatus(ctx context.Context, reg *api.Reg
 		sup.logger.Error(err, "failed to create a real registry")
 		return
 	}
-	registryStatus, err := reconciler.GetRegistryStatus(realReg)
+	registryStatus, err := reconciler.GetRegistryStatus(ctx, realReg)
 	sup.logger.V(1).Info("getting registrystatus",
 		"registry", reg.GetName(),
 		"status", registryStatus,

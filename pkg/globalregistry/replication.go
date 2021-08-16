@@ -16,6 +16,8 @@
 
 package globalregistry
 
+import "context"
+
 // ReplicationRule interface declares the methods that can be used to manipulate
 // the replication rule of a project.
 type ReplicationRule interface {
@@ -42,5 +44,5 @@ type ReplicationRule interface {
 // to delete the replication rule of a project.
 type DestructibleReplicationRule interface {
 	// Delete method deletes the replication rule from the registry.
-	Delete() error
+	Delete(context.Context) error
 }

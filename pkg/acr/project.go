@@ -17,6 +17,7 @@
 package acr
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/kubermatic-labs/registryman/pkg/globalregistry"
@@ -38,8 +39,8 @@ func (p *project) GetName() string {
 // Delete implements the globalregistry.Project interface. It succeeds of there
 // are no repos of the projects. Otherwise, it returns an error.
 //
-func (p *project) Delete() error {
-	repoNames, err := p.registry.getRepositories()
+func (p *project) Delete(ctx context.Context) error {
+	repoNames, err := p.registry.getRepositories(ctx)
 	if err != nil {
 		return err
 	}
@@ -66,8 +67,8 @@ func (p *project) Delete() error {
 	return nil
 }
 
-func (p *project) GetRepositories() ([]string, error) {
-	repos, err := p.registry.getRepositories()
+func (p *project) GetRepositories(ctx context.Context) ([]string, error) {
+	repos, err := p.registry.getRepositories(ctx)
 	if err != nil {
 		return nil, err
 	}

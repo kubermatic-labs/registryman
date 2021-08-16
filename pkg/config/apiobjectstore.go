@@ -52,19 +52,19 @@ func init() {
 // between the local file and Kubernetes resource based config management.
 type ApiObjectStore interface {
 	// WriteResource serializes the object specified by the obj parameter.
-	WriteResource(obj runtime.Object) error
+	WriteResource(ctx context.Context, obj runtime.Object) error
 
 	// RemoveResource removes the file from the filesystem.
-	RemoveResource(obj runtime.Object) error
+	RemoveResource(ctx context.Context, obj runtime.Object) error
 
 	// GetRegistries returns the parsed registries as API objects.
 	GetRegistries(context.Context) []*api.Registry
 
 	// GetProjects returns the parsed projects as API objects.
-	GetProjects() []*api.Project
+	GetProjects(context.Context) []*api.Project
 
 	// GetScanners returns the parsed scanners as API objects.
-	GetScanners() []*api.Scanner
+	GetScanners(context.Context) []*api.Scanner
 
 	// GetGlobalRegistryOptions returns the ApiObjectStore related CLI options of an
 	// apply.

@@ -17,6 +17,7 @@
 package globalregistry
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/go-logr/logr"
@@ -67,7 +68,7 @@ type Registry interface {
 // new project.
 type ProjectCreator interface {
 	// Create creates a new project with the given name.
-	CreateProject(name string) (Project, error)
+	CreateProject(ctx context.Context, name string) (Project, error)
 }
 
 // New creates a provider specific Registry. The provider must be registered
