@@ -19,12 +19,12 @@ package cmd
 import (
 	"context"
 	"errors"
-	"fmt"
 
 	"github.com/kubermatic-labs/registryman/pkg/config"
 	"github.com/kubermatic-labs/registryman/pkg/globalregistry"
 	"github.com/kubermatic-labs/registryman/pkg/globalregistry/reconciler"
 	"github.com/spf13/cobra"
+	"k8s.io/client-go/rest"
 )
 
 var dryRun bool
@@ -37,21 +37,31 @@ var applyCmd = &cobra.Command{
 	Long: `The necessary configuration steps are performed based
 on the configuration files which describe the expected
 state of the system.`,
-	Args: cobra.ExactArgs(1),
+	Args: cobra.MaximumNArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
-		fmt.Println("apply called")
-
-		logger.Info("reading config files", "dir", args[0])
 		config.SetLogger(logger)
 
-		manifests, err := config.ReadManifests(args[0], options)
-
-		if err != nil {
-			return err
+		var aos config.ApiObjectStore
+		var err error
+		if len(args) == 1 {
+			logger.Info("reading config files", "dir", args[0])
+			aos, err = config.ReadLocalManifests(args[0], options)
+			if err != nil {
+				return err
+			}
+		} else {
+			var clientConfig *rest.Config
+			aos, clientConfig, err = config.ConnectToKube(options)
+			if err != nil {
+				return err
+			}
+			logger.Info("connecting to Kubernetes for resources",
+				"host", clientConfig.Host)
 		}
 
-		expectedRegistries := manifests.ExpectedProvider().GetRegistries()
-		sideeffectCtx := context.WithValue(context.Background(), reconciler.SideEffectManifestManipulator, manifests)
+		expectedProvider := config.NewExpectedProvider(aos)
+		expectedRegistries := expectedProvider.GetRegistries()
+		sideeffectCtx := context.WithValue(context.Background(), reconciler.SideEffectManifestManipulator, aos)
 		for _, expectedRegistry := range expectedRegistries {
 			logger.Info("inspecting registry", "registry_name", expectedRegistry.GetName())
 			regStatusExpected, err := reconciler.GetRegistryStatus(expectedRegistry)
@@ -68,7 +78,7 @@ state of the system.`,
 				return err
 			}
 			logger.V(1).Info("actual registry status acquired", "status", regStatusActual)
-			actions := reconciler.Compare(manifests.ExpectedProvider(), regStatusActual, regStatusExpected)
+			actions := reconciler.Compare(expectedProvider, regStatusActual, regStatusExpected)
 			logger.Info("ACTIONS:")
 			for _, action := range actions {
 				if !dryRun {

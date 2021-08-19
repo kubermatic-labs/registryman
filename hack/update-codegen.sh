@@ -19,57 +19,57 @@ set -o nounset
 set -o pipefail
 
 SCRIPT_ROOT=$(dirname "${BASH_SOURCE[0]}")/..
-# CODEGEN_PKG=${CODEGEN_PKG:-$(cd "${SCRIPT_ROOT}"; ls -d -1 ./vendor/k8s.io/code-generator 2>/dev/null || echo ../code-generator)}
-# CONTROLLER_TOOLS_PKG=${CONTROLLER_TOOLS_PKG:-$(cd "${SCRIPT_ROOT}"; ls -d -1 ./vendor/sigs.k8s.io/controller-tools 2>/dev/null || echo ../controller-tools)}
-
-# if  ! ( command -v controller-gen > /dev/null ); then
-#     echo "controller-gen not found, installing sigs.k8s.io/controller-tools"
-#     pushd "${CONTROLLER_TOOLS_PKG}"
-#     go install ./cmd/controller-gen
-#     popd
-# fi
-
-
-# CLIENTSET_NAME_VERSIONED=clientset \
-# CLIENTSET_PKG_NAME=clientset \
-# bash "${CODEGEN_PKG}/generate-groups.sh" crd \
-#            github.com/kubermatic-labs/registryman/pkg/apis \
-#   "globalregistry:v1alpha1" \
-#   --output-base "$(dirname "${BASH_SOURCE[0]}")/../../.." \
-#   --go-header-file "${SCRIPT_ROOT}/hack/boilerplate.go.txt"
-
-# CLIENTSET_NAME_VERSIONED=clientset \
-# CLIENTSET_PKG_NAME=clientset \
-# CLIENTSET_NAME_INTERNAL=internalclientset \
-# bash "${CODEGEN_PKG}/generate-internal-groups.sh" deepcopy,conversion \
-#   k8s.io/apiextensions-apiserver/pkg/client k8s.io/apiextensions-apiserver/pkg/apis k8s.io/apiextensions-apiserver/pkg/apis \
-#   "apiextensions:v1beta1,v1" \
-#   --output-base "$(dirname "${BASH_SOURCE[0]}")/../../.." \
-#   --go-header-file "${SCRIPT_ROOT}/hack/boilerplate.go.txt"
 
 echo "Generating CRDs"
 go run \
    "${SCRIPT_ROOT}"/vendor/sigs.k8s.io/controller-tools/cmd/controller-gen/main.go crd \
-   paths="$(realpath "${SCRIPT_ROOT}"/pkg/apis/registryman.kubermatic.com/v1alpha1)"               \
-   output:dir="${SCRIPT_ROOT}"/pkg/apis/registryman.kubermatic.com/v1alpha1
+   paths="$(realpath "${SCRIPT_ROOT}"/pkg/apis/registryman/v1alpha1)"               \
+   output:dir="${SCRIPT_ROOT}"/pkg/apis/registryman/v1alpha1
 
 echo "Generating deepcopy code"
 go run \
    "${SCRIPT_ROOT}/vendor/k8s.io/code-generator/cmd/deepcopy-gen/main.go"     \
-   -i github.com/kubermatic-labs/registryman/pkg/apis/registryman.kubermatic.com/v1alpha1 \
-   -p github.com/kubermatic-labs/registryman/pkg/apis/registryman.kubermatic.com/v1alpha1 \
+   --input-dirs github.com/kubermatic-labs/registryman/pkg/apis/registryman/v1alpha1 \
+   -O zz_generated.deepcopy                                                \
+   --bounding-dirs github.com/kubermatic-labs/registryman/pkg/apis         \
    -h "${SCRIPT_ROOT}/hack/boilerplate.go.txt"
+# -p github.com/kubermatic-labs/registryman/pkg/apis/registryman/v1alpha1 \
+
+echo "Generating clientset"
+go run \
+   "${SCRIPT_ROOT}"/vendor/k8s.io/code-generator/cmd/client-gen/main.go     \
+   --input-base '' \
+   --input github.com/kubermatic-labs/registryman/pkg/apis/registryman/v1alpha1 \
+   --output-package github.com/kubermatic-labs/registryman/pkg/apis/registryman/v1alpha1/clientset \
+   --clientset-name versioned \
+   -h "${SCRIPT_ROOT}"/hack/boilerplate.go.txt
+
+echo "Generating listers"
+go run \
+   "${SCRIPT_ROOT}"/vendor/k8s.io/code-generator/cmd/lister-gen/main.go     \
+   --input-dirs github.com/kubermatic-labs/registryman/pkg/apis/registryman/v1alpha1 \
+   --output-package github.com/kubermatic-labs/registryman/pkg/apis/registryman/v1alpha1/listers \
+   -h "${SCRIPT_ROOT}"/hack/boilerplate.go.txt
+
+echo "Generating informers"
+go run \
+   "${SCRIPT_ROOT}"/vendor/k8s.io/code-generator/cmd/informer-gen/main.go     \
+   --input-dirs github.com/kubermatic-labs/registryman/pkg/apis/registryman/v1alpha1 \
+   --versioned-clientset-package github.com/kubermatic-labs/registryman/pkg/apis/registryman/v1alpha1/clientset/versioned \
+   --listers-package github.com/kubermatic-labs/registryman/pkg/apis/registryman/v1alpha1/listers \
+   --output-package github.com/kubermatic-labs/registryman/pkg/apis/registryman/v1alpha1/informers \
+   -h "${SCRIPT_ROOT}"/hack/boilerplate.go.txt
 
 echo "Generating register code"
 go run \
-   "${SCRIPT_ROOT}"/vendor/k8s.io/code-generator/cmd/register-gen/main.go     \
-   -i github.com/kubermatic-labs/registryman/pkg/apis/registryman.kubermatic.com/v1alpha1 \
-   -p github.com/kubermatic-labs/registryman/pkg/apis/registryman.kubermatic.com/v1alpha1 \
+   "${SCRIPT_ROOT}"/vendor/k8s.io/code-generator/cmd/register-gen/main.go  \
+   -i github.com/kubermatic-labs/registryman/pkg/apis/registryman/v1alpha1 \
+   -p github.com/kubermatic-labs/registryman/pkg/apis/registryman/v1alpha1 \
    -h "${SCRIPT_ROOT}"/hack/boilerplate.go.txt
 
 echo "Generating OpenAPI"
 go run \
    "${SCRIPT_ROOT}"/vendor/k8s.io/code-generator/cmd/openapi-gen/main.go                                           \
-   -i github.com/kubermatic-labs/registryman/pkg/apis/registryman.kubermatic.com/v1alpha1,k8s.io/apimachinery/pkg/apis/meta/v1 \
-   -p github.com/kubermatic-labs/registryman/pkg/apis/registryman.kubermatic.com/v1alpha1                                      \
+   -i github.com/kubermatic-labs/registryman/pkg/apis/registryman/v1alpha1,k8s.io/apimachinery/pkg/apis/meta/v1 \
+   -p github.com/kubermatic-labs/registryman/pkg/apis/registryman/v1alpha1                                      \
    -h "${SCRIPT_ROOT}"/hack/boilerplate.go.txt

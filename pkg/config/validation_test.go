@@ -29,7 +29,7 @@ var _ = Describe("Validation", func() {
 	Context("when getting multiple global registries", func() {
 		It("should error", func() {
 			testDir := fmt.Sprintf("%s/test_multiple_global_registries", testdataDir)
-			manifests, err := config.ReadManifests(testDir, nil)
+			manifests, err := config.ReadLocalManifests(testDir, nil)
 			Expect(err).Should(MatchError(config.ErrValidationMultipleGlobalRegistries))
 			Expect(manifests).To(BeNil())
 		})
@@ -37,7 +37,7 @@ var _ = Describe("Validation", func() {
 	Context("when a project has invalid local registries", func() {
 		It("should error", func() {
 			testDir := fmt.Sprintf("%s/test_invalid_local_projects", testdataDir)
-			manifests, err := config.ReadManifests(testDir, nil)
+			manifests, err := config.ReadLocalManifests(testDir, nil)
 			Expect(err).Should(MatchError(config.ErrValidationInvalidLocalRegistryInProject))
 			Expect(manifests).To(BeNil())
 		})
@@ -45,7 +45,7 @@ var _ = Describe("Validation", func() {
 	Context("when there are multiple scanners with the same name", func() {
 		It("should error", func() {
 			testDir := fmt.Sprintf("%s/test_scannername_unique", testdataDir)
-			manifests, err := config.ReadManifests(testDir, nil)
+			manifests, err := config.ReadLocalManifests(testDir, nil)
 			Expect(err).Should(MatchError(config.ErrValidationScannerNameNotUnique))
 			Expect(manifests).To(BeNil())
 		})
@@ -53,7 +53,7 @@ var _ = Describe("Validation", func() {
 	Context("when there are multiple projects with the same name", func() {
 		It("should error", func() {
 			testDir := fmt.Sprintf("%s/test_projectname_unique", testdataDir)
-			manifests, err := config.ReadManifests(testDir, nil)
+			manifests, err := config.ReadLocalManifests(testDir, nil)
 			Expect(err).Should(MatchError(config.ErrValidationProjectNameNotUnique))
 			Expect(manifests).To(BeNil())
 		})
@@ -61,7 +61,7 @@ var _ = Describe("Validation", func() {
 	Context("when there are multiple registries with the same name", func() {
 		It("should error", func() {
 			testDir := fmt.Sprintf("%s/test_registryname_unique", testdataDir)
-			manifests, err := config.ReadManifests(testDir, nil)
+			manifests, err := config.ReadLocalManifests(testDir, nil)
 			Expect(err).Should(MatchError(config.ErrValidationRegistryNameNotUnique))
 			Expect(manifests).To(BeNil())
 		})
@@ -69,7 +69,7 @@ var _ = Describe("Validation", func() {
 	Context("when a project refers to a non-existing scanner", func() {
 		It("should error", func() {
 			testDir := fmt.Sprintf("%s/test_scannername_valid", testdataDir)
-			manifests, err := config.ReadManifests(testDir, nil)
+			manifests, err := config.ReadLocalManifests(testDir, nil)
 			Expect(err).Should(MatchError(config.ErrValidationScannerNameReference))
 			Expect(manifests).To(BeNil())
 		})
@@ -77,7 +77,7 @@ var _ = Describe("Validation", func() {
 	Context("when a project group member does not have DN field", func() {
 		It("should error", func() {
 			testDir := fmt.Sprintf("%s/test_groupmember_has_dn", testdataDir)
-			manifests, err := config.ReadManifests(testDir, nil)
+			manifests, err := config.ReadLocalManifests(testDir, nil)
 			Expect(err).Should(MatchError(config.ErrValidationGroupWithoutDN))
 			Expect(manifests).To(BeNil())
 		})

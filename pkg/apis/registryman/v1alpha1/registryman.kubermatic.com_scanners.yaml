@@ -1,0 +1,61 @@
+
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: (devel)
+  creationTimestamp: null
+  name: scanners.registryman.kubermatic.com
+spec:
+  group: registryman.kubermatic.com
+  names:
+    categories:
+    - registryman
+    kind: Scanner
+    listKind: ScannerList
+    plural: scanners
+    singular: scanner
+  scope: Namespaced
+  versions:
+  - name: v1alpha1
+    schema:
+      openAPIV3Schema:
+        description: Scanner resource describes the configuration of an external vulnerability
+          scanner.
+        properties:
+          apiVersion:
+            description: 'APIVersion defines the versioned schema of this representation
+              of an object. Servers should convert recognized schemas to the latest
+              internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+            type: string
+          kind:
+            description: 'Kind is a string value representing the REST resource this
+              object represents. Servers may infer this from the endpoint the client
+              submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+            type: string
+          metadata:
+            type: object
+          spec:
+            description: Spec describes the Scanner Specification.
+            properties:
+              accessCredential:
+                description: An optional value of the HTTP Authorization header sent
+                  with each request to the Scanner Adapter API.
+                type: string
+              url:
+                description: A base URL of the scanner adapter.
+                pattern: ^(https?|ftp)://[^\s/$.?#].[^\s]*$
+                type: string
+            type: object
+        required:
+        - spec
+        type: object
+    served: true
+    storage: true
+status:
+  acceptedNames:
+    kind: ""
+    plural: ""
+  conditions: []
+  storedVersions: []

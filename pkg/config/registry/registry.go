@@ -22,7 +22,7 @@ import (
 	"strconv"
 
 	"github.com/go-logr/logr"
-	api "github.com/kubermatic-labs/registryman/pkg/apis/registryman.kubermatic.com/v1alpha1"
+	api "github.com/kubermatic-labs/registryman/pkg/apis/registryman/v1alpha1"
 	"github.com/kubermatic-labs/registryman/pkg/globalregistry"
 )
 
@@ -32,7 +32,7 @@ type ApiObjectProvider interface {
 	GetProjects() []*api.Project
 	GetRegistries() []*api.Registry
 	GetScanners() []*api.Scanner
-	GetCliOptions() globalregistry.RegistryOptions
+	GetGlobalRegistryOptions() globalregistry.RegistryOptions
 	GetLogger() logr.Logger
 }
 
@@ -120,7 +120,7 @@ func (reg *Registry) GetOptions() globalregistry.RegistryOptions {
 		}
 		return &registryOptions{forceDelete: b}
 	}
-	return reg.apiProvider.GetCliOptions()
+	return reg.apiProvider.GetGlobalRegistryOptions()
 }
 
 // ToReal method turns the (i.e. expected) Registry value into a
