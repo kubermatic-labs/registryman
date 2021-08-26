@@ -145,7 +145,7 @@ func (pmc *persistMemberCredentials) Perform(ctx context.Context) error {
 }
 
 func (ma *memberAddAction) Perform(reg globalregistry.Registry) (SideEffect, error) {
-	project, err := reg.ProjectAPI().GetByName(ma.projectName)
+	project, err := reg.(globalregistry.RegistryWithProjects).GetProjectByName(ma.projectName)
 	if err != nil {
 		return nilEffect, err
 	}
@@ -153,7 +153,12 @@ func (ma *memberAddAction) Perform(reg globalregistry.Registry) (SideEffect, err
 		// project not found
 		return nilEffect, fmt.Errorf("project %s not found", ma.projectName)
 	}
-	creds, err := project.AssignMember(toProjectMember(&ma.MemberStatus))
+	memberManipulatorProject, ok := project.(globalregistry.MemberManipulatorProject)
+	if !ok {
+		// registry does not support projects with members
+		return nilEffect, nil
+	}
+	creds, err := memberManipulatorProject.AssignMember(toProjectMember(&ma.MemberStatus))
 	if err != nil {
 		return nilEffect, err
 	}
@@ -211,11 +216,16 @@ func (ma *memberRemoveAction) String() string {
 }
 
 func (ma *memberRemoveAction) Perform(reg globalregistry.Registry) (SideEffect, error) {
-	project, err := reg.ProjectAPI().GetByName(ma.projectName)
+	project, err := reg.(globalregistry.RegistryWithProjects).GetProjectByName(ma.projectName)
 	if err != nil {
 		return nilEffect, err
 	}
-	err = project.UnassignMember(toProjectMember(&ma.MemberStatus))
+	memberManipulatorProject, ok := project.(globalregistry.MemberManipulatorProject)
+	if !ok {
+		// registry does not support projects with members
+		return nilEffect, nil
+	}
+	err = memberManipulatorProject.UnassignMember(toProjectMember(&ma.MemberStatus))
 	if err != nil {
 		return nilEffect, err
 	}
@@ -231,7 +241,7 @@ func (ma *memberRemoveAction) Perform(reg globalregistry.Registry) (SideEffect, 
 // CompareMemberStatuses compares the actual and expected status of the members
 // of a project. The function returns the actions that are needed to synchronize
 // the actual state to the expected state.
-func CompareMemberStatuses(projectName string, actual, expected []api.MemberStatus) []Action {
+func CompareMemberStatuses(projectName string, actual, expected []api.MemberStatus, regCapabilities api.RegistryCapabilities) []Action {
 	actualDiff := []api.MemberStatus{}
 	expectedDiff := []api.MemberStatus{}
 ActLoop:
@@ -256,21 +266,22 @@ ExpLoop:
 	}
 	actions := make([]Action, 0)
 
-	// actualDiff contains the members which are there but are not needed
-	for _, act := range actualDiff {
-		actions = append(actions, &memberRemoveAction{
-			act,
-			projectName,
-		})
-	}
-
-	// expectedClone contains the members which are missing and thus they
-	// shall be created
-	for _, exp := range expectedDiff {
-		actions = append(actions, &memberAddAction{
-			exp,
-			projectName,
-		})
+	if regCapabilities.CanManipulateProjectMembers {
+		// actualDiff contains the members which are there but are not needed
+		for _, act := range actualDiff {
+			actions = append(actions, &memberRemoveAction{
+				act,
+				projectName,
+			})
+		}
+		// expectedClone contains the members which are missing and thus they
+		// shall be created
+		for _, exp := range expectedDiff {
+			actions = append(actions, &memberAddAction{
+				exp,
+				projectName,
+			})
+		}
 	}
 
 	return actions

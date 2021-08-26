@@ -17,7 +17,6 @@
 package reconciler
 
 import (
-	"errors"
 	"fmt"
 
 	api "github.com/kubermatic-labs/registryman/pkg/apis/registryman/v1alpha1"
@@ -36,13 +35,13 @@ func (pa *projectAddAction) String() string {
 }
 
 func (pa *projectAddAction) Perform(reg globalregistry.Registry) (SideEffect, error) {
-	_, err := reg.ProjectAPI().Create(pa.Name)
-	switch {
-	case errors.Is(err, globalregistry.ErrNotImplemented):
+	papi, ok := reg.(globalregistry.ProjectCreator)
+	if !ok {
+		// registry provider does not implement project creation
 		return nilEffect, nil
-	default:
-		return nilEffect, err
 	}
+	_, err := papi.CreateProject(pa.Name)
+	return nilEffect, err
 }
 
 type projectRemoveAction struct {
@@ -56,17 +55,21 @@ func (pa *projectRemoveAction) String() string {
 }
 
 func (pa *projectRemoveAction) Perform(reg globalregistry.Registry) (SideEffect, error) {
-	project, err := reg.ProjectAPI().GetByName(pa.Name)
+	project, err := reg.(globalregistry.RegistryWithProjects).GetProjectByName(pa.Name)
 	if err != nil {
 		return nilEffect, err
 	}
-	return nilEffect, project.Delete()
+	destructibleProject, ok := project.(globalregistry.DestructibleProject)
+	if !ok {
+		return nilEffect, nil
+	}
+	return nilEffect, destructibleProject.Delete()
 }
 
 // CompareProjectStatuses compares the actual and expected status of the projects
 // of a registry. The function returns the actions that are needed to synchronize
 // the actual state to the expected state.
-func CompareProjectStatuses(store *config.ExpectedProvider, actual, expected []api.ProjectStatus) []Action {
+func CompareProjectStatuses(store *config.ExpectedProvider, actual, expected []api.ProjectStatus, regCapabilities api.RegistryCapabilities) []Action {
 	same := make(map[string][2]api.ProjectStatus)
 	actualDiff := []api.ProjectStatus{}
 	expectedDiff := []api.ProjectStatus{}
@@ -99,19 +102,23 @@ ExpLoop:
 
 	// actualDiff contains the projects which are there but are not needed
 	for _, act := range actualDiff {
-		// We remove the related replication rules first
-		for _, replRule := range act.ReplicationRules {
-			actions = append(actions, &rRuleRemoveAction{
-				ReplicationRuleStatus: replRule,
-				store:                 store,
-				projectName:           act.Name,
-			})
-
+		if regCapabilities.CanManipulateProjectReplicationRules {
+			// Since registry can remove replication rules we remove
+			// the related replication rules first
+			for _, replRule := range act.ReplicationRules {
+				actions = append(actions, &rRuleRemoveAction{
+					ReplicationRuleStatus: replRule,
+					store:                 store,
+					projectName:           act.Name,
+				})
+			}
 		}
-		// Then remove the project itself
-		actions = append(actions, &projectRemoveAction{
-			ProjectStatus: act,
-		})
+		if regCapabilities.CanDeleteProject {
+			// Then remove the project itself
+			actions = append(actions, &projectRemoveAction{
+				ProjectStatus: act,
+			})
+		}
 	}
 
 	// same contains the projects that are present in both actual and
@@ -121,45 +128,59 @@ ExpLoop:
 		actions = append(actions,
 			CompareMemberStatuses(projectName,
 				projectPair[0].Members,
-				projectPair[1].Members)...,
+				projectPair[1].Members,
+				regCapabilities,
+			)...,
 		)
 		actions = append(actions,
 			CompareReplicationRuleStatus(store,
 				projectName,
 				projectPair[0].ReplicationRules,
-				projectPair[1].ReplicationRules)...,
+				projectPair[1].ReplicationRules,
+				regCapabilities,
+			)...,
 		)
 		actions = append(actions,
 			CompareScannerStatuses(
 				projectName,
 				projectPair[0].ScannerStatus,
-				projectPair[1].ScannerStatus)...,
+				projectPair[1].ScannerStatus,
+				regCapabilities,
+			)...,
 		)
 	}
 	// expectedDiff contains the projects which are missing and thus they
 	// shall be created
 	for _, exp := range expectedDiff {
-		actions = append(actions, &projectAddAction{
-			exp,
-		})
-		for _, member := range exp.Members {
-			actions = append(actions, &memberAddAction{
-				member,
-				exp.Name,
+		if regCapabilities.CanCreateProject {
+			actions = append(actions, &projectAddAction{
+				exp,
 			})
 		}
-		for _, replRule := range exp.ReplicationRules {
-			actions = append(actions, &rRuleAddAction{
-				ReplicationRuleStatus: replRule,
-				store:                 store,
-				projectName:           exp.Name,
-			})
+		if regCapabilities.CanManipulateProjectMembers {
+			for _, member := range exp.Members {
+				actions = append(actions, &memberAddAction{
+					member,
+					exp.Name,
+				})
+			}
 		}
-		if exp.ScannerStatus.Name != "" {
-			actions = append(actions, &scannerAssignAction{
-				projectName:   exp.Name,
-				ScannerStatus: &exp.ScannerStatus,
-			})
+		if regCapabilities.CanManipulateProjectReplicationRules {
+			for _, replRule := range exp.ReplicationRules {
+				actions = append(actions, &rRuleAddAction{
+					ReplicationRuleStatus: replRule,
+					store:                 store,
+					projectName:           exp.Name,
+				})
+			}
+		}
+		if regCapabilities.CanManipulateProjectScanners {
+			if exp.ScannerStatus.Name != "" {
+				actions = append(actions, &scannerAssignAction{
+					projectName:   exp.Name,
+					ScannerStatus: &exp.ScannerStatus,
+				})
+			}
 		}
 	}
 

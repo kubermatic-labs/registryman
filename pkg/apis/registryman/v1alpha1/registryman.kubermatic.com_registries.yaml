@@ -74,6 +74,65 @@ spec:
           status:
             description: RegistryStatus specifies the status of a registry.
             properties:
+              capabilities:
+                properties:
+                  canCreateProject:
+                    description: CanCreateProject shows whether the registry can create
+                      projects.
+                    type: boolean
+                  canDeleteProject:
+                    description: CanDeleteProject shows whether the registry can delete
+                      projects.
+                    type: boolean
+                  canManipulateProjectMembers:
+                    description: CanManipulateProjectMembers shows whether the registry
+                      can add/remove members to the projects.
+                    type: boolean
+                  canManipulateReplicationRules:
+                    description: CanManipulateProjectReplicationRules shows whether
+                      the registry can add/remove replication rules to the projects.
+                    type: boolean
+                  canManipulateScanners:
+                    description: CanManipulateProjectScanners shows whether the registry
+                      can add/remove scanners to the projects.
+                    type: boolean
+                  canPullReplicate:
+                    description: CanPullReplicate shows whether the registry can pull
+                      repositories from remote registries.
+                    type: boolean
+                  canPushReplicate:
+                    description: CanPushReplicate shows whether the registry can push
+                      repositories from remote registries.
+                    type: boolean
+                  hasProjectMembers:
+                    description: HasProjectMembers shows whether the registry understands
+                      the concept of project membership.
+                    type: boolean
+                  hasProjectReplicationRules:
+                    description: HasProjectReplicationRules shows whether the registry
+                      understands the concept of project level replication rules.
+                    type: boolean
+                  hasProjectScanners:
+                    description: HasProjectScanners shows whether the registry understands
+                      the concept of project level vulnerability scanners.
+                    type: boolean
+                  hasProjectStorageReport:
+                    description: HasProjectStorageReport shows whether the registry
+                      understands the concept of project level storage reporting.
+                    type: boolean
+                required:
+                - canCreateProject
+                - canDeleteProject
+                - canManipulateProjectMembers
+                - canManipulateReplicationRules
+                - canManipulateScanners
+                - canPullReplicate
+                - canPushReplicate
+                - hasProjectMembers
+                - hasProjectReplicationRules
+                - hasProjectScanners
+                - hasProjectStorageReport
+                type: object
               projects:
                 items:
                   description: ProjectStatus specifies the status of a registry project.
@@ -165,6 +224,7 @@ spec:
                 - name
                 x-kubernetes-list-type: map
             required:
+            - capabilities
             - projects
             type: object
         required:

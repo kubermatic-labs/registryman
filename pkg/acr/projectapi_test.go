@@ -32,9 +32,9 @@ func sliceContainsString(projects []globalregistry.Project, s string) bool {
 }
 
 func TestCollectProjectNamesFromRepos(t *testing.T) {
-	projectApi := &projectAPI{}
+	reg := &registry{}
 	repos := []string{"os-images/ubuntu"}
-	projects := projectApi.collectProjectNamesFromRepos(repos)
+	projects := reg.collectProjectNamesFromRepos(repos)
 	if projLen := len(projects); projLen != 1 {
 		t.Errorf("len of projects is %d", projLen)
 	}
@@ -43,7 +43,7 @@ func TestCollectProjectNamesFromRepos(t *testing.T) {
 	}
 
 	repos = []string{"os-images/ubuntu", "os-images/alpine"}
-	projects = projectApi.collectProjectNamesFromRepos(repos)
+	projects = reg.collectProjectNamesFromRepos(repos)
 	if projLen := len(projects); projLen != 1 {
 		t.Errorf("len of projects is %d", projLen)
 	}
@@ -52,7 +52,7 @@ func TestCollectProjectNamesFromRepos(t *testing.T) {
 	}
 
 	repos = []string{"os-images/ubuntu", "os-images/alpine", "app-images/service"}
-	projects = projectApi.collectProjectNamesFromRepos(repos)
+	projects = reg.collectProjectNamesFromRepos(repos)
 	if projLen := len(projects); projLen != 2 {
 		t.Errorf("len of projects is %d", projLen)
 	}
@@ -65,7 +65,7 @@ func TestCollectProjectNamesFromRepos(t *testing.T) {
 	}
 
 	repos = []string{"ubuntu", "os-images/alpine", "app-images/service"}
-	projects = projectApi.collectProjectNamesFromRepos(repos)
+	projects = reg.collectProjectNamesFromRepos(repos)
 	if projLen := len(projects); projLen != 3 {
 		t.Errorf("len of projects is %d", projLen)
 	}
@@ -81,7 +81,7 @@ func TestCollectProjectNamesFromRepos(t *testing.T) {
 	}
 
 	repos = []string{}
-	projects = projectApi.collectProjectNamesFromRepos(repos)
+	projects = reg.collectProjectNamesFromRepos(repos)
 	if projLen := len(projects); projLen != 0 {
 		t.Errorf("len of projects is %d", projLen)
 	}

@@ -41,47 +41,29 @@ func init() {
 }
 
 type registry struct {
-	logger logr.Logger
-	globalregistry.RegistryConfig
+	logger    logr.Logger
+	parsedUrl *url.URL
+	globalregistry.Registry
 	*http.Client
-	projects         *projectAPI
-	remoteRegistries *remoteRegistries
-	replications     *replicationAPI
-	parsedUrl        *url.URL
-	scanners         *scannerAPI
 }
 
-// registry type implements the globalregistry.Registry interface
 var _ globalregistry.Registry = &registry{}
+var _ globalregistry.RegistryWithProjects = &registry{}
+var _ globalregistry.ProjectCreator = &registry{}
 
 // newRegistry is the constructor if the registry type. It is a globalregistry RegistryCreator.
-func newRegistry(logger logr.Logger, config globalregistry.RegistryConfig) (globalregistry.Registry, error) {
+func newRegistry(logger logr.Logger, config globalregistry.Registry) (globalregistry.Registry, error) {
 	var err error
 	c := &registry{
-		logger:         logger,
-		RegistryConfig: config,
-		Client:         http.DefaultClient,
+		logger:   logger,
+		Registry: config,
+		Client:   http.DefaultClient,
 	}
-	c.projects, err = newProjectAPI(c)
-	if err != nil {
-		return nil, err
-	}
-	c.remoteRegistries = newRemoteRegistries(c)
-	c.replications = newReplicationAPI(c)
 	c.parsedUrl, err = url.Parse(config.GetAPIEndpoint())
 	if err != nil {
 		return nil, err
 	}
-	c.scanners = newScannerAPI(c)
 	return c, nil
-}
-
-func (r *registry) ProjectAPI() globalregistry.ProjectAPI {
-	return r.projects
-}
-
-func (r *registry) ReplicationAPI() globalregistry.ReplicationAPI {
-	return r.replications
 }
 
 type bytesBody struct {

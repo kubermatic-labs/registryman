@@ -27,14 +27,21 @@ import (
 )
 
 type project struct {
-	id   int
-	api  *projectAPI
-	Name string
-	sApi *scannerAPI
+	id       int
+	registry *registry
+	Name     string
 }
 
 // interface guard
 var _ globalregistry.Project = &project{}
+var _ globalregistry.ProjectWithRepositories = &project{}
+var _ globalregistry.ProjectWithMembers = &project{}
+var _ globalregistry.MemberManipulatorProject = &project{}
+var _ globalregistry.ProjectWithScanner = &project{}
+var _ globalregistry.ScannerManipulatorProject = &project{}
+var _ globalregistry.ProjectWithReplication = &project{}
+var _ globalregistry.ProjectWithStorage = &project{}
+var _ globalregistry.DestructibleProject = &project{}
 
 func (p *project) GetName() string {
 	return p.Name
@@ -48,13 +55,13 @@ func (p *project) Delete() error {
 	}
 
 	if len(repos) > 0 {
-		switch opt := p.api.reg.GetOptions().(type) {
+		switch opt := p.registry.GetOptions().(type) {
 		case globalregistry.CanForceDelete:
 			if f := opt.ForceDeleteProjects(); !f {
 				return fmt.Errorf("%s: repositories are present, please delete them before deleting the project, %w", p.Name, globalregistry.ErrRecoverableError)
 			}
 			for _, repo := range repos {
-				p.api.reg.logger.V(1).Info("deleting repository",
+				p.registry.logger.V(1).Info("deleting repository",
 					"repositoryName", repos,
 				)
 				err = p.deleteRepository(repo)
@@ -65,7 +72,7 @@ func (p *project) Delete() error {
 		}
 
 	}
-	return p.api.delete(p.id)
+	return p.registry.delete(p.id)
 }
 
 func robotRoleToAccess(role string) []access {
@@ -120,7 +127,7 @@ func (p *project) AssignMember(member globalregistry.ProjectMember) (*globalregi
 				Username: member.GetName(),
 			},
 		}
-		_, err = p.api.createProjectMember(p.id, pum)
+		_, err = p.registry.createProjectMember(p.id, pum)
 		return nil, err
 	case groupType:
 		groupMember, ok := member.(globalregistry.LdapMember)
@@ -138,7 +145,7 @@ func (p *project) AssignMember(member globalregistry.ProjectMember) (*globalregi
 			GroupType:   1,
 		}
 
-		_, err = p.api.reg.updateIDOfUserGroup(userGroup)
+		_, err = p.registry.updateIDOfUserGroup(userGroup)
 		// err = p.api.reg.getOrCreateUsergroup(userGroup)
 		if err != nil {
 			return nil, err
@@ -148,7 +155,7 @@ func (p *project) AssignMember(member globalregistry.ProjectMember) (*globalregi
 			RoleId:      role,
 			MemberGroup: userGroup,
 		}
-		_, err = p.api.createProjectMember(p.id, pum)
+		_, err = p.registry.createProjectMember(p.id, pum)
 		return nil, err
 	case robotType:
 		prm := &robot{
@@ -172,7 +179,7 @@ func (p *project) AssignMember(member globalregistry.ProjectMember) (*globalregi
 		// ExpiresAt:   1024,
 		// Description: "generated robot member",
 		// Access:      robotRoleToAccess(member.GetRole()),
-		r, err := p.api.createProjectRobotMember(prm)
+		r, err := p.registry.createProjectRobotMember(prm)
 		if err != nil {
 			return nil, err
 		}
@@ -185,11 +192,11 @@ func (p *project) AssignMember(member globalregistry.ProjectMember) (*globalregi
 }
 
 func (p *project) GetMembers() ([]globalregistry.ProjectMember, error) {
-	userGroupMembers, err := p.api.getMembers(p.id)
+	userGroupMembers, err := p.registry.getMembers(p.id)
 	if err != nil {
 		return nil, err
 	}
-	robotMembers, err := p.api.getRobotMembers(p.id)
+	robotMembers, err := p.registry.getRobotMembers(p.id)
 	if err != nil {
 		return nil, err
 	}
@@ -220,7 +227,7 @@ func (p *project) UnassignMember(member globalregistry.ProjectMember) error {
 	case userType, groupType:
 		var m *projectMemberEntity
 		var members []*projectMemberEntity
-		members, err = p.api.getMembers(p.id)
+		members, err = p.registry.getMembers(p.id)
 		if err != nil {
 			return err
 		}
@@ -233,11 +240,11 @@ func (p *project) UnassignMember(member globalregistry.ProjectMember) error {
 		if m == nil {
 			return fmt.Errorf("user member not found")
 		}
-		err = p.api.deleteProjectMember(p.id, m.Id)
+		err = p.registry.deleteProjectMember(p.id, m.Id)
 	case robotType:
 		var m *robot
 		var members []*robot
-		members, err = p.api.getRobotMembers(p.id)
+		members, err = p.registry.getRobotMembers(p.id)
 		if err != nil {
 			return err
 		}
@@ -251,42 +258,42 @@ func (p *project) UnassignMember(member globalregistry.ProjectMember) error {
 		if m == nil {
 			return fmt.Errorf("robot member not found")
 		}
-		err = p.api.deleteProjectRobotMember(p.id, m.Id)
+		err = p.registry.deleteProjectRobotMember(p.id, m.Id)
 	}
 	return err
 }
 
-func (p *project) AssignReplicationRule(remoteReg globalregistry.RegistryConfig, trigger, direction string) (globalregistry.ReplicationRule, error) {
-	return p.api.reg.ReplicationAPI().(*replicationAPI).create(p, remoteReg, trigger, direction)
+func (p *project) AssignReplicationRule(remoteReg globalregistry.Registry, trigger, direction string) (globalregistry.ReplicationRule, error) {
+	return p.registry.createReplicationRule(p, remoteReg, trigger, direction)
 }
 
 func (p *project) GetRepositories() ([]string, error) {
-	return p.api.listProjectRepositories(p)
+	return p.registry.listProjectRepositories(p)
 }
 
 func (p *project) deleteRepository(r string) error {
-	return p.api.deleteProjectRepository(p, r)
+	return p.registry.deleteProjectRepository(p, r)
 }
 
-func (p *project) GetReplicationRules(trigger string, direction string) ([]globalregistry.ReplicationRule, error) {
-	p.api.reg.logger.V(1).Info("Project.GetReplicationRules invoked",
+func (p *project) GetReplicationRules(trigger, direction string) ([]globalregistry.ReplicationRule, error) {
+	p.registry.logger.V(1).Info("Project.GetReplicationRules invoked",
 		"projectName", p.Name,
 	)
-	replRules, err := p.api.reg.replications.List()
+	replRules, err := p.registry.listReplicationRules()
 	if err != nil {
 		return nil, err
 	}
-	p.api.reg.logger.V(1).Info("replication rules fetched",
+	p.registry.logger.V(1).Info("replication rules fetched",
 		"count", len(replRules),
 	)
 	results := make([]globalregistry.ReplicationRule, 0)
 	for _, replRule := range replRules {
-		p.api.reg.logger.V(1).Info("checking replication rule",
+		p.registry.logger.V(1).Info("checking replication rule",
 			"name", replRule.GetName(),
 			"projectName", replRule.GetProjectName(),
 		)
 		if replRule.GetProjectName() == p.Name {
-			p.api.reg.logger.V(1).Info("project name matches, replication rule stored")
+			p.registry.logger.V(1).Info("project name matches, replication rule stored")
 			if trigger != "" && trigger != replRule.Trigger() {
 				continue
 			}
@@ -300,20 +307,20 @@ func (p *project) GetReplicationRules(trigger string, direction string) ([]globa
 }
 
 func (p *project) GetScanner() (globalregistry.Scanner, error) {
-	return p.sApi.getForProject(p.id)
+	return p.registry.getScannerOfProject(p.id)
 }
 
 func (p *project) AssignScanner(targetScanner globalregistry.Scanner) error {
-	scannerID, err := p.sApi.getScannerIDByNameOrCreate(targetScanner)
+	scannerID, err := p.registry.getScannerIDByNameOrCreate(targetScanner)
 	if err != nil {
 		return err
 	}
-	return p.sApi.SetForProject(p.id, scannerID)
+	return p.registry.setScannerForProject(p.id, scannerID)
 }
 
 func (p *project) UnassignScanner(targetScanner globalregistry.Scanner) error {
 	var defaultScanner globalregistry.Scanner
-	currentScanners, err := p.sApi.List()
+	currentScanners, err := p.registry.listScanners()
 
 	if err != nil {
 		return fmt.Errorf("couldn't list scanners for project, %w", err)
@@ -329,7 +336,7 @@ func (p *project) UnassignScanner(targetScanner globalregistry.Scanner) error {
 		return nil
 	}
 	if defaultScanner.GetName() == "" {
-		p.api.reg.logger.Error(err, "couldn't find default scanner for project", p)
+		p.registry.logger.Error(err, "couldn't find default scanner for project", p)
 		return err
 	}
 
@@ -349,19 +356,19 @@ type projectStatusResponse struct {
 
 // GetUsedStorage implements the globalregistry.Project interface.
 func (p *project) GetUsedStorage() (int, error) {
-	p.api.reg.logger.V(1).Info("getting storage usage of a project",
+	p.registry.logger.V(1).Info("getting storage usage of a project",
 		"projectName", p.Name,
 	)
-	url := *p.api.reg.parsedUrl
+	url := *p.registry.parsedUrl
 	url.Path = fmt.Sprintf("/api/v2.0/projects/%d/summary", p.id)
 	req, err := http.NewRequest(http.MethodGet, url.String(), nil)
 	if err != nil {
 		return -1, err
 	}
 
-	req.SetBasicAuth(p.api.reg.GetUsername(), p.api.reg.GetPassword())
+	req.SetBasicAuth(p.registry.GetUsername(), p.registry.GetPassword())
 
-	resp, err := p.api.reg.do(req)
+	resp, err := p.registry.do(req)
 	if err != nil {
 		return -1, err
 	}
@@ -372,13 +379,13 @@ func (p *project) GetUsedStorage() (int, error) {
 
 	err = json.NewDecoder(resp.Body).Decode(&parsedResponse)
 	if err != nil {
-		p.api.reg.logger.Error(err, "json decoding failed")
+		p.registry.logger.Error(err, "json decoding failed")
 		b := bytes.NewBuffer(nil)
 		_, err := b.ReadFrom(resp.Body)
 		if err != nil {
 			panic(err)
 		}
-		p.api.reg.logger.Info(b.String())
+		p.registry.logger.Info(b.String())
 	}
 	return parsedResponse.Quota.Used.Storage, nil
 }

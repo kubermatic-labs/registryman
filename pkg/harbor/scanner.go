@@ -22,7 +22,7 @@ import (
 
 type scanner struct {
 	id        string
-	api       *scannerAPI
+	registry  *registry
 	name      string
 	url       string
 	isDefault bool
@@ -31,7 +31,7 @@ type scanner struct {
 var _ globalregistry.Scanner = &scanner{}
 
 func (s *scanner) Delete() error {
-	return s.api.delete(s.id)
+	return s.registry.deleteScanner(s.id)
 }
 
 func (s *scanner) GetName() string {

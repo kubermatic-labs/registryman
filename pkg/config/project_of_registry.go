@@ -47,7 +47,8 @@ func newProject(aos ApiObjectStore, reg *api.Registry, proj *api.Project) (*Proj
 	if err != nil {
 		return nil, err
 	}
-	realProject, err := realRegistry.ProjectAPI().GetByName(proj.GetName())
+	realRegistryWithProjects := realRegistry.(globalregistry.RegistryWithProjects)
+	realProject, err := realRegistryWithProjects.GetProjectByName(proj.GetName())
 	if err != nil {
 		return nil, err
 	}

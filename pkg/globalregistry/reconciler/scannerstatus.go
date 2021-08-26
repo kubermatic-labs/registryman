@@ -50,11 +50,15 @@ func (a *scannerAssignAction) String() string {
 }
 
 func (a *scannerAssignAction) Perform(reg globalregistry.Registry) (SideEffect, error) {
-	project, err := reg.ProjectAPI().GetByName(a.projectName)
+	project, err := reg.(globalregistry.RegistryWithProjects).GetProjectByName(a.projectName)
 	if err != nil {
 		return nilEffect, err
 	}
-	err = project.AssignScanner((*scannerStatus)(a.ScannerStatus))
+	scannerManipulatorProject, ok := project.(globalregistry.ScannerManipulatorProject)
+	if !ok {
+		return nilEffect, nil
+	}
+	err = scannerManipulatorProject.AssignScanner((*scannerStatus)(a.ScannerStatus))
 	return nilEffect, err
 }
 
@@ -69,11 +73,15 @@ func (a *scannerUnassignAction) String() string {
 }
 
 func (a *scannerUnassignAction) Perform(reg globalregistry.Registry) (SideEffect, error) {
-	project, err := reg.ProjectAPI().GetByName(a.projectName)
+	project, err := reg.(globalregistry.RegistryWithProjects).GetProjectByName(a.projectName)
 	if err != nil {
 		return nilEffect, err
 	}
-	err = project.UnassignScanner((*scannerStatus)(a.ScannerStatus))
+	scannerManipulatorProject, ok := project.(globalregistry.ScannerManipulatorProject)
+	if !ok {
+		return nilEffect, nil
+	}
+	err = scannerManipulatorProject.UnassignScanner((*scannerStatus)(a.ScannerStatus))
 	return nilEffect, err
 }
 
@@ -82,23 +90,25 @@ var _ Action = &scannerUnassignAction{}
 // CompareScannerStatuses compares the actual and expected status of the scanner
 // of a project. The function returns the actions that are needed to synchronize
 // the actual state to the expected state.
-func CompareScannerStatuses(projectName string, actual, expected api.ScannerStatus) []Action {
+func CompareScannerStatuses(projectName string, actual, expected api.ScannerStatus, regCapabilities api.RegistryCapabilities) []Action {
 	actions := make([]Action, 0)
 
-	// Old scanner shall be deleted
-	if actual.Name != "" && actual != expected {
-		actions = append(actions, &scannerUnassignAction{
-			projectName:   projectName,
-			ScannerStatus: &actual,
-		})
-	}
+	if regCapabilities.CanManipulateProjectScanners {
+		// Old scanner shall be deleted
+		if actual.Name != "" && actual != expected {
+			actions = append(actions, &scannerUnassignAction{
+				projectName:   projectName,
+				ScannerStatus: &actual,
+			})
+		}
 
-	// New scanner shall be configured
-	if expected.Name != "" && actual != expected {
-		actions = append(actions, &scannerAssignAction{
-			projectName:   projectName,
-			ScannerStatus: &expected,
-		})
+		// New scanner shall be configured
+		if expected.Name != "" && actual != expected {
+			actions = append(actions, &scannerAssignAction{
+				projectName:   projectName,
+				ScannerStatus: &expected,
+			})
+		}
 	}
 	return actions
 }

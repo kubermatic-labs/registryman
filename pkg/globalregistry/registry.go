@@ -23,7 +23,7 @@ import (
 )
 
 // RegistryCreator function type can be used to create a Registry interface.
-type RegistryCreator func(logr.Logger, RegistryConfig) (Registry, error)
+type RegistryCreator func(logr.Logger, Registry) (Registry, error)
 
 var (
 	registeredRegistryCreators        map[string]RegistryCreator
@@ -52,9 +52,9 @@ func GetReplicationCapability(provider string) ReplicationCapabilities {
 	return cap
 }
 
-// RegistryConfig interface describes a registry configuration that is needed to
+// Registry interface describes a registry configuration that is needed to
 // create a new provider-specific Registry via its constructor.
-type RegistryConfig interface {
+type Registry interface {
 	GetProvider() string
 	GetUsername() string
 	GetPassword() string
@@ -63,19 +63,17 @@ type RegistryConfig interface {
 	GetOptions() RegistryOptions
 }
 
-// Registry is an abstraction over registries. It is an abstraction over the
-// real, provider-specific registries and over the expected registry states
-// defined by the api.Registry type.
-type Registry interface {
-	RegistryConfig
-	ReplicationAPI() ReplicationAPI
-	ProjectAPI() ProjectAPI
+// ProjectCreator interface defines the methods of a registry that can create a
+// new project.
+type ProjectCreator interface {
+	// Create creates a new project with the given name.
+	CreateProject(name string) (Project, error)
 }
 
 // New creates a provider specific Registry. The provider must be registered
 // first. If the provider is not registered, an error is returned. Otherwise the
 // constructor function of the registered provider is invoked.
-func New(logger logr.Logger, config RegistryConfig) (Registry, error) {
+func New(logger logr.Logger, config Registry) (Registry, error) {
 	registryProvider := config.GetProvider()
 	constructor, ok := registeredRegistryCreators[registryProvider]
 	if !ok {

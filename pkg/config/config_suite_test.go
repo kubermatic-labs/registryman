@@ -31,7 +31,7 @@ const (
 )
 
 var _ = BeforeSuite(func() {
-	l, err := zap.NewDevelopment()
+	l, err := zap.NewProduction()
 	Expect(err).ToNot(HaveOccurred())
 	config.SetLogger(zapr.NewLogger(l))
 })

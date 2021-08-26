@@ -34,7 +34,7 @@ var _ = Describe("ScannerStatus", func() {
 			Name: "scanner",
 			URL:  "http://scanner.com",
 		}
-		actions := reconciler.CompareScannerStatuses("proj", act, exp)
+		actions := reconciler.CompareScannerStatuses("proj", act, exp, api.RegistryCapabilities{})
 		Expect(actions).ToNot(BeNil())
 		Expect(len(actions)).To(Equal(0))
 
@@ -42,7 +42,7 @@ var _ = Describe("ScannerStatus", func() {
 		act = api.ScannerStatus{}
 		exp = api.ScannerStatus{}
 
-		actions = reconciler.CompareScannerStatuses("proj", act, exp)
+		actions = reconciler.CompareScannerStatuses("proj", act, exp, api.RegistryCapabilities{})
 		Expect(actions).ToNot(BeNil())
 		Expect(len(actions)).To(Equal(0))
 	})
@@ -53,7 +53,9 @@ var _ = Describe("ScannerStatus", func() {
 			Name: "scanner",
 			URL:  "http://scanner.com",
 		}
-		actions := reconciler.CompareScannerStatuses("proj", act, exp)
+		actions := reconciler.CompareScannerStatuses("proj", act, exp, api.RegistryCapabilities{
+			CanManipulateProjectScanners: true,
+		})
 		Expect(actions).ToNot(BeNil())
 		Expect(len(actions)).To(Equal(1))
 		Expect(actionsToStrings(actions)).To(Equal([]string{
@@ -68,7 +70,9 @@ var _ = Describe("ScannerStatus", func() {
 		}
 		exp := api.ScannerStatus{}
 
-		actions := reconciler.CompareScannerStatuses("proj", act, exp)
+		actions := reconciler.CompareScannerStatuses("proj", act, exp, api.RegistryCapabilities{
+			CanManipulateProjectScanners: true,
+		})
 		Expect(actions).ToNot(BeNil())
 		Expect(len(actions)).To(Equal(1))
 		Expect(actionsToStrings(actions)).To(Equal([]string{
@@ -86,7 +90,9 @@ var _ = Describe("ScannerStatus", func() {
 			URL:  "http://scanner-new.com",
 		}
 
-		actions := reconciler.CompareScannerStatuses("proj", act, exp)
+		actions := reconciler.CompareScannerStatuses("proj", act, exp, api.RegistryCapabilities{
+			CanManipulateProjectScanners: true,
+		})
 		Expect(actions).ToNot(BeNil())
 		Expect(len(actions)).To(Equal(2))
 		Expect(actionsToStrings(actions)).To(Equal([]string{
@@ -103,7 +109,9 @@ var _ = Describe("ScannerStatus", func() {
 			URL:  "http://scanner.com",
 		}
 
-		actions = reconciler.CompareScannerStatuses("proj", act, exp)
+		actions = reconciler.CompareScannerStatuses("proj", act, exp, api.RegistryCapabilities{
+			CanManipulateProjectScanners: true,
+		})
 		Expect(actions).ToNot(BeNil())
 		Expect(len(actions)).To(Equal(2))
 		Expect(actionsToStrings(actions)).To(Equal([]string{
@@ -120,7 +128,9 @@ var _ = Describe("ScannerStatus", func() {
 			URL:  "http://scanner-new.com",
 		}
 
-		actions = reconciler.CompareScannerStatuses("proj", act, exp)
+		actions = reconciler.CompareScannerStatuses("proj", act, exp, api.RegistryCapabilities{
+			CanManipulateProjectScanners: true,
+		})
 		Expect(actions).ToNot(BeNil())
 		Expect(len(actions)).To(Equal(2))
 		Expect(actionsToStrings(actions)).To(Equal([]string{

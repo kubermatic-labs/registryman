@@ -46,7 +46,7 @@ var _ = Describe("Memberstatus", func() {
 	It("returns no action for the same MemberStatus slice", func() {
 		act := []api.MemberStatus{}
 		exp := []api.MemberStatus{}
-		actions := reconciler.CompareMemberStatuses("proj", act, exp)
+		actions := reconciler.CompareMemberStatuses("proj", act, exp, api.RegistryCapabilities{})
 		Expect(actions).ToNot(BeNil())
 		Expect(len(actions)).To(Equal(0))
 
@@ -56,7 +56,7 @@ var _ = Describe("Memberstatus", func() {
 		exp = []api.MemberStatus{
 			alpha,
 		}
-		actions = reconciler.CompareMemberStatuses("proj", act, exp)
+		actions = reconciler.CompareMemberStatuses("proj", act, exp, api.RegistryCapabilities{})
 		Expect(actions).ToNot(BeNil())
 		Expect(len(actions)).To(Equal(0))
 
@@ -68,7 +68,7 @@ var _ = Describe("Memberstatus", func() {
 			alpha,
 			beta,
 		}
-		actions = reconciler.CompareMemberStatuses("proj", act, exp)
+		actions = reconciler.CompareMemberStatuses("proj", act, exp, api.RegistryCapabilities{})
 		Expect(actions).ToNot(BeNil())
 		Expect(len(actions)).To(Equal(0))
 
@@ -80,7 +80,7 @@ var _ = Describe("Memberstatus", func() {
 			alpha,
 			beta,
 		}
-		actions = reconciler.CompareMemberStatuses("proj", act, exp)
+		actions = reconciler.CompareMemberStatuses("proj", act, exp, api.RegistryCapabilities{})
 		Expect(actions).ToNot(BeNil())
 		Expect(len(actions)).To(Equal(0))
 	})
@@ -90,7 +90,9 @@ var _ = Describe("Memberstatus", func() {
 		exp := []api.MemberStatus{
 			alpha,
 		}
-		actions := reconciler.CompareMemberStatuses("proj", act, exp)
+		actions := reconciler.CompareMemberStatuses("proj", act, exp, api.RegistryCapabilities{
+			CanManipulateProjectMembers: true,
+		})
 		Expect(actions).ToNot(BeNil())
 		Expect(len(actions)).To(Equal(1))
 		Expect(actionsToStrings(actions)).To(Equal([]string{
@@ -104,7 +106,9 @@ var _ = Describe("Memberstatus", func() {
 			alpha,
 			beta,
 		}
-		actions = reconciler.CompareMemberStatuses("proj", act, exp)
+		actions = reconciler.CompareMemberStatuses("proj", act, exp, api.RegistryCapabilities{
+			CanManipulateProjectMembers: true,
+		})
 		Expect(actions).ToNot(BeNil())
 		Expect(len(actions)).To(Equal(1))
 		Expect(actionsToStrings(actions)).To(Equal([]string{
@@ -117,7 +121,9 @@ var _ = Describe("Memberstatus", func() {
 			alpha,
 		}
 		exp := []api.MemberStatus{}
-		actions := reconciler.CompareMemberStatuses("proj", act, exp)
+		actions := reconciler.CompareMemberStatuses("proj", act, exp, api.RegistryCapabilities{
+			CanManipulateProjectMembers: true,
+		})
 		Expect(actions).ToNot(BeNil())
 		Expect(len(actions)).To(Equal(1))
 		Expect(actionsToStrings(actions)).To(Equal([]string{
@@ -131,7 +137,9 @@ var _ = Describe("Memberstatus", func() {
 		exp = []api.MemberStatus{
 			beta,
 		}
-		actions = reconciler.CompareMemberStatuses("proj", act, exp)
+		actions = reconciler.CompareMemberStatuses("proj", act, exp, api.RegistryCapabilities{
+			CanManipulateProjectMembers: true,
+		})
 		Expect(actions).ToNot(BeNil())
 		Expect(len(actions)).To(Equal(1))
 		Expect(actionsToStrings(actions)).To(Equal([]string{
@@ -146,7 +154,9 @@ var _ = Describe("Memberstatus", func() {
 		exp := []api.MemberStatus{
 			alphaPrime,
 		}
-		actions := reconciler.CompareMemberStatuses("proj", act, exp)
+		actions := reconciler.CompareMemberStatuses("proj", act, exp, api.RegistryCapabilities{
+			CanManipulateProjectMembers: true,
+		})
 		Expect(actions).ToNot(BeNil())
 		Expect(len(actions)).To(Equal(2))
 		Expect(actionsToStrings(actions)).To(Equal([]string{

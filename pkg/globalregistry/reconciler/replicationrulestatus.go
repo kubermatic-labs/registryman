@@ -42,7 +42,7 @@ func (ra *rRuleAddAction) String() string {
 }
 
 func (ra *rRuleAddAction) Perform(reg globalregistry.Registry) (SideEffect, error) {
-	project, err := reg.ProjectAPI().GetByName(ra.projectName)
+	project, err := reg.(globalregistry.RegistryWithProjects).GetProjectByName(ra.projectName)
 	if err != nil {
 		return nilEffect, err
 	}
@@ -50,7 +50,12 @@ func (ra *rRuleAddAction) Perform(reg globalregistry.Registry) (SideEffect, erro
 	if remoteRegistry == nil {
 		return nilEffect, fmt.Errorf("registry %s not found in object store", ra.RemoteRegistryName)
 	}
-	_, err = project.AssignReplicationRule(remoteRegistry, ra.Trigger, ra.Direction)
+	replicationRuleManipulatorProject, ok := project.(globalregistry.ReplicationRuleManipulatorProject)
+	if !ok {
+		// registry does not support project level replication
+		return nilEffect, nil
+	}
+	_, err = replicationRuleManipulatorProject.AssignReplicationRule(remoteRegistry, ra.Trigger, ra.Direction)
 	return nilEffect, err
 }
 
@@ -72,16 +77,26 @@ func (ra *rRuleRemoveAction) String() string {
 }
 
 func (ra *rRuleRemoveAction) Perform(reg globalregistry.Registry) (SideEffect, error) {
-	project, err := reg.ProjectAPI().GetByName(ra.projectName)
+	project, err := reg.(globalregistry.RegistryWithProjects).GetProjectByName(ra.projectName)
 	if err != nil {
 		return nilEffect, err
 	}
-	rRules, err := project.GetReplicationRules(ra.Trigger, ra.Direction)
+	projectWithReplication, ok := project.(globalregistry.ProjectWithReplication)
+	if !ok {
+		// registry does not support project level replication
+		return nilEffect, nil
+	}
+	rRules, err := projectWithReplication.GetReplicationRules(ra.Trigger, ra.Direction)
 	if err != nil {
 		return nilEffect, err
 	}
 	for _, rRule := range rRules {
-		err := rRule.Delete()
+		destructibleReplicationRule, ok := rRule.(globalregistry.DestructibleReplicationRule)
+		if !ok {
+			// TODO: error handling
+			continue
+		}
+		err := destructibleReplicationRule.Delete()
 		if err != nil {
 			return nilEffect, err
 		}
@@ -92,7 +107,7 @@ func (ra *rRuleRemoveAction) Perform(reg globalregistry.Registry) (SideEffect, e
 // CompareReplicationRuleStatus compares the actual and expected status of the
 // replication rules of a project. The function returns the actions that are
 // needed to synchronize the actual state to the expected state.
-func CompareReplicationRuleStatus(store *config.ExpectedProvider, projectName string, actual, expected []api.ReplicationRuleStatus) []Action {
+func CompareReplicationRuleStatus(store *config.ExpectedProvider, projectName string, actual, expected []api.ReplicationRuleStatus, regCapabilities api.RegistryCapabilities) []Action {
 	actualDiff := []api.ReplicationRuleStatus{}
 	expectedDiff := []api.ReplicationRuleStatus{}
 ActLoop:
@@ -117,23 +132,25 @@ ExpLoop:
 	}
 	actions := make([]Action, 0)
 
-	// actualDiff contains the members which are there but are not needed
-	for _, act := range actualDiff {
-		actions = append(actions, &rRuleRemoveAction{
-			act,
-			store,
-			projectName,
-		})
-	}
+	if regCapabilities.CanManipulateProjectReplicationRules {
+		// actualDiff contains the members which are there but are not needed
+		for _, act := range actualDiff {
+			actions = append(actions, &rRuleRemoveAction{
+				act,
+				store,
+				projectName,
+			})
+		}
 
-	// expectedClone contains the members which are missing and thus they
-	// shall be created
-	for _, exp := range expectedDiff {
-		actions = append(actions, &rRuleAddAction{
-			exp,
-			store,
-			projectName,
-		})
+		// expectedClone contains the members which are missing and thus they
+		// shall be created
+		for _, exp := range expectedDiff {
+			actions = append(actions, &rRuleAddAction{
+				exp,
+				store,
+				projectName,
+			})
+		}
 	}
 
 	return actions

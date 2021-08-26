@@ -31,29 +31,19 @@ import (
 
 const replicationPolicyPath = "/api/v2.0/replication/policies"
 
-type replicationAPI struct {
-	reg *registry
-}
-
-func newReplicationAPI(reg *registry) *replicationAPI {
-	return &replicationAPI{
-		reg: reg,
-	}
-}
-
-func (r *replicationAPI) List() ([]globalregistry.ReplicationRule, error) {
-	url := *r.reg.parsedUrl
+func (r *registry) listReplicationRules() ([]globalregistry.ReplicationRule, error) {
+	url := *r.parsedUrl
 	url.Path = replicationPolicyPath
-	r.reg.logger.V(1).Info("creating new request", "url", url.String())
+	r.logger.V(1).Info("creating new request", "url", url.String())
 	req, err := http.NewRequest(http.MethodGet, url.String(), nil)
 	if err != nil {
 		return nil, err
 	}
-	r.reg.logger.V(1).Info("sending HTTP request", "req-uri", req.RequestURI)
+	r.logger.V(1).Info("sending HTTP request", "req-uri", req.RequestURI)
 
-	req.SetBasicAuth(r.reg.GetUsername(), r.reg.GetPassword())
+	req.SetBasicAuth(r.GetUsername(), r.GetPassword())
 
-	resp, err := r.reg.do(req)
+	resp, err := r.do(req)
 	if err != nil {
 		return nil, err
 	}
@@ -64,13 +54,13 @@ func (r *replicationAPI) List() ([]globalregistry.ReplicationRule, error) {
 
 	err = json.NewDecoder(resp.Body).Decode(&replicationsResult)
 	if err != nil {
-		r.reg.logger.Error(err, "json decoding failed")
+		r.logger.Error(err, "json decoding failed")
 		b := bytes.NewBuffer(nil)
 		_, err := b.ReadFrom(resp.Body)
 		if err != nil {
 			panic(err)
 		}
-		r.reg.logger.Info(b.String())
+		r.logger.Info(b.String())
 		fmt.Printf("body: %+v\n", b.String())
 	}
 	replicationRules := make([]globalregistry.ReplicationRule, 0)
@@ -87,7 +77,7 @@ func (r *replicationAPI) List() ([]globalregistry.ReplicationRule, error) {
 		if len(replResult.Filters) >= 1 {
 			replicationRules = append(replicationRules, &replicationRule{
 				ID:          replResult.Id,
-				api:         r,
+				registry:    r,
 				name:        replResult.Name,
 				projectName: strings.TrimSuffix(replResult.Filters[0].Value, "/**"),
 				Dir:         dir,
@@ -100,9 +90,8 @@ func (r *replicationAPI) List() ([]globalregistry.ReplicationRule, error) {
 	return replicationRules, err
 }
 
-func (r *replicationAPI) create(project globalregistry.Project, remoteReg globalregistry.RegistryConfig, trigger, direction string) (globalregistry.ReplicationRule, error) {
-
-	r.reg.logger.V(1).Info("ReplicationAPI.Create invoked",
+func (r *registry) createReplicationRule(project globalregistry.Project, remoteReg globalregistry.Registry, trigger, direction string) (globalregistry.ReplicationRule, error) {
+	r.logger.V(1).Info("ReplicationAPI.Create invoked",
 		"project_name", project.GetName(),
 		"remoteReg_name", remoteReg.GetName(),
 		"trigger", trigger,
@@ -144,7 +133,7 @@ func (r *replicationAPI) create(project globalregistry.Project, remoteReg global
 		Deletion:      true,
 		Override:      true,
 	}
-	remoteRegistry, err := r.reg.remoteRegistries.getByNameOrCreate(remoteReg)
+	remoteRegistry, err := r.getRemoteRegistryByNameOrCreate(remoteReg)
 	if err != nil {
 		return nil, err
 	}
@@ -189,8 +178,8 @@ func (r *replicationAPI) create(project globalregistry.Project, remoteReg global
 	if err != nil {
 		return nil, err
 	}
-	r.reg.logger.V(1).Info(reqBodyBuf.String())
-	url := *r.reg.parsedUrl
+	r.logger.V(1).Info(reqBodyBuf.String())
+	url := *r.parsedUrl
 	url.Path = replicationPolicyPath
 	req, err := http.NewRequest(http.MethodPost, url.String(), reqBodyBuf)
 	if err != nil {
@@ -198,9 +187,9 @@ func (r *replicationAPI) create(project globalregistry.Project, remoteReg global
 	}
 
 	req.Header["Content-Type"] = []string{"application/json"}
-	req.SetBasicAuth(r.reg.GetUsername(), r.reg.GetPassword())
+	req.SetBasicAuth(r.GetUsername(), r.GetPassword())
 
-	resp, err := r.reg.do(req)
+	resp, err := r.do(req)
 	if err != nil {
 		return nil, err
 	}
@@ -209,14 +198,14 @@ func (r *replicationAPI) create(project globalregistry.Project, remoteReg global
 
 	replicationPolicyID, err := strconv.Atoi(strings.TrimPrefix(resp.Header.Get("Location"), replicationPolicyPath+"/"))
 	if err != nil {
-		r.reg.logger.Error(err, "cannot parse project ID from response Location header",
+		r.logger.Error(err, "cannot parse project ID from response Location header",
 			"location-header", resp.Header.Get("Location"))
 		return nil, err
 	}
 
 	return &replicationRule{
 		ID:          replicationPolicyID,
-		api:         r,
+		registry:    r,
 		name:        name,
 		projectName: project.GetName(),
 		Dir:         direction,
@@ -225,21 +214,20 @@ func (r *replicationAPI) create(project globalregistry.Project, remoteReg global
 	}, nil
 }
 
-func (r *replicationAPI) delete(id int) error {
-	url := *r.reg.parsedUrl
+func (r *registry) deleteReplicationRule(id int) error {
+	url := *r.parsedUrl
 	url.Path = fmt.Sprintf("%s/%d", replicationPolicyPath, id)
-	r.reg.logger.V(1).Info("creating new request", "url", url.String())
+	r.logger.V(1).Info("creating new request", "url", url.String())
 	req, err := http.NewRequest(http.MethodDelete, url.String(), nil)
 	if err != nil {
 		return err
 	}
-	r.reg.logger.V(1).Info("sending HTTP request", "req-uri", req.URL)
+	r.logger.V(1).Info("sending HTTP request", "req-uri", req.URL)
 
 	req.Header["Content-Type"] = []string{"application/json"}
-	// r.registry.AddBasicAuth(req)
-	req.SetBasicAuth(r.reg.GetUsername(), r.reg.GetPassword())
+	req.SetBasicAuth(r.GetUsername(), r.GetPassword())
 
-	resp, err := r.reg.do(req)
+	resp, err := r.do(req)
 	if err != nil {
 		return err
 	}

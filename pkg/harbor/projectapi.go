@@ -75,18 +75,15 @@ type projectCreateReqBody struct {
 	Public       bool         `json:"public"`
 }
 
-type projectAPI struct {
-	reg *registry
-}
-
-func newProjectAPI(reg *registry) (*projectAPI, error) {
-	return &projectAPI{
-		reg: reg,
-	}, nil
-}
-
-func (p *projectAPI) GetByName(name string) (globalregistry.Project, error) {
-	projects, err := p.List()
+func (r *registry) GetProjectByName(name string) (globalregistry.Project, error) {
+	if name == "" {
+		return &project{
+			id:       -1,
+			registry: r,
+			Name:     "",
+		}, nil
+	}
+	projects, err := r.ListProjects()
 	if err != nil {
 		return nil, err
 	}
@@ -98,20 +95,20 @@ func (p *projectAPI) GetByName(name string) (globalregistry.Project, error) {
 	return nil, nil
 }
 
-func (p *projectAPI) List() ([]globalregistry.Project, error) {
-	p.reg.logger.V(1).Info("listing projects",
-		"registry", p.reg.GetName(),
+func (r *registry) ListProjects() ([]globalregistry.Project, error) {
+	r.logger.V(1).Info("listing projects",
+		"registry", r.GetName(),
 	)
-	url := *p.reg.parsedUrl
+	url := *r.parsedUrl
 	url.Path = path
 	req, err := http.NewRequest(http.MethodGet, url.String(), nil)
 	if err != nil {
 		return nil, err
 	}
 
-	req.SetBasicAuth(p.reg.GetUsername(), p.reg.GetPassword())
+	req.SetBasicAuth(r.GetUsername(), r.GetPassword())
 
-	resp, err := p.reg.do(req)
+	resp, err := r.do(req)
 	if err != nil {
 		return nil, err
 	}
@@ -122,34 +119,32 @@ func (p *projectAPI) List() ([]globalregistry.Project, error) {
 
 	err = json.NewDecoder(resp.Body).Decode(&projectData)
 	if err != nil {
-		p.reg.logger.Error(err, "json decoding failed")
+		r.logger.Error(err, "json decoding failed")
 		b := bytes.NewBuffer(nil)
 		_, err := b.ReadFrom(resp.Body)
 		if err != nil {
 			panic(err)
 		}
-		p.reg.logger.Info(b.String())
+		r.logger.Info(b.String())
 	}
 	pStatus := make([]globalregistry.Project, len(projectData))
 	for i, pData := range projectData {
 		pStatus[i] = &project{
-			id:   pData.ProjectID,
-			api:  p,
-			Name: pData.Name,
-			sApi: newScannerAPI(p.reg),
+			id:       pData.ProjectID,
+			registry: r,
+			Name:     pData.Name,
 		}
 	}
 	return pStatus, err
 }
 
-func (p *projectAPI) Create(name string) (globalregistry.Project, error) {
+func (r *registry) CreateProject(name string) (globalregistry.Project, error) {
 	proj := &project{
-		api:  p,
-		Name: name,
-		sApi: newScannerAPI(p.reg),
+		registry: r,
+		Name:     name,
 	}
 
-	url := *p.reg.parsedUrl
+	url := *r.parsedUrl
 	url.Path = path
 	reqBodyBuf := bytes.NewBuffer(nil)
 	err := json.NewEncoder(reqBodyBuf).Encode(&projectCreateReqBody{
@@ -165,9 +160,9 @@ func (p *projectAPI) Create(name string) (globalregistry.Project, error) {
 
 	req.Header["Content-Type"] = []string{"application/json"}
 	// p.registry.AddBasicAuth(req)
-	req.SetBasicAuth(p.reg.GetUsername(), p.reg.GetPassword())
+	req.SetBasicAuth(r.GetUsername(), r.GetPassword())
 
-	resp, err := p.reg.do(req)
+	resp, err := r.do(req)
 	if err != nil {
 		return nil, err
 	}
@@ -176,53 +171,53 @@ func (p *projectAPI) Create(name string) (globalregistry.Project, error) {
 
 	projectID, err := strconv.Atoi(strings.TrimPrefix(resp.Header.Get("Location"), path+"/"))
 	if err != nil {
-		p.reg.logger.Error(err, "cannot parse project ID from response Location header",
+		r.logger.Error(err, "cannot parse project ID from response Location header",
 			"location-header", resp.Header.Get("Location"))
 		return nil, err
 	}
 	proj.id = projectID
 
 	// Removing default implicit admin user
-	members, err := p.getMembers(proj.id)
+	members, err := r.getMembers(proj.id)
 	if err != nil {
-		p.reg.logger.V(-1).Info("could not get project members", "error", err)
+		r.logger.V(-1).Info("could not get project members", "error", err)
 		return proj, nil
 	}
 	var m *projectMemberEntity
 	for _, memb := range members {
-		if memb.EntityName == p.reg.GetUsername() {
+		if memb.EntityName == r.GetUsername() {
 			m = memb
 			break
 		}
 	}
 	if m == nil {
-		p.reg.logger.V(-1).Info("could not find implicit admin member", "username", p.reg.GetUsername())
+		r.logger.V(-1).Info("could not find implicit admin member", "username", r.GetUsername())
 		return proj, nil
 	}
-	err = p.deleteProjectMember(proj.id, m.Id)
+	err = r.deleteProjectMember(proj.id, m.Id)
 	if err != nil {
-		p.reg.logger.V(-1).Info("could not delete implicit admin member",
-			"username", p.reg.GetUsername(),
+		r.logger.V(-1).Info("could not delete implicit admin member",
+			"username", r.GetUsername(),
 			"error", err,
 		)
 	}
 	return proj, nil
 }
 
-func (p *projectAPI) delete(id int) error {
-	url := *p.reg.parsedUrl
+func (r *registry) delete(id int) error {
+	url := *r.parsedUrl
 	url.Path = fmt.Sprintf("%s/%d", path, id)
-	p.reg.logger.V(1).Info("creating new request", "url", url.String())
+	r.logger.V(1).Info("creating new request", "url", url.String())
 	req, err := http.NewRequest(http.MethodDelete, url.String(), nil)
 	if err != nil {
 		return err
 	}
-	p.reg.logger.V(1).Info("sending HTTP request")
+	r.logger.V(1).Info("sending HTTP request")
 
 	req.Header["Content-Type"] = []string{"application/json"}
-	req.SetBasicAuth(p.reg.GetUsername(), p.reg.GetPassword())
+	req.SetBasicAuth(r.GetUsername(), r.GetPassword())
 
-	resp, err := p.reg.do(req)
+	resp, err := r.do(req)
 	if err != nil {
 		return err
 	}
@@ -236,17 +231,17 @@ type projectRepositoryRespBody struct {
 	Name string `json:"name"`
 }
 
-func (p *projectAPI) listProjectRepositories(proj *project) ([]string, error) {
-	url := *p.reg.parsedUrl
+func (r *registry) listProjectRepositories(proj *project) ([]string, error) {
+	url := *r.parsedUrl
 	url.Path = fmt.Sprintf("%s/%s/repositories", path, proj.Name)
 	req, err := http.NewRequest(http.MethodGet, url.String(), nil)
 	if err != nil {
 		return nil, err
 	}
 
-	req.SetBasicAuth(p.reg.GetUsername(), p.reg.GetPassword())
+	req.SetBasicAuth(r.GetUsername(), r.GetPassword())
 
-	resp, err := p.reg.do(req)
+	resp, err := r.do(req)
 	if err != nil {
 		return nil, err
 	}
@@ -258,8 +253,8 @@ func (p *projectAPI) listProjectRepositories(proj *project) ([]string, error) {
 	err = json.NewDecoder(resp.Body).Decode(&repositories)
 	if err != nil {
 		buf := resp.Body.(*bytesBody)
-		p.reg.logger.Error(err, "json decoding failed")
-		p.reg.logger.Info(buf.String())
+		r.logger.Error(err, "json decoding failed")
+		r.logger.Info(buf.String())
 	}
 
 	var repositoryNames []string
@@ -275,17 +270,17 @@ func (p *projectAPI) listProjectRepositories(proj *project) ([]string, error) {
 	return repositoryNames, err
 }
 
-func (p *projectAPI) deleteProjectRepository(proj *project, repo string) error {
-	url := *p.reg.parsedUrl
+func (r *registry) deleteProjectRepository(proj *project, repo string) error {
+	url := *r.parsedUrl
 	url.Path = fmt.Sprintf("%s/%s/repositories/%s", path, proj.Name, repo)
 	req, err := http.NewRequest(http.MethodDelete, url.String(), nil)
 	if err != nil {
 		return err
 	}
 
-	req.SetBasicAuth(p.reg.GetUsername(), p.reg.GetPassword())
+	req.SetBasicAuth(r.GetUsername(), r.GetPassword())
 
-	resp, err := p.reg.do(req)
+	resp, err := r.do(req)
 	if err != nil {
 		return err
 	}

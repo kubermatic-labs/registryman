@@ -59,20 +59,11 @@ type scannerRegistrationRequest struct {
 type projectScanner struct {
 	Uuid string `json:"uuid,omitempty"`
 }
-type scannerAPI struct {
-	reg *registry
-}
 
 var _ globalregistry.Scanner = &scannerRegistrationRequest{}
 
-func newScannerAPI(reg *registry) *scannerAPI {
-	return &scannerAPI{
-		reg: reg,
-	}
-}
-
-func (s *scannerAPI) create(config globalregistry.Scanner) (string, error) {
-	url := *s.reg.parsedUrl
+func (r *registry) createScanner(config globalregistry.Scanner) (string, error) {
+	url := *r.parsedUrl
 	url.Path = scannersPath
 
 	reqBodyBuf := bytes.NewBuffer(nil)
@@ -89,8 +80,8 @@ func (s *scannerAPI) create(config globalregistry.Scanner) (string, error) {
 	}
 
 	req.Header["Content-Type"] = []string{"application/json"}
-	req.SetBasicAuth(s.reg.GetUsername(), s.reg.GetPassword())
-	resp, err := s.reg.do(req)
+	req.SetBasicAuth(r.GetUsername(), r.GetPassword())
+	resp, err := r.do(req)
 	if err != nil {
 		return "", err
 	}
@@ -105,16 +96,16 @@ func (s *scannerAPI) create(config globalregistry.Scanner) (string, error) {
 		resp.Header.Get("Location"),
 		fmt.Sprintf("%s/", scannersPath))
 	if err != nil {
-		s.reg.logger.Error(err, "cannot parse scanner URL from response Location header",
+		r.logger.Error(err, "cannot parse scanner URL from response Location header",
 			"location-header", resp.Header.Get("Location"))
 		return "", err
 	}
 	return scannerID, nil
 }
 
-func (s *scannerAPI) getScannerIDByNameOrCreate(targetScanner globalregistry.Scanner) (string, error) {
+func (r *registry) getScannerIDByNameOrCreate(targetScanner globalregistry.Scanner) (string, error) {
 	retrievedID := ""
-	currentScanners, err := s.List()
+	currentScanners, err := r.listScanners()
 	if err != nil {
 		return "", err
 	}
@@ -129,20 +120,20 @@ func (s *scannerAPI) getScannerIDByNameOrCreate(targetScanner globalregistry.Sca
 		return retrievedID, nil
 	}
 
-	s.reg.logger.V(1).Info("id not found, comparing with existing scanner registrations", "name", targetScanner.GetName())
+	r.logger.V(1).Info("id not found, comparing with existing scanner registrations", "name", targetScanner.GetName())
 	for _, scannerIterator := range currentScanners {
 		if (strings.EqualFold(scannerIterator.GetName(), targetScanner.GetName()) ||
 			strings.EqualFold(scannerIterator.GetURL(), targetScanner.GetURL())) &&
 			!(strings.EqualFold(scannerIterator.GetName(), targetScanner.GetName()) &&
 				strings.EqualFold(scannerIterator.GetURL(), targetScanner.GetURL())) {
 
-			s.reg.logger.V(1).Info("updating existing scanner", scannerIterator.GetName(), targetScanner.GetName())
-			err = s.update(scannerIterator.(*scanner).id, targetScanner)
+			r.logger.V(1).Info("updating existing scanner", scannerIterator.GetName(), targetScanner.GetName())
+			err = r.updateScanner(scannerIterator.(*scanner).id, targetScanner)
 			return scannerIterator.(*scanner).id, err
 		}
 	}
 
-	s.reg.logger.V(1).Info("creating global scanner", "name", targetScanner.GetName())
+	r.logger.V(1).Info("creating global scanner", "name", targetScanner.GetName())
 
 	newScannerConfig := &scannerRegistrationRequest{
 		Name:     targetScanner.GetName(),
@@ -150,19 +141,19 @@ func (s *scannerAPI) getScannerIDByNameOrCreate(targetScanner globalregistry.Sca
 		Disabled: false,
 	}
 
-	return s.create(newScannerConfig)
+	return r.createScanner(newScannerConfig)
 }
 
-func (s *scannerAPI) List() ([]globalregistry.Scanner, error) {
-	url := *s.reg.parsedUrl
+func (r *registry) listScanners() ([]globalregistry.Scanner, error) {
+	url := *r.parsedUrl
 	url.Path = scannersPath
 	req, err := http.NewRequest(http.MethodGet, url.String(), nil)
 	if err != nil {
 		return nil, err
 	}
 
-	req.SetBasicAuth(s.reg.GetUsername(), s.reg.GetPassword())
-	resp, err := s.reg.do(req)
+	req.SetBasicAuth(r.GetUsername(), r.GetPassword())
+	resp, err := r.do(req)
 	if err != nil {
 		return nil, err
 	}
@@ -173,13 +164,13 @@ func (s *scannerAPI) List() ([]globalregistry.Scanner, error) {
 	err = json.NewDecoder(resp.Body).Decode(&scannerResult)
 
 	if err != nil {
-		s.reg.logger.Error(err, "json decoding failed")
+		r.logger.Error(err, "json decoding failed")
 		b := bytes.NewBuffer(nil)
 		_, err := b.ReadFrom(resp.Body)
 		if err != nil {
 			panic(err)
 		}
-		s.reg.logger.Info(b.String())
+		r.logger.Info(b.String())
 	}
 
 	scanners := make([]globalregistry.Scanner, 0)
@@ -191,7 +182,7 @@ func (s *scannerAPI) List() ([]globalregistry.Scanner, error) {
 	for _, scannerIterator := range scannerResult {
 		scanners = append(scanners, &scanner{
 			id:        scannerIterator.Uuid,
-			api:       s,
+			registry:  r,
 			name:      scannerIterator.Name,
 			url:       scannerIterator.Url,
 			isDefault: scannerIterator.IsDefault,
@@ -200,8 +191,8 @@ func (s *scannerAPI) List() ([]globalregistry.Scanner, error) {
 	return scanners, err
 }
 
-func (s *scannerAPI) SetForProject(projectID int, scannerID string) error {
-	url := *s.reg.parsedUrl
+func (r *registry) setScannerForProject(projectID int, scannerID string) error {
+	url := *r.parsedUrl
 	url.Path = fmt.Sprintf("%s/%d/scanner", path, projectID)
 
 	reqBodyBuf := bytes.NewBuffer(nil)
@@ -216,8 +207,8 @@ func (s *scannerAPI) SetForProject(projectID int, scannerID string) error {
 		return err
 	}
 
-	req.SetBasicAuth(s.reg.GetUsername(), s.reg.GetPassword())
-	resp, err := s.reg.do(req)
+	req.SetBasicAuth(r.GetUsername(), r.GetPassword())
+	resp, err := r.do(req)
 	if err != nil {
 		return err
 	}
@@ -230,16 +221,16 @@ func (s *scannerAPI) SetForProject(projectID int, scannerID string) error {
 	return err
 }
 
-func (s *scannerAPI) getForProject(id int) (globalregistry.Scanner, error) {
-	url := *s.reg.parsedUrl
+func (r *registry) getScannerOfProject(id int) (globalregistry.Scanner, error) {
+	url := *r.parsedUrl
 	url.Path = fmt.Sprintf("%s/%d/scanner", path, id)
 	req, err := http.NewRequest(http.MethodGet, url.String(), nil)
 	if err != nil {
 		return nil, err
 	}
 
-	req.SetBasicAuth(s.reg.GetUsername(), s.reg.GetPassword())
-	resp, err := s.reg.do(req)
+	req.SetBasicAuth(r.GetUsername(), r.GetPassword())
+	resp, err := r.do(req)
 	if err != nil {
 		return nil, err
 	}
@@ -250,27 +241,27 @@ func (s *scannerAPI) getForProject(id int) (globalregistry.Scanner, error) {
 	err = json.NewDecoder(resp.Body).Decode(scannerResult)
 
 	if err != nil {
-		s.reg.logger.Error(err, "json decoding failed")
+		r.logger.Error(err, "json decoding failed")
 		b := bytes.NewBuffer(nil)
 		_, err := b.ReadFrom(resp.Body)
 		if err != nil {
 			panic(err)
 		}
-		s.reg.logger.Info(b.String())
+		r.logger.Info(b.String())
 	}
 
 	resultScanner := &scanner{
-		id:   scannerResult.Uuid,
-		api:  s,
-		name: scannerResult.Name,
-		url:  scannerResult.Url,
+		id:       scannerResult.Uuid,
+		registry: r,
+		name:     scannerResult.Name,
+		url:      scannerResult.Url,
 	}
 	return resultScanner, err
 
 }
 
-func (s *scannerAPI) update(id string, targetScanner globalregistry.Scanner) error {
-	url := *s.reg.parsedUrl
+func (r *registry) updateScanner(id string, targetScanner globalregistry.Scanner) error {
+	url := *r.parsedUrl
 	url.Path = fmt.Sprintf("%s/%s", scannersPath, id)
 
 	reqBodyBuf := bytes.NewBuffer(nil)
@@ -288,9 +279,9 @@ func (s *scannerAPI) update(id string, targetScanner globalregistry.Scanner) err
 	}
 
 	req.Header["Content-Type"] = []string{"application/json"}
-	req.SetBasicAuth(s.reg.GetUsername(), s.reg.GetPassword())
+	req.SetBasicAuth(r.GetUsername(), r.GetPassword())
 
-	resp, err := s.reg.do(req)
+	resp, err := r.do(req)
 	if err != nil {
 		return err
 	}
@@ -303,8 +294,8 @@ func (s *scannerAPI) update(id string, targetScanner globalregistry.Scanner) err
 	return err
 }
 
-func (s *scannerAPI) delete(id string) error {
-	url := *s.reg.parsedUrl
+func (r *registry) deleteScanner(id string) error {
+	url := *r.parsedUrl
 	url.Path = fmt.Sprintf("%s/%s", scannersPath, id)
 
 	req, err := http.NewRequest(http.MethodDelete, url.String(), nil)
@@ -313,9 +304,9 @@ func (s *scannerAPI) delete(id string) error {
 	}
 
 	req.Header["Content-Type"] = []string{"application/json"}
-	req.SetBasicAuth(s.reg.GetUsername(), s.reg.GetPassword())
+	req.SetBasicAuth(r.GetUsername(), r.GetPassword())
 
-	resp, err := s.reg.do(req)
+	resp, err := r.do(req)
 	if err != nil {
 		return err
 	}

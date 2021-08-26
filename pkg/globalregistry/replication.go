@@ -36,14 +36,11 @@ type ReplicationRule interface {
 	// RemoteRegistry returns the remote registry which is subject to the
 	// replication.
 	RemoteRegistry() Registry
-
-	// Delete method deletes the replication rule from the registry.
-	Delete() error
 }
 
-// ReplicationAPI interface defines the methods of a registry which are related
-// to the management of the replication rules.
-type ReplicationAPI interface {
-	// List method returns the replication rules of a registry.
-	List() ([]ReplicationRule, error)
+// DestructibleReplicationRule interface declares the methods that can be used
+// to delete the replication rule of a project.
+type DestructibleReplicationRule interface {
+	// Delete method deletes the replication rule from the registry.
+	Delete() error
 }

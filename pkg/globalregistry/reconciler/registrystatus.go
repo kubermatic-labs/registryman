@@ -17,8 +17,6 @@
 package reconciler
 
 import (
-	"errors"
-
 	api "github.com/kubermatic-labs/registryman/pkg/apis/registryman/v1alpha1"
 	"github.com/kubermatic-labs/registryman/pkg/config"
 	"github.com/kubermatic-labs/registryman/pkg/globalregistry"
@@ -28,7 +26,49 @@ import (
 // returns the actions that are needed to synchronize the actual state to the
 // expected state.
 func Compare(store *config.ExpectedProvider, actual, expected *api.RegistryStatus) []Action {
-	return CompareProjectStatuses(store, actual.Projects, expected.Projects)
+	return CompareProjectStatuses(store, actual.Projects, expected.Projects, actual.Capabilities)
+}
+
+func getRegistryCapabilities(reg globalregistry.Registry) (api.RegistryCapabilities, error) {
+	replCap := globalregistry.GetReplicationCapability(reg.GetProvider())
+	regWithProjects := reg.(globalregistry.RegistryWithProjects)
+	registryCapabilities := api.RegistryCapabilities{
+		CanPullReplicate: replCap.CanPull(),
+		CanPushReplicate: replCap.CanPush(),
+	}
+	dummyProject, err := regWithProjects.GetProjectByName("")
+	if err != nil {
+		return registryCapabilities, err
+	}
+
+	if _, ok := reg.(globalregistry.ProjectCreator); ok {
+		registryCapabilities.CanCreateProject = true
+	}
+	if _, ok := dummyProject.(globalregistry.DestructibleProject); ok {
+		registryCapabilities.CanDeleteProject = true
+	}
+	if _, ok := dummyProject.(globalregistry.ProjectWithMembers); ok {
+		registryCapabilities.HasProjectMembers = true
+	}
+	if _, ok := dummyProject.(globalregistry.MemberManipulatorProject); ok {
+		registryCapabilities.CanManipulateProjectMembers = true
+	}
+	if _, ok := dummyProject.(globalregistry.ProjectWithScanner); ok {
+		registryCapabilities.HasProjectScanners = true
+	}
+	if _, ok := dummyProject.(globalregistry.ScannerManipulatorProject); ok {
+		registryCapabilities.CanManipulateProjectScanners = true
+	}
+	if _, ok := dummyProject.(globalregistry.ProjectWithReplication); ok {
+		registryCapabilities.HasProjectReplicationRules = true
+	}
+	if _, ok := dummyProject.(globalregistry.ReplicationRuleManipulatorProject); ok {
+		registryCapabilities.CanManipulateProjectReplicationRules = true
+	}
+	if _, ok := dummyProject.(globalregistry.ProjectWithStorage); ok {
+		registryCapabilities.HasProjectStorageReport = true
+	}
+	return registryCapabilities, nil
 }
 
 // GetRegistryStatus function calculate the status of a registry. If the
@@ -36,7 +76,12 @@ func Compare(store *config.ExpectedProvider, actual, expected *api.RegistryStatu
 // status is returned. If the registry represents an actual (real) registry, the
 // actual status is returned.
 func GetRegistryStatus(reg globalregistry.Registry) (*api.RegistryStatus, error) {
-	projects, err := reg.ProjectAPI().List()
+	regWithProjects := reg.(globalregistry.RegistryWithProjects)
+	registryCapabilities, err := getRegistryCapabilities(reg)
+	if err != nil {
+		return nil, err
+	}
+	projects, err := regWithProjects.ListProjects()
 	if err != nil {
 		return nil, err
 	}
@@ -44,53 +89,63 @@ func GetRegistryStatus(reg globalregistry.Registry) (*api.RegistryStatus, error)
 	for i, project := range projects {
 		projectStatuses[i].Name = project.GetName()
 
-		members, err := project.GetMembers()
-		if err != nil {
-			return nil, err
-		}
-		projectStatuses[i].Members = make([]api.MemberStatus, len(members))
-		for n, member := range members {
-			projectStatuses[i].Members[n].Name = member.GetName()
-			projectStatuses[i].Members[n].Type = member.GetType()
-			projectStatuses[i].Members[n].Role = member.GetRole()
-			switch m := member.(type) {
-			case globalregistry.LdapMember:
-				projectStatuses[i].Members[n].DN = m.GetDN()
+		projectWithMembers, ok := project.(globalregistry.ProjectWithMembers)
+		if ok {
+			// registry supports projects with members
+			members, err := projectWithMembers.GetMembers()
+			if err != nil {
+				return nil, err
+			}
+			projectStatuses[i].Members = make([]api.MemberStatus, len(members))
+			for n, member := range members {
+				projectStatuses[i].Members[n].Name = member.GetName()
+				projectStatuses[i].Members[n].Type = member.GetType()
+				projectStatuses[i].Members[n].Role = member.GetRole()
+				switch m := member.(type) {
+				case globalregistry.LdapMember:
+					projectStatuses[i].Members[n].DN = m.GetDN()
+				}
 			}
 		}
-		replicationRules, err := project.GetReplicationRules("", "")
-		if err != nil {
-			return nil, err
-		}
-		projectStatuses[i].ReplicationRules = make([]api.ReplicationRuleStatus, len(replicationRules))
-		for n, rule := range replicationRules {
-			projectStatuses[i].ReplicationRules[n].RemoteRegistryName = rule.RemoteRegistry().GetName()
-			projectStatuses[i].ReplicationRules[n].Trigger = string(rule.Trigger())
-			projectStatuses[i].ReplicationRules[n].Direction = rule.Direction()
+		projectWithReplication, ok := project.(globalregistry.ProjectWithReplication)
+		if ok {
+			replicationRules, err := projectWithReplication.GetReplicationRules("", "")
+			if err != nil {
+				return nil, err
+			}
+			projectStatuses[i].ReplicationRules = make([]api.ReplicationRuleStatus, len(replicationRules))
+			for n, rule := range replicationRules {
+				projectStatuses[i].ReplicationRules[n].RemoteRegistryName = rule.RemoteRegistry().GetName()
+				projectStatuses[i].ReplicationRules[n].Trigger = string(rule.Trigger())
+				projectStatuses[i].ReplicationRules[n].Direction = rule.Direction()
+			}
 		}
 
-		storageUsed, err := project.GetUsedStorage()
-		switch {
-		case errors.Is(err, globalregistry.ErrNotImplemented):
-			// we use the default value, if GetUsedStorage is not implemented
-		case err == nil:
+		projectWithStorage, ok := project.(globalregistry.ProjectWithStorage)
+		if ok {
+			storageUsed, err := projectWithStorage.GetUsedStorage()
+			if err != nil {
+				return nil, err
+			}
 			projectStatuses[i].StorageUsed = storageUsed
-		default:
-			return nil, err
 		}
 
-		projectScanner, err := project.GetScanner()
-		if err != nil {
-			return nil, err
-		}
-		if projectScanner != nil {
-			projectStatuses[i].ScannerStatus = api.ScannerStatus{
-				Name: projectScanner.GetName(),
-				URL:  projectScanner.GetURL(),
+		projectWithScanner, ok := project.(globalregistry.ProjectWithScanner)
+		if ok {
+			projectScanner, err := projectWithScanner.GetScanner()
+			if err != nil {
+				return nil, err
+			}
+			if projectScanner != nil {
+				projectStatuses[i].ScannerStatus = api.ScannerStatus{
+					Name: projectScanner.GetName(),
+					URL:  projectScanner.GetURL(),
+				}
 			}
 		}
 	}
 	return &api.RegistryStatus{
-		Projects: projectStatuses,
+		Projects:     projectStatuses,
+		Capabilities: registryCapabilities,
 	}, nil
 }

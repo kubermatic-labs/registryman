@@ -21,45 +21,35 @@ import (
 	"github.com/kubermatic-labs/registryman/pkg/globalregistry"
 )
 
-type projectAPI struct {
-	registry *Registry
-}
+var _ globalregistry.RegistryWithProjects = &Registry{}
 
-var _ globalregistry.ProjectAPI = &projectAPI{}
-
-func (papi *projectAPI) Create(string) (globalregistry.Project, error) {
-	panic("not implemented")
-}
-
-func (papi *projectAPI) GetByName(name string) (globalregistry.Project, error) {
-	projects := papi.registry.apiProvider.GetProjects()
+func (r *Registry) GetProjectByName(name string) (globalregistry.Project, error) {
+	if name == "" {
+		return &project{
+			Project:  nil,
+			registry: r,
+		}, nil
+	}
+	projects := r.apiProvider.GetProjects()
 	for _, proj := range projects {
-		// projectApi, ok := project.(*api.Project)
-		// if !ok {
-		// 	return nil, fmt.Errorf("project is not *api.Project")
-		// }
 		if proj.GetName() == name {
 			return &project{
 				Project:  proj,
-				registry: papi.registry,
+				registry: r,
 			}, nil
 		}
 	}
 	return nil, nil
 }
 
-func (papi *projectAPI) List() ([]globalregistry.Project, error) {
-	projects := papi.registry.apiProvider.GetProjects()
+func (r *Registry) ListProjects() ([]globalregistry.Project, error) {
+	projects := r.apiProvider.GetProjects()
 	result := make([]globalregistry.Project, 0)
 	for _, proj := range projects {
-		// projectApi, ok := project.(*api.Project)
-		// if !ok {
-		// 	return nil, fmt.Errorf("project is not *api.Project")
-		// }
 		myProject := false
 	LRegLoop:
 		for _, lReg := range proj.Spec.LocalRegistries {
-			if lReg == papi.registry.GetName() {
+			if lReg == r.GetName() {
 				myProject = true
 				break LRegLoop
 			}
@@ -68,7 +58,7 @@ func (papi *projectAPI) List() ([]globalregistry.Project, error) {
 			myProject {
 			result = append(result, &project{
 				Project:  proj,
-				registry: papi.registry,
+				registry: r,
 			})
 		}
 	}

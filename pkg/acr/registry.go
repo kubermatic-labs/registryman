@@ -19,7 +19,6 @@
 package acr
 
 import (
-	"fmt"
 	"net/http"
 	"net/url"
 
@@ -30,24 +29,17 @@ import (
 const path = "/v2/_catalog"
 
 type registry struct {
-	logger logr.Logger
-	globalregistry.RegistryConfig
-	projects     *projectAPI
-	replications *replicationAPI
-	*http.Client
+	logger    logr.Logger
 	parsedUrl *url.URL
+	globalregistry.Registry
+	*http.Client
 }
-
-type replicationAPI struct{}
-
-type acrRegistryCapabilities struct{}
 
 type repositories struct {
 	Repositories []string `json:"repositories,omitempty"`
 }
 
 var _ globalregistry.Registry = &registry{}
-var _ globalregistry.ReplicationCapabilities = acrRegistryCapabilities{}
 
 func init() {
 	globalregistry.RegisterProviderImplementation(
@@ -57,18 +49,12 @@ func init() {
 	)
 }
 
-func newRegistry(logger logr.Logger, config globalregistry.RegistryConfig) (globalregistry.Registry, error) {
+func newRegistry(logger logr.Logger, config globalregistry.Registry) (globalregistry.Registry, error) {
 	var err error
 	r := &registry{
-		RegistryConfig: config,
-		projects:       &projectAPI{},
-		replications:   &replicationAPI{},
-		Client:         http.DefaultClient,
-		logger:         logger,
-	}
-	r.projects, err = newProjectAPI(r)
-	if err != nil {
-		return nil, err
+		Registry: config,
+		Client:   http.DefaultClient,
+		logger:   logger,
 	}
 
 	r.parsedUrl, err = url.Parse(config.GetAPIEndpoint())
@@ -78,17 +64,9 @@ func newRegistry(logger logr.Logger, config globalregistry.RegistryConfig) (glob
 	return r, nil
 }
 
-func (r *registry) ProjectAPI() globalregistry.ProjectAPI {
-	return r.projects
-}
+type acrRegistryCapabilities struct{}
 
-func (r *registry) ReplicationAPI() globalregistry.ReplicationAPI {
-	return r.replications
-}
-
-func (r *replicationAPI) List() ([]globalregistry.ReplicationRule, error) {
-	return nil, fmt.Errorf("replicationAPI.List not implemented")
-}
+var _ globalregistry.ReplicationCapabilities = acrRegistryCapabilities{}
 
 func (cap acrRegistryCapabilities) CanPull() bool {
 	return false

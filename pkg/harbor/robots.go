@@ -102,19 +102,19 @@ type robotCreated struct {
 	Name         string    `json:"name,omitempty"`
 }
 
-func (p *projectAPI) getRobotMembers(projectID int) ([]*robot, error) {
-	url := *p.reg.parsedUrl
+func (r *registry) getRobotMembers(projectID int) ([]*robot, error) {
+	url := *r.parsedUrl
 	url.Path = fmt.Sprintf("%s/%d/robots", path, projectID)
-	p.reg.logger.V(1).Info("creating new request", "url", url.String())
+	r.logger.V(1).Info("creating new request", "url", url.String())
 	req, err := http.NewRequest(http.MethodGet, url.String(), nil)
 	if err != nil {
 		return nil, err
 	}
-	p.reg.logger.V(1).Info("sending HTTP request", "req-uri", req.RequestURI)
+	r.logger.V(1).Info("sending HTTP request", "req-uri", req.RequestURI)
 
-	req.SetBasicAuth(p.reg.GetUsername(), p.reg.GetPassword())
+	req.SetBasicAuth(r.GetUsername(), r.GetPassword())
 
-	resp, err := p.reg.do(req)
+	resp, err := r.do(req)
 	if err != nil {
 		return nil, err
 	}
@@ -125,21 +125,21 @@ func (p *projectAPI) getRobotMembers(projectID int) ([]*robot, error) {
 
 	err = json.NewDecoder(resp.Body).Decode(&robotMembersResult)
 	if err != nil {
-		p.reg.logger.Error(err, "json decoding failed")
+		r.logger.Error(err, "json decoding failed")
 		b := bytes.NewBuffer(nil)
 		_, err := b.ReadFrom(resp.Body)
 		if err != nil {
 			panic(err)
 		}
-		p.reg.logger.Info(b.String())
+		r.logger.Info(b.String())
 		fmt.Printf("body: %+v\n", b.String())
 	}
-	p.reg.logger.V(1).Info("robots parsed", "result", robotMembersResult)
+	r.logger.V(1).Info("robots parsed", "result", robotMembersResult)
 	return robotMembersResult, err
 }
 
-func (p *projectAPI) createProjectRobotMember(robotMember *robot) (*robotCreated, error) {
-	url := *p.reg.parsedUrl
+func (r *registry) createProjectRobotMember(robotMember *robot) (*robotCreated, error) {
+	url := *r.parsedUrl
 	url.Path = "/api/v2.0/robots"
 	reqBodyBuf := bytes.NewBuffer(nil)
 	err := json.NewEncoder(reqBodyBuf).Encode(robotMember)
@@ -152,9 +152,9 @@ func (p *projectAPI) createProjectRobotMember(robotMember *robot) (*robotCreated
 	}
 
 	req.Header["Content-Type"] = []string{"application/json"}
-	req.SetBasicAuth(p.reg.GetUsername(), p.reg.GetPassword())
+	req.SetBasicAuth(r.GetUsername(), r.GetPassword())
 
-	resp, err := p.reg.do(req)
+	resp, err := r.do(req)
 	if err != nil {
 		return nil, err
 	}
@@ -166,31 +166,31 @@ func (p *projectAPI) createProjectRobotMember(robotMember *robot) (*robotCreated
 	err = json.NewDecoder(resp.Body).Decode(robotResult)
 
 	if err != nil {
-		p.reg.logger.Error(err, "json decoding failed")
+		r.logger.Error(err, "json decoding failed")
 		b := bytes.NewBuffer(nil)
 		_, err := b.ReadFrom(resp.Body)
 		if err != nil {
 			panic(err)
 		}
-		p.reg.logger.Info(b.String())
+		r.logger.Info(b.String())
 	}
 	return robotResult, err
 }
 
-func (p *projectAPI) deleteProjectRobotMember(projectID int, robotMemberID int) error {
-	url := *p.reg.parsedUrl
+func (r *registry) deleteProjectRobotMember(projectID int, robotMemberID int) error {
+	url := *r.parsedUrl
 	url.Path = fmt.Sprintf("%s/%d/robots/%d", path, projectID, robotMemberID)
-	p.reg.logger.V(1).Info("creating new request", "url", url.String())
+	r.logger.V(1).Info("creating new request", "url", url.String())
 	req, err := http.NewRequest(http.MethodDelete, url.String(), nil)
 	if err != nil {
 		return err
 	}
-	p.reg.logger.V(1).Info("sending HTTP request")
+	r.logger.V(1).Info("sending HTTP request")
 
 	req.Header["Content-Type"] = []string{"application/json"}
-	req.SetBasicAuth(p.reg.GetUsername(), p.reg.GetPassword())
+	req.SetBasicAuth(r.GetUsername(), r.GetPassword())
 
-	resp, err := p.reg.do(req)
+	resp, err := r.do(req)
 	if err != nil {
 		return err
 	}

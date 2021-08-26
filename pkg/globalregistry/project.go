@@ -50,16 +50,34 @@ type ProjectMemberCredentials struct {
 // Project interface defines the methods that can be performed on a project of a
 // registry.
 type Project interface {
-
 	// GetName returns the name of the project.
 	GetName() string
+}
 
+// ProjectWithRepositories interface defines the methods that can be performed
+// on a project of a registry that has repositories.
+type ProjectWithRepositories interface {
+	// GetRepositories returns the repositories found in the project
+	GetRepositories() ([]string, error)
+}
+
+// Project interface defines the methods that can be performed on a project of a
+// registry which can delete the given project.
+type DestructibleProject interface {
 	// Delete removes the project from the registry.
 	Delete() error
+}
 
+// ProjectWithMembers interface contains the methods that we use for
+// project-level member related read-only operations.
+type ProjectWithMembers interface {
 	// GetMembers returns the list of project members.
 	GetMembers() ([]ProjectMember, error)
+}
 
+// MemberManipulatorProject interface contains the methods that we use for
+// project-level member related read-write operations.
+type MemberManipulatorProject interface {
 	// AssignMember method assigns a project member (user, group or robot)
 	// to a project. When credentials are created by the registry provider,
 	// they are returned. Otherwise, ProjectMemberCredentials is nil.
@@ -67,42 +85,57 @@ type Project interface {
 
 	// UnassignMember removes a project member from the project.
 	UnassignMember(ProjectMember) error
+}
 
-	// GetReplicationRules returns the list of replication rule concerning
-	// the project of the registry. When trigger and/or direction is an
-	// empty string, then trigger or direction parameter is (are) not
-	// considered respectively.
-	GetReplicationRules(trigger, direction string) ([]ReplicationRule, error)
-
-	// AssignReplicationRule assigns a replication rule to the project.
-	AssignReplicationRule(config RegistryConfig, trigger, direction string) (ReplicationRule, error)
-
+// ProjectWithScanner interface contains the methods that we use for
+// project-level scanner related read-only operations.
+type ProjectWithScanner interface {
 	// GetScanner returns the scanner assigned to the project.
 	GetScanner() (Scanner, error)
+}
 
+// ScannerManipulatorProject interface contains the methods that we use for
+// project-level scanner related read-write operations.
+type ScannerManipulatorProject interface {
 	// AssignScanner assigns a scanner to the project.
 	AssignScanner(Scanner) error
 
 	// UnassignScanner removes a scanner from the project.
 	UnassignScanner(Scanner) error
-
-	// GetRepositories returns the repositories found in the project
-	GetRepositories() ([]string, error)
-
-	Storage
 }
 
-// ProjectAPI interface defines the methods of a registry which are related to
-// the management of the projects.
-type ProjectAPI interface {
+// ProjectWithReplication interface contains the methods that we use for
+// project-level replication related read-only operations.
+type ProjectWithReplication interface {
+	// GetReplicationRules returns the list of replication rule concerning
+	// the project of the registry.
+	GetReplicationRules(trigger, direction string) ([]ReplicationRule, error)
+}
 
+// ReplicationRuleManipulatorProject interface contains the methods that we use
+// for project-level replication related read-write manipulations.
+type ReplicationRuleManipulatorProject interface {
+	// AssignReplicationRule assigns a replication rule to the project.
+	AssignReplicationRule(remote Registry, trigger, direction string) (ReplicationRule, error)
+}
+
+// ProjectWithStorage interface contains the methods that we use for
+// project-level storage related operations.
+type ProjectWithStorage interface {
+	// GetUsedStorage returns the used storage in bytes.
+	GetUsedStorage() (int, error)
+}
+
+// RegistryWithProjects interface defines the methods of a registry which are
+// related to the management of the projects.
+type RegistryWithProjects interface {
 	// List returns the list of the projects managed by the registry.
-	List() ([]Project, error)
+	ListProjects() ([]Project, error)
 
 	// GetByName returns the project with the given name. If no project is
 	// present with the given name (nil, nil) is returned.
-	GetByName(name string) (Project, error)
-
-	// Create creates a new project with the given name.
-	Create(name string) (Project, error)
+	//
+	// For empty project name a dummy Project is created that can be used
+	// for testing the registry's capabilities.
+	GetProjectByName(name string) (Project, error)
 }

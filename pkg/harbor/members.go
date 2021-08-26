@@ -113,18 +113,18 @@ type projectMemberRequestBody struct {
 	MemberUser  *userEntity `json:"member_user"`
 }
 
-func (p *projectAPI) getMembers(projectID int) ([]*projectMemberEntity, error) {
-	url := *p.reg.parsedUrl
+func (r *registry) getMembers(projectID int) ([]*projectMemberEntity, error) {
+	url := *r.parsedUrl
 	url.Path = fmt.Sprintf("%s/%d/members", path, projectID)
-	p.reg.logger.V(1).Info("creating new request", "url", url.String())
+	r.logger.V(1).Info("creating new request", "url", url.String())
 	req, err := http.NewRequest(http.MethodGet, url.String(), nil)
 	if err != nil {
 		return nil, err
 	}
 
-	req.SetBasicAuth(p.reg.GetUsername(), p.reg.GetPassword())
+	req.SetBasicAuth(r.GetUsername(), r.GetPassword())
 
-	resp, err := p.reg.do(req)
+	resp, err := r.do(req)
 	if err != nil {
 		return nil, err
 	}
@@ -135,18 +135,18 @@ func (p *projectAPI) getMembers(projectID int) ([]*projectMemberEntity, error) {
 
 	err = json.NewDecoder(resp.Body).Decode(&projectMembersResult)
 	if err != nil {
-		p.reg.logger.Error(err, "json decoding failed")
+		r.logger.Error(err, "json decoding failed")
 		b := bytes.NewBuffer(nil)
 		_, err := b.ReadFrom(resp.Body)
 		if err != nil {
 			panic(err)
 		}
-		p.reg.logger.Info(b.String())
+		r.logger.Info(b.String())
 		fmt.Printf("body: %+v\n", b.String())
 	}
 	for _, member := range projectMembersResult {
 		if member.EntityType == "g" {
-			member.dn, err = p.reg.searchLdapGroup(member.EntityName)
+			member.dn, err = r.searchLdapGroup(member.EntityName)
 			if err != nil {
 				return nil, err
 			}
@@ -155,8 +155,8 @@ func (p *projectAPI) getMembers(projectID int) ([]*projectMemberEntity, error) {
 	return projectMembersResult, err
 }
 
-func (p *projectAPI) createProjectMember(projectID int, projectMember *projectMemberRequestBody) (int, error) {
-	url := *p.reg.parsedUrl
+func (r *registry) createProjectMember(projectID int, projectMember *projectMemberRequestBody) (int, error) {
+	url := *r.parsedUrl
 	url.Path = fmt.Sprintf("%s/%d/members", path, projectID)
 	reqBodyBuf := bytes.NewBuffer(nil)
 	err := json.NewEncoder(reqBodyBuf).Encode(projectMember)
@@ -169,9 +169,9 @@ func (p *projectAPI) createProjectMember(projectID int, projectMember *projectMe
 	}
 
 	req.Header["Content-Type"] = []string{"application/json"}
-	req.SetBasicAuth(p.reg.GetUsername(), p.reg.GetPassword())
+	req.SetBasicAuth(r.GetUsername(), r.GetPassword())
 
-	resp, err := p.reg.do(req)
+	resp, err := r.do(req)
 	if err != nil {
 		return 0, err
 	}
@@ -197,7 +197,7 @@ func (p *projectAPI) createProjectMember(projectID int, projectMember *projectMe
 		resp.Header.Get("Location"),
 		fmt.Sprintf("%s/%d/members/", path, projectID)))
 	if err != nil {
-		p.reg.logger.Error(err, "cannot parse member ID from response Location header",
+		r.logger.Error(err, "cannot parse member ID from response Location header",
 			"location-header", resp.Header.Get("Location"))
 		return 0, err
 	}
@@ -205,20 +205,20 @@ func (p *projectAPI) createProjectMember(projectID int, projectMember *projectMe
 	return memberID, nil
 }
 
-func (p *projectAPI) deleteProjectMember(projectID int, memberId int) error {
-	url := *p.reg.parsedUrl
+func (r *registry) deleteProjectMember(projectID int, memberId int) error {
+	url := *r.parsedUrl
 	url.Path = fmt.Sprintf("%s/%d/members/%d", path, projectID, memberId)
-	p.reg.logger.V(1).Info("creating new request", "url", url.String())
+	r.logger.V(1).Info("creating new request", "url", url.String())
 	req, err := http.NewRequest(http.MethodDelete, url.String(), nil)
 	if err != nil {
 		return err
 	}
-	p.reg.logger.V(1).Info("sending HTTP request", "req-uri", req.URL)
+	r.logger.V(1).Info("sending HTTP request", "req-uri", req.URL)
 
 	req.Header["Content-Type"] = []string{"application/json"}
-	req.SetBasicAuth(p.reg.GetUsername(), p.reg.GetPassword())
+	req.SetBasicAuth(r.GetUsername(), r.GetPassword())
 
-	resp, err := p.reg.do(req)
+	resp, err := r.do(req)
 	if err != nil {
 		return err
 	}

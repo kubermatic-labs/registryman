@@ -51,7 +51,7 @@ var _ = Describe("Memberstatus", func() {
 	It("returns no action for the same ReplicationRuleStatus slice", func() {
 		act := []api.ReplicationRuleStatus{}
 		exp := []api.ReplicationRuleStatus{}
-		actions := reconciler.CompareReplicationRuleStatus(nil, "proj", act, exp)
+		actions := reconciler.CompareReplicationRuleStatus(nil, "proj", act, exp, api.RegistryCapabilities{})
 		Expect(actions).ToNot(BeNil())
 		Expect(len(actions)).To(Equal(0))
 
@@ -61,7 +61,7 @@ var _ = Describe("Memberstatus", func() {
 		exp = []api.ReplicationRuleStatus{
 			rrule1,
 		}
-		actions = reconciler.CompareReplicationRuleStatus(nil, "proj", act, exp)
+		actions = reconciler.CompareReplicationRuleStatus(nil, "proj", act, exp, api.RegistryCapabilities{})
 		Expect(actions).ToNot(BeNil())
 		Expect(len(actions)).To(Equal(0))
 
@@ -73,7 +73,7 @@ var _ = Describe("Memberstatus", func() {
 			rrule1,
 			rrule2,
 		}
-		actions = reconciler.CompareReplicationRuleStatus(nil, "proj", act, exp)
+		actions = reconciler.CompareReplicationRuleStatus(nil, "proj", act, exp, api.RegistryCapabilities{})
 		Expect(actions).ToNot(BeNil())
 		Expect(len(actions)).To(Equal(0))
 
@@ -85,7 +85,7 @@ var _ = Describe("Memberstatus", func() {
 			rrule2,
 			rrule1,
 		}
-		actions = reconciler.CompareReplicationRuleStatus(nil, "proj", act, exp)
+		actions = reconciler.CompareReplicationRuleStatus(nil, "proj", act, exp, api.RegistryCapabilities{})
 		Expect(actions).ToNot(BeNil())
 	})
 
@@ -94,7 +94,9 @@ var _ = Describe("Memberstatus", func() {
 		exp := []api.ReplicationRuleStatus{
 			rrule1,
 		}
-		actions := reconciler.CompareReplicationRuleStatus(nil, "proj", act, exp)
+		actions := reconciler.CompareReplicationRuleStatus(nil, "proj", act, exp, api.RegistryCapabilities{
+			CanManipulateProjectReplicationRules: true,
+		})
 		Expect(actions).ToNot(BeNil())
 		Expect(len(actions)).To(Equal(1))
 		Expect(actionsToStrings(actions)).To(Equal([]string{
@@ -108,7 +110,9 @@ var _ = Describe("Memberstatus", func() {
 			rrule1,
 			rrule2,
 		}
-		actions = reconciler.CompareReplicationRuleStatus(nil, "proj", act, exp)
+		actions = reconciler.CompareReplicationRuleStatus(nil, "proj", act, exp, api.RegistryCapabilities{
+			CanManipulateProjectReplicationRules: true,
+		})
 		Expect(actions).ToNot(BeNil())
 		Expect(len(actions)).To(Equal(1))
 		Expect(actionsToStrings(actions)).To(Equal([]string{
@@ -121,7 +125,9 @@ var _ = Describe("Memberstatus", func() {
 			rrule1,
 		}
 		exp := []api.ReplicationRuleStatus{}
-		actions := reconciler.CompareReplicationRuleStatus(nil, "proj", act, exp)
+		actions := reconciler.CompareReplicationRuleStatus(nil, "proj", act, exp, api.RegistryCapabilities{
+			CanManipulateProjectReplicationRules: true,
+		})
 		Expect(actions).ToNot(BeNil())
 		Expect(len(actions)).To(Equal(1))
 		Expect(actionsToStrings(actions)).To(Equal([]string{
@@ -134,7 +140,9 @@ var _ = Describe("Memberstatus", func() {
 		exp = []api.ReplicationRuleStatus{
 			rrule2,
 		}
-		actions = reconciler.CompareReplicationRuleStatus(nil, "proj", act, exp)
+		actions = reconciler.CompareReplicationRuleStatus(nil, "proj", act, exp, api.RegistryCapabilities{
+			CanManipulateProjectReplicationRules: true,
+		})
 		Expect(actions).ToNot(BeNil())
 		Expect(len(actions)).To(Equal(1))
 		Expect(actionsToStrings(actions)).To(Equal([]string{
@@ -149,7 +157,9 @@ var _ = Describe("Memberstatus", func() {
 		exp := []api.ReplicationRuleStatus{
 			rrule2,
 		}
-		actions := reconciler.CompareReplicationRuleStatus(nil, "proj", act, exp)
+		actions := reconciler.CompareReplicationRuleStatus(nil, "proj", act, exp, api.RegistryCapabilities{
+			CanManipulateProjectReplicationRules: true,
+		})
 		Expect(actions).ToNot(BeNil())
 		Expect(len(actions)).To(Equal(2))
 		Expect(actionsToStrings(actions)).To(Equal([]string{
@@ -162,7 +172,9 @@ var _ = Describe("Memberstatus", func() {
 		exp = []api.ReplicationRuleStatus{
 			rrule1Trig,
 		}
-		actions = reconciler.CompareReplicationRuleStatus(nil, "proj", act, exp)
+		actions = reconciler.CompareReplicationRuleStatus(nil, "proj", act, exp, api.RegistryCapabilities{
+			CanManipulateProjectReplicationRules: true,
+		})
 		Expect(actions).ToNot(BeNil())
 		Expect(len(actions)).To(Equal(2))
 		Expect(actionsToStrings(actions)).To(Equal([]string{
@@ -175,7 +187,9 @@ var _ = Describe("Memberstatus", func() {
 		exp = []api.ReplicationRuleStatus{
 			rrule1Pull,
 		}
-		actions = reconciler.CompareReplicationRuleStatus(nil, "proj", act, exp)
+		actions = reconciler.CompareReplicationRuleStatus(nil, "proj", act, exp, api.RegistryCapabilities{
+			CanManipulateProjectReplicationRules: true,
+		})
 		Expect(actions).ToNot(BeNil())
 		Expect(len(actions)).To(Equal(2))
 		Expect(actionsToStrings(actions)).To(Equal([]string{

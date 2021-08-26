@@ -104,7 +104,3 @@ func (rule *replicationRule) Direction() string {
 func (rule *replicationRule) RemoteRegistry() globalregistry.Registry {
 	return rule.remote
 }
-
-func (rule *replicationRule) Delete() error {
-	panic("not implemented")
-}

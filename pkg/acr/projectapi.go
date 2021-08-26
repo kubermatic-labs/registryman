@@ -26,26 +26,14 @@ import (
 	"github.com/kubermatic-labs/registryman/pkg/globalregistry"
 )
 
-type projectAPI struct {
-	reg *registry
-}
-
-var _ globalregistry.ProjectAPI = &projectAPI{}
-
-func newProjectAPI(reg *registry) (*projectAPI, error) {
-	return &projectAPI{
-		reg: reg,
-	}, nil
-}
-
-// Create implements the globalregistry.ProjectAPI interface. Currently, it is
-// not implemented.
-func (p *projectAPI) Create(name string) (globalregistry.Project, error) {
-	return nil, fmt.Errorf("cannot create project in ACR: %w", globalregistry.ErrNotImplemented)
-}
-
-func (p *projectAPI) GetByName(name string) (globalregistry.Project, error) {
-	projects, err := p.List()
+func (r *registry) GetProjectByName(name string) (globalregistry.Project, error) {
+	if name == "" {
+		return &project{
+			name:     "",
+			registry: r,
+		}, nil
+	}
+	projects, err := r.ListProjects()
 	if err != nil {
 		return nil, err
 	}
@@ -98,16 +86,16 @@ func (s *registry) do(req *http.Request) (*http.Response, error) {
 	return resp, nil
 }
 
-func (p *projectAPI) getRepositories() ([]string, error) {
-	p.reg.parsedUrl.Path = path
-	req, err := http.NewRequest(http.MethodGet, p.reg.parsedUrl.String(), nil)
+func (r *registry) getRepositories() ([]string, error) {
+	r.parsedUrl.Path = path
+	req, err := http.NewRequest(http.MethodGet, r.parsedUrl.String(), nil)
 	if err != nil {
 		return nil, err
 	}
 
-	req.SetBasicAuth(p.reg.GetUsername(), p.reg.GetPassword())
+	req.SetBasicAuth(r.GetUsername(), r.GetPassword())
 
-	resp, err := p.reg.do(req)
+	resp, err := r.do(req)
 	if err != nil {
 		return nil, err
 	}
@@ -118,23 +106,23 @@ func (p *projectAPI) getRepositories() ([]string, error) {
 
 	err = json.NewDecoder(resp.Body).Decode(repos)
 	if err != nil {
-		p.reg.logger.Error(err, "json decoding failed")
+		r.logger.Error(err, "json decoding failed")
 		b := bytes.NewBuffer(nil)
 		_, err := b.ReadFrom(resp.Body)
 		if err != nil {
 			panic(err)
 		}
-		p.reg.logger.Info(b.String())
+		r.logger.Info(b.String())
 	}
 	return repos.Repositories, nil
 }
 
-func (p *projectAPI) List() ([]globalregistry.Project, error) {
-	repositories, err := p.getRepositories()
+func (r *registry) ListProjects() ([]globalregistry.Project, error) {
+	repositories, err := r.getRepositories()
 	if err != nil {
 		return nil, err
 	}
-	pStatus := p.collectProjectNamesFromRepos(repositories)
+	pStatus := r.collectProjectNamesFromRepos(repositories)
 
 	return pStatus, err
 }
@@ -143,7 +131,7 @@ func projectNameFromRepoName(repoName string) string {
 	return strings.Split(repoName, "/")[0]
 }
 
-func (p *projectAPI) collectProjectNamesFromRepos(repoNames []string) []globalregistry.Project {
+func (r *registry) collectProjectNamesFromRepos(repoNames []string) []globalregistry.Project {
 	projectNames := make(map[string]struct{})
 
 	for _, repoName := range repoNames {
@@ -155,15 +143,15 @@ func (p *projectAPI) collectProjectNamesFromRepos(repoNames []string) []globalre
 	i := 0
 	for projectName := range projectNames {
 		pStatus[i] = &project{
-			api:  p,
-			name: projectName,
+			name:     projectName,
+			registry: r,
 		}
 		i++
 	}
 	return pStatus
 }
 
-func (p *projectAPI) collectReposOfProject(projectName string, repoNames []string) []string {
+func collectReposOfProject(projectName string, repoNames []string) []string {
 	reposOfProject := []string{}
 	for _, repoName := range repoNames {
 		if projectNameFromRepoName(repoName) == projectName {
@@ -173,19 +161,19 @@ func (p *projectAPI) collectReposOfProject(projectName string, repoNames []strin
 	return reposOfProject
 }
 
-func (p *projectAPI) deleteRepoOfProject(proj *project, repoName string) error {
-	p.reg.logger.V(1).Info("deleting ACR repository",
+func (r *registry) deleteRepoOfProject(proj *project, repoName string) error {
+	r.logger.V(1).Info("deleting ACR repository",
 		"repositoryName", repoName,
 	)
-	url := *p.reg.parsedUrl
+	url := *r.parsedUrl
 	url.Path = fmt.Sprintf("/acr/v1/%s", repoName)
 	req, err := http.NewRequest(http.MethodDelete, url.String(), nil)
 	if err != nil {
 		return err
 	}
 
-	req.SetBasicAuth(p.reg.GetUsername(), p.reg.GetPassword())
+	req.SetBasicAuth(r.GetUsername(), r.GetPassword())
 
-	_, err = p.reg.do(req)
+	_, err = r.do(req)
 	return err
 }
