@@ -1,3 +1,19 @@
+/*
+   Copyright 2021 The Kubermatic Kubernetes Platform contributors.
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*/
+
 package config
 
 import (
@@ -146,16 +162,16 @@ func checkScannerNamesInProjects(projects []*api.Project, scanners []*api.Scanne
 // name.
 func checkScannerNameUniqueness(scanners []*api.Scanner) error {
 	var err error
-	scannerNames := map[string]*api.Scanner{}
+	scannerNames := map[string]bool{}
 	for _, scanner := range scanners {
 		scannerName := scanner.GetName()
-		if scannerNames[scannerName] != nil {
+		if scannerNames[scannerName] {
 			logger.V(-1).Info("Multiple scanners configured with the same name",
 				"scanner_name", scannerName,
 			)
 			err = ErrValidationScannerNameNotUnique
 		}
-		scannerNames[scannerName] = scanner
+		scannerNames[scannerName] = true
 	}
 	return err
 }
@@ -164,16 +180,16 @@ func checkScannerNameUniqueness(scanners []*api.Scanner) error {
 // name.
 func checkProjectNameUniqueness(projects []*api.Project) error {
 	var err error
-	projectNames := map[string]*api.Project{}
+	projectNames := map[string]bool{}
 	for _, project := range projects {
 		projectName := project.GetName()
-		if projectNames[projectName] != nil {
+		if projectNames[projectName] {
 			logger.V(-1).Info("Multiple projects configured with the same name",
 				"project_name", projectName,
 			)
 			err = ErrValidationProjectNameNotUnique
 		}
-		projectNames[projectName] = project
+		projectNames[projectName] = true
 	}
 	return err
 }
@@ -182,16 +198,16 @@ func checkProjectNameUniqueness(projects []*api.Project) error {
 // same name.
 func checkRegistryNameUniqueness(registries []*api.Registry) error {
 	var err error
-	registryNames := map[string]*api.Registry{}
+	registryNames := map[string]bool{}
 	for _, registry := range registries {
 		registryName := registry.GetName()
-		if registryNames[registryName] != nil {
+		if registryNames[registryName] {
 			logger.V(-1).Info("Multiple registries configured with the same name",
 				"registry_name", registryName,
 			)
 			err = ErrValidationRegistryNameNotUnique
 		}
-		registryNames[registryName] = registry
+		registryNames[registryName] = true
 	}
 	return err
 }

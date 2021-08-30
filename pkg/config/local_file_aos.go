@@ -138,10 +138,6 @@ func ReadLocalManifests(path string, options globalregistry.RegistryOptions) (*l
 			aos.store[*gvk] = []runtime.Object{o}
 		}
 	}
-	err = ValidateConsistency(aos)
-	if err != nil {
-		return nil, err
-	}
 	return aos, nil
 }
 

@@ -19,6 +19,7 @@ package cmd
 import (
 	"github.com/kubermatic-labs/registryman/pkg/config"
 	"github.com/spf13/cobra"
+	"k8s.io/client-go/rest"
 )
 
 // validateCmd represents the validate command
@@ -26,11 +27,27 @@ var validateCmd = &cobra.Command{
 	Use:   "validate",
 	Short: "Validate the configuration files",
 	Long:  `Validate the configuration files`,
-	Args:  cobra.ExactArgs(1),
+	Args:  cobra.MaximumNArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		config.SetLogger(logger)
-		logger.Info("validating config files", "dir", args[0])
-		_, err := config.ReadLocalManifests(args[0], nil)
+		var aos config.ApiObjectStore
+		var err error
+		if len(args) == 1 {
+			logger.Info("reading config files", "dir", args[0])
+			aos, err = config.ReadLocalManifests(args[0], options)
+			if err != nil {
+				return err
+			}
+		} else {
+			var clientConfig *rest.Config
+			aos, clientConfig, err = config.ConnectToKube(options)
+			if err != nil {
+				return err
+			}
+			logger.Info("connecting to Kubernetes for resources",
+				"host", clientConfig.Host)
+		}
+		err = config.ValidateConsistency(aos)
 		if err == nil {
 			logger.Info("config files are valid")
 		} else {
