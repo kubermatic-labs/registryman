@@ -60,6 +60,8 @@ state of the system.`,
 				"host", clientConfig.Host)
 		}
 
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
+		sideeffectCtx := context.WithValue(ctx, reconciler.SideEffectManifestManipulator, aos)
 		expectedProvider := config.NewExpectedProvider(aos)
 		expectedRegistries := expectedProvider.GetRegistries(ctx)
 		defer cancel()
