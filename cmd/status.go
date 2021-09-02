@@ -21,11 +21,32 @@ import (
 	"fmt"
 	"os"
 
+	api "github.com/kubermatic-labs/registryman/pkg/apis/registryman/v1alpha1"
 	"github.com/kubermatic-labs/registryman/pkg/config"
 	"github.com/kubermatic-labs/registryman/pkg/globalregistry/reconciler"
 	"github.com/spf13/cobra"
+	"gopkg.in/yaml.v2"
 	"k8s.io/client-go/rest"
 )
+
+var filteredRegistries []string
+var outputEncoder string
+
+func registryInScope(registryName string) bool {
+	if len(filteredRegistries) == 0 {
+		return true
+	}
+	for _, filteredRegistry := range filteredRegistries {
+		if registryName == filteredRegistry {
+			return true
+		}
+	}
+	return false
+}
+
+type encoder interface {
+	Encode(v interface{}) (err error)
+}
 
 // statusCmd represents the status command
 var statusCmd = &cobra.Command{
@@ -54,32 +75,41 @@ var statusCmd = &cobra.Command{
 		}
 
 		expectedRegistries := config.NewExpectedProvider(aos).GetRegistries()
+		registryStatuses := map[string]*api.RegistryStatus{}
 		for _, expectedRegistry := range expectedRegistries {
-			fmt.Println("#")
-			fmt.Println("#")
-			fmt.Printf("# %s\n", expectedRegistry.GetName())
-			fmt.Println("#")
-			fmt.Println("#")
+			if !registryInScope(expectedRegistry.GetName()) {
+				continue
+			}
 			actualRegistry, err := expectedRegistry.ToReal()
 			if err != nil {
 				return err
 			}
-			regStatusActual, err := reconciler.GetRegistryStatus(actualRegistry)
-			if err != nil {
-				return err
-			}
-			encoder := json.NewEncoder(os.Stdout)
-			encoder.SetIndent("", "  ")
-			err = encoder.Encode(regStatusActual)
+			registryStatuses[expectedRegistry.GetName()], err = reconciler.GetRegistryStatus(actualRegistry)
 			if err != nil {
 				return err
 			}
 		}
+		var enc encoder
+		switch outputEncoder {
+		case "json":
+			enc = json.NewEncoder(os.Stdout)
+			enc.(*json.Encoder).SetIndent("", "  ")
+		case "yaml":
+			enc = yaml.NewEncoder(os.Stdout)
+		default:
+			return fmt.Errorf("invalid output format: %s", outputEncoder)
+		}
+		err = enc.Encode(registryStatuses)
 
-		return nil
+		return err
 	},
 }
 
 func init() {
 	rootCmd.AddCommand(statusCmd)
+	statusCmd.PersistentFlags().StringSliceVarP(&filteredRegistries,
+		"registries",
+		"r",
+		[]string{}, "Select which registries shall be checked. When not set all registries will be checked.")
+	statusCmd.PersistentFlags().StringVarP(&outputEncoder, "output", "o", "json", "Output format. Supported values are json or yaml.")
 }

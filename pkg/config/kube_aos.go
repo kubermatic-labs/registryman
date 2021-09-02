@@ -168,8 +168,8 @@ func (aos *kubeApiObjectStore) GetRegistries() []*api.Registry {
 		panic(err)
 	}
 	apiRegistries := make([]*api.Registry, len(registryList.Items))
-	for i, reg := range registryList.Items {
-		apiRegistries[i] = &reg
+	for i := range registryList.Items {
+		apiRegistries[i] = &registryList.Items[i]
 	}
 	return apiRegistries
 }
@@ -185,8 +185,8 @@ func (aos *kubeApiObjectStore) GetProjects() []*api.Project {
 		panic(err)
 	}
 	apiProjects := make([]*api.Project, len(projectList.Items))
-	for i, reg := range projectList.Items {
-		apiProjects[i] = &reg
+	for i := range projectList.Items {
+		apiProjects[i] = &projectList.Items[i]
 	}
 	return apiProjects
 }
@@ -202,8 +202,8 @@ func (aos *kubeApiObjectStore) GetScanners() []*api.Scanner {
 		panic(err)
 	}
 	apiScanners := make([]*api.Scanner, len(scannerList.Items))
-	for i, reg := range scannerList.Items {
-		apiScanners[i] = &reg
+	for i := range scannerList.Items {
+		apiScanners[i] = &scannerList.Items[i]
 	}
 	return apiScanners
 }

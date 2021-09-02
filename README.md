@@ -156,6 +156,27 @@ files describing the registries reside.
 $ registryman status <path-to-configuration-dir>
 ```
 
+It's possible to check the status of the registries that are stored as
+Kubernetes Registry resources.
+
+```bash
+$ registryman status
+```
+
+By default, all configured registried are checked. You can filter for registries
+using the `-r` flag.
+
+```bash
+$ registryman status -r harbor-1,harbor-2
+```
+
+The default output format is JSON. It's possible to output the result as YAML
+too.
+
+```bash
+$ registryman status -r harbor-1 -o yaml
+```
+
 ### Validating the config files
 
 Registryman can validate the configuration files using the `validate` command.
