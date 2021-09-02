@@ -14,13 +14,14 @@
    limitations under the License.
 */
 
-package acr
+package artifactory
 
 import (
 	"bytes"
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"path"
 	"strings"
 
 	"github.com/kubermatic-labs/registryman/pkg/globalregistry"
@@ -87,7 +88,7 @@ func (s *registry) do(req *http.Request) (*http.Response, error) {
 }
 
 func (r *registry) getRepositories() ([]string, error) {
-	r.parsedUrl.Path = path
+	r.parsedUrl.Path = path.Join(r.registryPath, catalogPath)
 	req, err := http.NewRequest(http.MethodGet, r.parsedUrl.String(), nil)
 	if err != nil {
 		return nil, err
@@ -161,12 +162,12 @@ func collectReposOfProject(projectName string, repoNames []string) []string {
 	return reposOfProject
 }
 
-func (r *registry) deleteRepoOfProject(repoName string) error {
-	r.logger.V(1).Info("deleting ACR repository",
-		"repositoryName", repoName,
+func (r *registry) deleteProject(proj *project) error {
+	r.logger.V(1).Info("deleting Artifactory project",
+		"projectName", proj.GetName(),
 	)
 	url := *r.parsedUrl
-	url.Path = fmt.Sprintf("/acr/v1/%s", repoName)
+	url.Path = fmt.Sprintf("/artifactory/%s/%s", r.name, proj.GetName())
 	req, err := http.NewRequest(http.MethodDelete, url.String(), nil)
 	if err != nil {
 		return err

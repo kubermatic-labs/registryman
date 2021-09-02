@@ -20,6 +20,7 @@ import (
 	"github.com/go-logr/logr"
 	_ "github.com/kubermatic-labs/registryman/pkg/acr"
 	api "github.com/kubermatic-labs/registryman/pkg/apis/registryman/v1alpha1"
+	_ "github.com/kubermatic-labs/registryman/pkg/artifactory"
 	"github.com/kubermatic-labs/registryman/pkg/globalregistry"
 	_ "github.com/kubermatic-labs/registryman/pkg/harbor"
 

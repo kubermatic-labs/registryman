@@ -14,7 +14,7 @@
    limitations under the License.
 */
 
-package acr
+package artifactory
 
 import (
 	"fmt"
@@ -48,16 +48,14 @@ func (p *project) Delete() error {
 		switch opt := p.registry.GetOptions().(type) {
 		case globalregistry.CanForceDelete:
 			if !opt.ForceDeleteProjects() {
-				return fmt.Errorf("%s: repositories are present, please delete them before deleting the project, %w", p.GetName(), globalregistry.ErrRecoverableError)
+				return fmt.Errorf("%s: repositories are present, please use --force-delete option to delete the project, %w", p.GetName(), globalregistry.ErrRecoverableError)
 			}
-			for _, repo := range repoNames {
-				p.registry.logger.V(1).Info("deleting repository",
-					"repositoryName", repoNames,
-				)
-				err = p.deleteRepository(repo)
-				if err != nil {
-					return err
-				}
+			p.registry.logger.V(1).Info("deleting project",
+				"projectName", p.GetName(),
+			)
+			err = p.deleteProject()
+			if err != nil {
+				return err
 			}
 		default:
 			return globalregistry.ErrNotImplemented
@@ -74,6 +72,6 @@ func (p *project) GetRepositories() ([]string, error) {
 	return collectReposOfProject(p.name, repos), nil
 }
 
-func (p *project) deleteRepository(repoName string) error {
-	return p.registry.deleteRepoOfProject(repoName)
+func (p *project) deleteProject() error {
+	return p.registry.deleteProject(p)
 }
