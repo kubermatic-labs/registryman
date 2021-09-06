@@ -17,9 +17,11 @@
 package cmd
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"os"
+	"time"
 
 	"github.com/kubermatic-labs/registryman/pkg/config"
 	"github.com/kubermatic-labs/registryman/pkg/globalregistry/reconciler"
@@ -53,7 +55,9 @@ var statusCmd = &cobra.Command{
 				"host", clientConfig.Host)
 		}
 
-		expectedRegistries := config.NewExpectedProvider(aos).GetRegistries()
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
+		defer cancel()
+		expectedRegistries := config.NewExpectedProvider(aos).GetRegistries(ctx)
 		for _, expectedRegistry := range expectedRegistries {
 			fmt.Println("#")
 			fmt.Println("#")
@@ -64,7 +68,7 @@ var statusCmd = &cobra.Command{
 			if err != nil {
 				return err
 			}
-			regStatusActual, err := reconciler.GetRegistryStatus(actualRegistry)
+			regStatusActual, err := reconciler.GetRegistryStatus(ctx, actualRegistry)
 			if err != nil {
 				return err
 			}

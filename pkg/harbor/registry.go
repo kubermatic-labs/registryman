@@ -20,6 +20,7 @@ package harbor
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -241,7 +242,7 @@ func (r *registry) createUserGroup(ug *userGroup) error {
 	return nil
 }
 
-func (r *registry) deleteUserGroup(ug *userGroup) error {
+func (r *registry) deleteUserGroup(ctx context.Context, ug *userGroup) error {
 	r.logger.V(1).Info("deleting usergroup",
 		"Id", ug.Id,
 		"GroupName", ug.GroupName,
@@ -262,7 +263,7 @@ func (r *registry) deleteUserGroup(ug *userGroup) error {
 	return err
 }
 
-func (r *registry) updateIDOfUserGroup(ug *userGroup) (bool, error) {
+func (r *registry) updateIDOfUserGroup(ctx context.Context, ug *userGroup) (bool, error) {
 	r.logger.V(1).Info("get id of usergroup",
 		"GroupName", ug.GroupName,
 		"LdapGroupDN", ug.LdapGroupDn,
@@ -286,7 +287,7 @@ func (r *registry) updateIDOfUserGroup(ug *userGroup) (bool, error) {
 				"LdapGroupDN", userGroup.LdapGroupDn,
 				"GroupType", userGroup.GroupType,
 			)
-			err = r.deleteUserGroup(userGroup)
+			err = r.deleteUserGroup(ctx, userGroup)
 			if err != nil {
 				return false, err
 			}

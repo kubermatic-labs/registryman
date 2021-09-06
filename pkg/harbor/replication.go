@@ -17,6 +17,7 @@
 package harbor
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/kubermatic-labs/registryman/pkg/globalregistry"
@@ -106,6 +107,6 @@ func (r *replicationRule) RemoteRegistry() globalregistry.Registry {
 	return r.Remote
 }
 
-func (r *replicationRule) Delete() error {
-	return r.registry.deleteReplicationRule(r.ID)
+func (r *replicationRule) Delete(ctx context.Context) error {
+	return r.registry.deleteReplicationRule(ctx, r.ID)
 }

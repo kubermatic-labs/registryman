@@ -48,12 +48,12 @@ var SideEffectManifestManipulator = SideEffectContextKey("sideeffect-manipulator
 // Actions. SideEffect can be used for e.g. file manipulations at the local
 // filesystem.
 type SideEffect interface {
-	Perform(ctx context.Context) error
+	Perform(context.Context) error
 }
 
 // Action interface contains the methods that a reconciliation action needs to
 // implement.
 type Action interface {
 	String() string
-	Perform(globalregistry.Registry) (SideEffect, error)
+	Perform(context.Context, globalregistry.Registry) (SideEffect, error)
 }

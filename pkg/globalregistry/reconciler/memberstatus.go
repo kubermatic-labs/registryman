@@ -144,8 +144,8 @@ func (pmc *persistMemberCredentials) Perform(ctx context.Context) error {
 	return manifestManipulator.WriteResource(secret)
 }
 
-func (ma *memberAddAction) Perform(reg globalregistry.Registry) (SideEffect, error) {
-	project, err := reg.(globalregistry.RegistryWithProjects).GetProjectByName(ma.projectName)
+func (ma *memberAddAction) Perform(ctx context.Context, reg globalregistry.Registry) (SideEffect, error) {
+	project, err := reg.(globalregistry.RegistryWithProjects).GetProjectByName(ctx, ma.projectName)
 	if err != nil {
 		return nilEffect, err
 	}
@@ -158,7 +158,7 @@ func (ma *memberAddAction) Perform(reg globalregistry.Registry) (SideEffect, err
 		// registry does not support projects with members
 		return nilEffect, nil
 	}
-	creds, err := memberManipulatorProject.AssignMember(toProjectMember(&ma.MemberStatus))
+	creds, err := memberManipulatorProject.AssignMember(ctx, toProjectMember(&ma.MemberStatus))
 	if err != nil {
 		return nilEffect, err
 	}
@@ -215,8 +215,8 @@ func (ma *memberRemoveAction) String() string {
 		ma.Name, ma.projectName)
 }
 
-func (ma *memberRemoveAction) Perform(reg globalregistry.Registry) (SideEffect, error) {
-	project, err := reg.(globalregistry.RegistryWithProjects).GetProjectByName(ma.projectName)
+func (ma *memberRemoveAction) Perform(ctx context.Context, reg globalregistry.Registry) (SideEffect, error) {
+	project, err := reg.(globalregistry.RegistryWithProjects).GetProjectByName(ctx, ma.projectName)
 	if err != nil {
 		return nilEffect, err
 	}
@@ -225,7 +225,7 @@ func (ma *memberRemoveAction) Perform(reg globalregistry.Registry) (SideEffect, 
 		// registry does not support projects with members
 		return nilEffect, nil
 	}
-	err = memberManipulatorProject.UnassignMember(toProjectMember(&ma.MemberStatus))
+	err = memberManipulatorProject.UnassignMember(ctx, toProjectMember(&ma.MemberStatus))
 	if err != nil {
 		return nilEffect, err
 	}

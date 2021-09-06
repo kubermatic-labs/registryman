@@ -17,6 +17,7 @@
 package registry
 
 import (
+	"context"
 	"fmt"
 
 	api "github.com/kubermatic-labs/registryman/pkg/apis/registryman/v1alpha1"
@@ -33,7 +34,7 @@ var _ globalregistry.ProjectWithMembers = &project{}
 var _ globalregistry.ProjectWithReplication = &project{}
 var _ globalregistry.ProjectWithScanner = &project{}
 
-func (proj *project) GetMembers() ([]globalregistry.ProjectMember, error) {
+func (proj *project) GetMembers(context.Context) ([]globalregistry.ProjectMember, error) {
 	members := make([]globalregistry.ProjectMember, len(proj.Spec.Members))
 	for i, member := range proj.Spec.Members {
 		pMember := &projectMember{
@@ -51,11 +52,11 @@ func (proj *project) GetMembers() ([]globalregistry.ProjectMember, error) {
 	return members, nil
 }
 
-func (proj *project) GetReplicationRules(trigger, direction string) ([]globalregistry.ReplicationRule, error) {
+func (proj *project) GetReplicationRules(ctx context.Context, trigger, direction string) ([]globalregistry.ReplicationRule, error) {
 	rules := []globalregistry.ReplicationRule{}
 	switch proj.Spec.Type {
 	case api.GlobalProjectType:
-		for _, r := range proj.registry.apiProvider.GetRegistries() {
+		for _, r := range proj.registry.apiProvider.GetRegistries(ctx) {
 			remoteReg := New(r, proj.registry.apiProvider)
 			if proj.registry.GetName() != r.GetName() {
 				calcRepl := calculateReplicationRule(
@@ -85,11 +86,11 @@ func (proj *project) GetReplicationRules(trigger, direction string) ([]globalreg
 	return rules, nil
 }
 
-func (p *project) GetScanner() (globalregistry.Scanner, error) {
+func (p *project) GetScanner(ctx context.Context) (globalregistry.Scanner, error) {
 	if p.Spec.Scanner == "" {
 		return nil, nil
 	}
-	scanners := p.registry.apiProvider.GetScanners()
+	scanners := p.registry.apiProvider.GetScanners(ctx)
 	for _, s := range scanners {
 		if s.GetName() == p.Spec.Scanner {
 			return &scanner{s}, nil

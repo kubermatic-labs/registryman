@@ -38,6 +38,8 @@ import (
 var clientConfig *rest.Config
 var kubeConfig clientcmd.ClientConfig
 
+const fieldManager = "regman"
+
 func init() {
 	loadingRules := clientcmd.NewDefaultClientConfigLoadingRules()
 	// if you want to change the loading rules (which files in which order), you can do so here
@@ -75,7 +77,7 @@ func ConnectToKube(options globalregistry.RegistryOptions) (ApiObjectStore, *res
 // The filename parameter specifies the name of the file to be created.
 // The path where the file is created is set when the ReadManifests
 // function creates the ApiObjectStore.
-func (aos *kubeApiObjectStore) WriteResource(obj runtime.Object) error {
+func (aos *kubeApiObjectStore) WriteResource(ctx context.Context, obj runtime.Object) error {
 	gvk := obj.GetObjectKind().GroupVersionKind()
 	logger.V(1).Info("WriteResource",
 		"group", gvk.Group,
@@ -109,9 +111,11 @@ func (aos *kubeApiObjectStore) WriteResource(obj runtime.Object) error {
 		if err != nil {
 			return fmt.Errorf("error creating SecretApplyConfiguration: %w", err)
 		}
-		_, err = aos.kubeClient.CoreV1().Secrets(namespace).Apply(context.Background(), applyConfig, v1.ApplyOptions{
-			FieldManager: "regman",
-		})
+		_, err = aos.kubeClient.CoreV1().Secrets(namespace).Apply(ctx,
+			applyConfig,
+			v1.ApplyOptions{
+				FieldManager: fieldManager,
+			})
 		if err != nil {
 			return fmt.Errorf("error applying secret: %w", err)
 		}
@@ -122,7 +126,7 @@ func (aos *kubeApiObjectStore) WriteResource(obj runtime.Object) error {
 // RemoveResource removes the file from the filesystem. The path where
 // the file is removed from is set when the ReadManifests function
 // creates the ApiObjectStore.
-func (aos *kubeApiObjectStore) RemoveResource(obj runtime.Object) error {
+func (aos *kubeApiObjectStore) RemoveResource(ctx context.Context, obj runtime.Object) error {
 	gvk := obj.GetObjectKind().GroupVersionKind()
 	logger.V(1).Info("WriteResource",
 		"group", gvk.Group,
@@ -149,7 +153,7 @@ func (aos *kubeApiObjectStore) RemoveResource(obj runtime.Object) error {
 		logger.V(1).Info("removing secret",
 			"name", secret.GetName(),
 		)
-		err = aos.kubeClient.CoreV1().Secrets(namespace).Delete(context.Background(), secret.GetName(), v1.DeleteOptions{})
+		err = aos.kubeClient.CoreV1().Secrets(namespace).Delete(ctx, secret.GetName(), v1.DeleteOptions{})
 		if err != nil {
 			return fmt.Errorf("error removing secret: %w", err)
 		}
@@ -158,52 +162,52 @@ func (aos *kubeApiObjectStore) RemoveResource(obj runtime.Object) error {
 }
 
 // GetRegistries returns the parsed registries as API objects.
-func (aos *kubeApiObjectStore) GetRegistries() []*api.Registry {
+func (aos *kubeApiObjectStore) GetRegistries(ctx context.Context) []*api.Registry {
 	namespace, _, err := kubeConfig.Namespace()
 	if err != nil {
 		panic(err)
 	}
-	registryList, err := aos.regmanClient.RegistrymanV1alpha1().Registries(namespace).List(context.Background(), v1.ListOptions{})
+	registryList, err := aos.regmanClient.RegistrymanV1alpha1().Registries(namespace).List(ctx, v1.ListOptions{})
 	if err != nil {
 		panic(err)
 	}
 	apiRegistries := make([]*api.Registry, len(registryList.Items))
-	for i, reg := range registryList.Items {
-		apiRegistries[i] = &reg
+	for i := range registryList.Items {
+		apiRegistries[i] = &registryList.Items[i]
 	}
 	return apiRegistries
 }
 
 // GetProjects returns the parsed projects as API objects.
-func (aos *kubeApiObjectStore) GetProjects() []*api.Project {
+func (aos *kubeApiObjectStore) GetProjects(ctx context.Context) []*api.Project {
 	namespace, _, err := kubeConfig.Namespace()
 	if err != nil {
 		panic(err)
 	}
-	projectList, err := aos.regmanClient.RegistrymanV1alpha1().Projects(namespace).List(context.Background(), v1.ListOptions{})
+	projectList, err := aos.regmanClient.RegistrymanV1alpha1().Projects(namespace).List(ctx, v1.ListOptions{})
 	if err != nil {
 		panic(err)
 	}
 	apiProjects := make([]*api.Project, len(projectList.Items))
-	for i, reg := range projectList.Items {
-		apiProjects[i] = &reg
+	for i := range projectList.Items {
+		apiProjects[i] = &projectList.Items[i]
 	}
 	return apiProjects
 }
 
 // GetScanners returns the parsed scanners as API objects.
-func (aos *kubeApiObjectStore) GetScanners() []*api.Scanner {
+func (aos *kubeApiObjectStore) GetScanners(ctx context.Context) []*api.Scanner {
 	namespace, _, err := kubeConfig.Namespace()
 	if err != nil {
 		panic(err)
 	}
-	scannerList, err := aos.regmanClient.RegistrymanV1alpha1().Scanners(namespace).List(context.Background(), v1.ListOptions{})
+	scannerList, err := aos.regmanClient.RegistrymanV1alpha1().Scanners(namespace).List(ctx, v1.ListOptions{})
 	if err != nil {
 		panic(err)
 	}
 	apiScanners := make([]*api.Scanner, len(scannerList.Items))
-	for i, reg := range scannerList.Items {
-		apiScanners[i] = &reg
+	for i := range scannerList.Items {
+		apiScanners[i] = &scannerList.Items[i]
 	}
 	return apiScanners
 }
@@ -216,4 +220,15 @@ func (aos *kubeApiObjectStore) GetGlobalRegistryOptions() globalregistry.Registr
 
 func (aos *kubeApiObjectStore) GetLogger() logr.Logger {
 	return logger
+}
+
+func (aos *kubeApiObjectStore) UpdateRegistryStatus(ctx context.Context, reg *api.Registry) error {
+	namespace, _, err := kubeConfig.Namespace()
+	if err != nil {
+		return err
+	}
+	_, err = aos.regmanClient.RegistrymanV1alpha1().Registries(namespace).UpdateStatus(ctx, reg, v1.UpdateOptions{
+		FieldManager: fieldManager,
+	})
+	return err
 }

@@ -18,6 +18,7 @@ package harbor
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -75,7 +76,7 @@ type projectCreateReqBody struct {
 	Public       bool         `json:"public"`
 }
 
-func (r *registry) GetProjectByName(name string) (globalregistry.Project, error) {
+func (r *registry) GetProjectByName(ctx context.Context, name string) (globalregistry.Project, error) {
 	if name == "" {
 		return &project{
 			id:       -1,
@@ -83,7 +84,7 @@ func (r *registry) GetProjectByName(name string) (globalregistry.Project, error)
 			Name:     "",
 		}, nil
 	}
-	projects, err := r.ListProjects()
+	projects, err := r.ListProjects(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -95,7 +96,7 @@ func (r *registry) GetProjectByName(name string) (globalregistry.Project, error)
 	return nil, nil
 }
 
-func (r *registry) ListProjects() ([]globalregistry.Project, error) {
+func (r *registry) ListProjects(ctx context.Context) ([]globalregistry.Project, error) {
 	r.logger.V(1).Info("listing projects",
 		"registry", r.GetName(),
 	)
@@ -105,6 +106,7 @@ func (r *registry) ListProjects() ([]globalregistry.Project, error) {
 	if err != nil {
 		return nil, err
 	}
+	req = req.WithContext(ctx)
 
 	req.SetBasicAuth(r.GetUsername(), r.GetPassword())
 
@@ -138,7 +140,7 @@ func (r *registry) ListProjects() ([]globalregistry.Project, error) {
 	return pStatus, err
 }
 
-func (r *registry) CreateProject(name string) (globalregistry.Project, error) {
+func (r *registry) CreateProject(ctx context.Context, name string) (globalregistry.Project, error) {
 	proj := &project{
 		registry: r,
 		Name:     name,
@@ -157,6 +159,7 @@ func (r *registry) CreateProject(name string) (globalregistry.Project, error) {
 	if err != nil {
 		return nil, err
 	}
+	req = req.WithContext(ctx)
 
 	req.Header["Content-Type"] = []string{"application/json"}
 	// p.registry.AddBasicAuth(req)
@@ -178,7 +181,7 @@ func (r *registry) CreateProject(name string) (globalregistry.Project, error) {
 	proj.id = projectID
 
 	// Removing default implicit admin user
-	members, err := r.getMembers(proj.id)
+	members, err := r.getMembers(ctx, proj.id)
 	if err != nil {
 		r.logger.V(-1).Info("could not get project members", "error", err)
 		return proj, nil
@@ -231,13 +234,14 @@ type projectRepositoryRespBody struct {
 	Name string `json:"name"`
 }
 
-func (r *registry) listProjectRepositories(proj *project) ([]string, error) {
+func (r *registry) listProjectRepositories(ctx context.Context, proj *project) ([]string, error) {
 	url := *r.parsedUrl
 	url.Path = fmt.Sprintf("%s/%s/repositories", path, proj.Name)
 	req, err := http.NewRequest(http.MethodGet, url.String(), nil)
 	if err != nil {
 		return nil, err
 	}
+	req = req.WithContext(ctx)
 
 	req.SetBasicAuth(r.GetUsername(), r.GetPassword())
 
