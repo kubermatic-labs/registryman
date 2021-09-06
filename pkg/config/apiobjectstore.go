@@ -23,6 +23,7 @@ import (
 	_ "github.com/kubermatic-labs/registryman/pkg/artifactory"
 	"github.com/kubermatic-labs/registryman/pkg/globalregistry"
 	_ "github.com/kubermatic-labs/registryman/pkg/harbor"
+	_ "github.com/kubermatic-labs/registryman/pkg/jfrog"
 
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"

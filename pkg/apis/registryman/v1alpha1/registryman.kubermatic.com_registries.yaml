@@ -53,6 +53,7 @@ spec:
                 - harbor
                 - acr
                 - artifactory
+                - jfrog
                 type: string
               role:
                 default: Local

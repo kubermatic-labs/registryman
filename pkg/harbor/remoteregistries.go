@@ -58,6 +58,8 @@ func remoteRegistryStatusFromRegistry(reg globalregistry.Registry) *remoteRegist
 		regType = "azure-acr"
 	case "artifactory":
 		regType = "artifactory"
+	case "jfrog":
+		regType = "jfrog"
 	default:
 		panic(fmt.Sprintf("provider %s not implemented", reg.GetProvider()))
 	}
