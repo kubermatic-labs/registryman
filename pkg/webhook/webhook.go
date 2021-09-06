@@ -18,6 +18,7 @@ package webhook
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"net/http"
 
@@ -67,7 +68,7 @@ type mockApiObjestStore struct {
 	removedScanner  *api.Scanner
 }
 
-func (maos *mockApiObjestStore) GetRegistries() []*api.Registry {
+func (maos *mockApiObjestStore) GetRegistries(ctx context.Context) []*api.Registry {
 	var result []*api.Registry
 	if maos.addedRegistry != nil {
 		result = []*api.Registry{maos.addedRegistry}
@@ -80,8 +81,8 @@ func (maos *mockApiObjestStore) GetRegistries() []*api.Registry {
 		removedRegistryName = maos.removedRegistry.GetName()
 		removedRegistryNamespace = maos.removedRegistry.GetNamespace()
 	}
-	projects := maos.ApiObjectStore.GetRegistries()
-	for i, registry := range maos.ApiObjectStore.GetRegistries() {
+	projects := maos.ApiObjectStore.GetRegistries(ctx)
+	for i, registry := range maos.ApiObjectStore.GetRegistries(ctx) {
 		if registry.GetName() != removedRegistryName ||
 			registry.GetNamespace() != removedRegistryNamespace {
 			result = append(result, projects[i])
@@ -90,7 +91,7 @@ func (maos *mockApiObjestStore) GetRegistries() []*api.Registry {
 	return result
 }
 
-func (maos *mockApiObjestStore) GetProjects() []*api.Project {
+func (maos *mockApiObjestStore) GetProjects(ctx context.Context) []*api.Project {
 	var result []*api.Project
 	if maos.addedProject != nil {
 		result = []*api.Project{maos.addedProject}
@@ -103,8 +104,8 @@ func (maos *mockApiObjestStore) GetProjects() []*api.Project {
 		removedProjectName = maos.removedProject.GetName()
 		removedProjectNamespace = maos.removedProject.GetNamespace()
 	}
-	projects := maos.ApiObjectStore.GetProjects()
-	for i, project := range maos.ApiObjectStore.GetProjects() {
+	projects := maos.ApiObjectStore.GetProjects(ctx)
+	for i, project := range maos.ApiObjectStore.GetProjects(ctx) {
 		if project.GetName() != removedProjectName ||
 			project.GetNamespace() != removedProjectNamespace {
 			result = append(result, projects[i])
@@ -113,7 +114,7 @@ func (maos *mockApiObjestStore) GetProjects() []*api.Project {
 	return result
 }
 
-func (maos *mockApiObjestStore) GetScanners() []*api.Scanner {
+func (maos *mockApiObjestStore) GetScanners(ctx context.Context) []*api.Scanner {
 	var result []*api.Scanner
 	if maos.addedScanner != nil {
 		result = []*api.Scanner{maos.addedScanner}
@@ -126,8 +127,8 @@ func (maos *mockApiObjestStore) GetScanners() []*api.Scanner {
 		removedScannerName = maos.removedScanner.GetName()
 		removedScannerNamespace = maos.removedScanner.GetNamespace()
 	}
-	projects := maos.ApiObjectStore.GetScanners()
-	for i, scanner := range maos.ApiObjectStore.GetScanners() {
+	projects := maos.ApiObjectStore.GetScanners(ctx)
+	for i, scanner := range maos.ApiObjectStore.GetScanners(ctx) {
 		if scanner.GetName() != removedScannerName ||
 			scanner.GetNamespace() != removedScannerNamespace {
 			result = append(result, projects[i])

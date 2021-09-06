@@ -19,6 +19,7 @@ package cmd
 import (
 	"context"
 	"errors"
+	"time"
 
 	"github.com/kubermatic-labs/registryman/pkg/config"
 	"github.com/kubermatic-labs/registryman/pkg/globalregistry"
@@ -59,12 +60,14 @@ state of the system.`,
 				"host", clientConfig.Host)
 		}
 
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
+		sideeffectCtx := context.WithValue(ctx, reconciler.SideEffectManifestManipulator, aos)
 		expectedProvider := config.NewExpectedProvider(aos)
-		expectedRegistries := expectedProvider.GetRegistries()
-		sideeffectCtx := context.WithValue(context.Background(), reconciler.SideEffectManifestManipulator, aos)
+		expectedRegistries := expectedProvider.GetRegistries(ctx)
+		defer cancel()
 		for _, expectedRegistry := range expectedRegistries {
 			logger.Info("inspecting registry", "registry_name", expectedRegistry.GetName())
-			regStatusExpected, err := reconciler.GetRegistryStatus(expectedRegistry)
+			regStatusExpected, err := reconciler.GetRegistryStatus(ctx, expectedRegistry)
 			if err != nil {
 				return err
 			}
@@ -73,7 +76,7 @@ state of the system.`,
 			if err != nil {
 				return err
 			}
-			regStatusActual, err := reconciler.GetRegistryStatus(actualRegistry)
+			regStatusActual, err := reconciler.GetRegistryStatus(ctx, actualRegistry)
 			if err != nil {
 				return err
 			}
@@ -83,7 +86,7 @@ state of the system.`,
 			for _, action := range actions {
 				if !dryRun {
 					logger.Info(action.String())
-					sideEffect, err := action.Perform(actualRegistry)
+					sideEffect, err := action.Perform(ctx, actualRegistry)
 					if err != nil {
 						if errors.Is(err, globalregistry.ErrRecoverableError) {
 							logger.V(-1).Info(err.Error())

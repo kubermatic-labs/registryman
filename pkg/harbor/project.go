@@ -18,6 +18,7 @@ package harbor
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -42,14 +43,15 @@ var _ globalregistry.ScannerManipulatorProject = &project{}
 var _ globalregistry.ProjectWithReplication = &project{}
 var _ globalregistry.ProjectWithStorage = &project{}
 var _ globalregistry.DestructibleProject = &project{}
+var _ globalregistry.ReplicationRuleManipulatorProject = &project{}
 
 func (p *project) GetName() string {
 	return p.Name
 }
 
 // Delete removes the project from registry
-func (p *project) Delete() error {
-	repos, err := p.GetRepositories()
+func (p *project) Delete(ctx context.Context) error {
+	repos, err := p.GetRepositories(ctx)
 	if err != nil {
 		return err
 	}
@@ -111,7 +113,7 @@ func robotRoleToAccess(role string) []access {
 	}
 }
 
-func (p *project) AssignMember(member globalregistry.ProjectMember) (*globalregistry.ProjectMemberCredentials, error) {
+func (p *project) AssignMember(ctx context.Context, member globalregistry.ProjectMember) (*globalregistry.ProjectMemberCredentials, error) {
 	memberType := member.GetType()
 	switch memberType {
 	default:
@@ -127,7 +129,7 @@ func (p *project) AssignMember(member globalregistry.ProjectMember) (*globalregi
 				Username: member.GetName(),
 			},
 		}
-		_, err = p.registry.createProjectMember(p.id, pum)
+		_, err = p.registry.createProjectMember(ctx, p.id, pum)
 		return nil, err
 	case groupType:
 		groupMember, ok := member.(globalregistry.LdapMember)
@@ -145,8 +147,7 @@ func (p *project) AssignMember(member globalregistry.ProjectMember) (*globalregi
 			GroupType:   1,
 		}
 
-		_, err = p.registry.updateIDOfUserGroup(userGroup)
-		// err = p.api.reg.getOrCreateUsergroup(userGroup)
+		_, err = p.registry.updateIDOfUserGroup(ctx, userGroup)
 		if err != nil {
 			return nil, err
 		}
@@ -155,7 +156,7 @@ func (p *project) AssignMember(member globalregistry.ProjectMember) (*globalregi
 			RoleId:      role,
 			MemberGroup: userGroup,
 		}
-		_, err = p.registry.createProjectMember(p.id, pum)
+		_, err = p.registry.createProjectMember(ctx, p.id, pum)
 		return nil, err
 	case robotType:
 		prm := &robot{
@@ -191,12 +192,12 @@ func (p *project) AssignMember(member globalregistry.ProjectMember) (*globalregi
 
 }
 
-func (p *project) GetMembers() ([]globalregistry.ProjectMember, error) {
-	userGroupMembers, err := p.registry.getMembers(p.id)
+func (p *project) GetMembers(ctx context.Context) ([]globalregistry.ProjectMember, error) {
+	userGroupMembers, err := p.registry.getMembers(ctx, p.id)
 	if err != nil {
 		return nil, err
 	}
-	robotMembers, err := p.registry.getRobotMembers(p.id)
+	robotMembers, err := p.registry.getRobotMembers(ctx, p.id)
 	if err != nil {
 		return nil, err
 	}
@@ -218,7 +219,7 @@ func (p *project) GetMembers() ([]globalregistry.ProjectMember, error) {
 	return members, nil
 }
 
-func (p *project) UnassignMember(member globalregistry.ProjectMember) error {
+func (p *project) UnassignMember(ctx context.Context, member globalregistry.ProjectMember) error {
 	memberType := member.GetType()
 	var err error
 	switch memberType {
@@ -227,7 +228,7 @@ func (p *project) UnassignMember(member globalregistry.ProjectMember) error {
 	case userType, groupType:
 		var m *projectMemberEntity
 		var members []*projectMemberEntity
-		members, err = p.registry.getMembers(p.id)
+		members, err = p.registry.getMembers(ctx, p.id)
 		if err != nil {
 			return err
 		}
@@ -244,7 +245,7 @@ func (p *project) UnassignMember(member globalregistry.ProjectMember) error {
 	case robotType:
 		var m *robot
 		var members []*robot
-		members, err = p.registry.getRobotMembers(p.id)
+		members, err = p.registry.getRobotMembers(ctx, p.id)
 		if err != nil {
 			return err
 		}
@@ -263,23 +264,23 @@ func (p *project) UnassignMember(member globalregistry.ProjectMember) error {
 	return err
 }
 
-func (p *project) AssignReplicationRule(remoteReg globalregistry.Registry, trigger, direction string) (globalregistry.ReplicationRule, error) {
-	return p.registry.createReplicationRule(p, remoteReg, trigger, direction)
+func (p *project) AssignReplicationRule(ctx context.Context, remoteReg globalregistry.Registry, trigger, direction string) (globalregistry.ReplicationRule, error) {
+	return p.registry.createReplicationRule(ctx, p, remoteReg, trigger, direction)
 }
 
-func (p *project) GetRepositories() ([]string, error) {
-	return p.registry.listProjectRepositories(p)
+func (p *project) GetRepositories(ctx context.Context) ([]string, error) {
+	return p.registry.listProjectRepositories(ctx, p)
 }
 
 func (p *project) deleteRepository(r string) error {
 	return p.registry.deleteProjectRepository(p, r)
 }
 
-func (p *project) GetReplicationRules(trigger, direction string) ([]globalregistry.ReplicationRule, error) {
+func (p *project) GetReplicationRules(ctx context.Context, trigger, direction string) ([]globalregistry.ReplicationRule, error) {
 	p.registry.logger.V(1).Info("Project.GetReplicationRules invoked",
 		"projectName", p.Name,
 	)
-	replRules, err := p.registry.listReplicationRules()
+	replRules, err := p.registry.listReplicationRules(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -306,21 +307,21 @@ func (p *project) GetReplicationRules(trigger, direction string) ([]globalregist
 	return results, nil
 }
 
-func (p *project) GetScanner() (globalregistry.Scanner, error) {
-	return p.registry.getScannerOfProject(p.id)
+func (p *project) GetScanner(ctx context.Context) (globalregistry.Scanner, error) {
+	return p.registry.getScannerOfProject(ctx, p.id)
 }
 
-func (p *project) AssignScanner(targetScanner globalregistry.Scanner) error {
-	scannerID, err := p.registry.getScannerIDByNameOrCreate(targetScanner)
+func (p *project) AssignScanner(ctx context.Context, targetScanner globalregistry.Scanner) error {
+	scannerID, err := p.registry.getScannerIDByNameOrCreate(ctx, targetScanner)
 	if err != nil {
 		return err
 	}
-	return p.registry.setScannerForProject(p.id, scannerID)
+	return p.registry.setScannerForProject(ctx, p.id, scannerID)
 }
 
-func (p *project) UnassignScanner(targetScanner globalregistry.Scanner) error {
+func (p *project) UnassignScanner(ctx context.Context, targetScanner globalregistry.Scanner) error {
 	var defaultScanner globalregistry.Scanner
-	currentScanners, err := p.registry.listScanners()
+	currentScanners, err := p.registry.listScanners(ctx)
 
 	if err != nil {
 		return fmt.Errorf("couldn't list scanners for project, %w", err)
@@ -340,7 +341,7 @@ func (p *project) UnassignScanner(targetScanner globalregistry.Scanner) error {
 		return err
 	}
 
-	return p.AssignScanner(defaultScanner)
+	return p.AssignScanner(ctx, defaultScanner)
 }
 
 type projectStatusQuotaUsed struct {
@@ -355,7 +356,7 @@ type projectStatusResponse struct {
 }
 
 // GetUsedStorage implements the globalregistry.Project interface.
-func (p *project) GetUsedStorage() (int, error) {
+func (p *project) GetUsedStorage(ctx context.Context) (int, error) {
 	p.registry.logger.V(1).Info("getting storage usage of a project",
 		"projectName", p.Name,
 	)
@@ -365,6 +366,7 @@ func (p *project) GetUsedStorage() (int, error) {
 	if err != nil {
 		return -1, err
 	}
+	req = req.WithContext(ctx)
 
 	req.SetBasicAuth(p.registry.GetUsername(), p.registry.GetPassword())
 

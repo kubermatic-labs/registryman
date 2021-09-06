@@ -19,6 +19,7 @@
 package registry
 
 import (
+	"context"
 	"strconv"
 
 	"github.com/go-logr/logr"
@@ -29,9 +30,9 @@ import (
 // ApiObjectProvider interface describes the methods that are needed to get the
 // different API resources.
 type ApiObjectProvider interface {
-	GetProjects() []*api.Project
-	GetRegistries() []*api.Registry
-	GetScanners() []*api.Scanner
+	GetProjects(context.Context) []*api.Project
+	GetRegistries(context.Context) []*api.Registry
+	GetScanners(context.Context) []*api.Scanner
 	GetGlobalRegistryOptions() globalregistry.RegistryOptions
 	GetLogger() logr.Logger
 }

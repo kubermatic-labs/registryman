@@ -17,6 +17,8 @@
 package config
 
 import (
+	"context"
+
 	api "github.com/kubermatic-labs/registryman/pkg/apis/registryman/v1alpha1"
 )
 
@@ -24,9 +26,10 @@ import (
 // i.e. all resources parsed. If there is a consistency issue, an error is
 // returned.
 func ValidateConsistency(aos ApiObjectStore) error {
-	registries := aos.GetRegistries()
-	projects := aos.GetProjects()
-	scanners := aos.GetScanners()
+	ctx := context.Background()
+	registries := aos.GetRegistries(ctx)
+	projects := aos.GetProjects(ctx)
+	scanners := aos.GetScanners(ctx)
 
 	// Forcing maximum one Global registry
 	err := checkGlobalRegistryCount(registries)

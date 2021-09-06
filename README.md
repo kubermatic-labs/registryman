@@ -5,13 +5,16 @@
 
 Registryman (Registry Manager) allows you to declare your Docker registry
 projects, project members and project replication rules in a declarative way (by
-virtue of YAML files), which will then be applied to your Docker registries.
-This enables consistent, always up-to-date team members and access rules.
+virtue of YAML files or Kubernetes resources), which will then be applied to
+your Docker registries. This enables consistent, always up-to-date team members
+and access rules.
 
 ## Features
 
 * Managing replication rules and project membership on a project level.
 * Dry-runs of any action taken, for greater peace of mind.
+* Configuration via config files or Kubernetes resources
+* Dual mode of operation: CLI or Kubernetes operator
 
 ## Installation
 
@@ -67,7 +70,7 @@ For more details, feel free to review the content of the [Documentaion folder](d
 
 ## Usage
 
-### Applying the configuration
+### Applying the configuration in CLI mode
 
 Since Registryman works in a declarative way, first you describe the expected
 state as configuration (.yaml) files and then you apply them.
@@ -146,9 +149,9 @@ spec:
   password: admin
 ```
 
-### Checking the actual registry state
+### Checking the actual registry status in CLI mode
 
-Registryman can generate the state of the managed registries using the `state`
+Registryman can generate the status of the managed registries using the `status`
 command. Similarly to apply, you have to specify the directory where the YAML
 files describing the registries reside.
 
@@ -156,7 +159,14 @@ files describing the registries reside.
 $ registryman status <path-to-configuration-dir>
 ```
 
-### Validating the config files
+If you omit the path to the configuration directory, the resources definitions
+will be fetched from the configured Kubernetes API server.
+
+```bash
+$ registryman status --context my-kubernetes
+```
+
+### Validating the config files in CLI mode
 
 Registryman can validate the configuration files using the `validate` command.
 
@@ -178,6 +188,15 @@ $ registryman swagger
 ```
 
 The Swagger schema is generated on the standard out in JSON format.
+
+### Starting in operator mode
+
+Registryman can be started in operator mode with the help of the `operator`
+command.
+
+```bash
+$ registryman operator
+```
 
 # Development
 

@@ -18,6 +18,7 @@ package harbor
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -31,7 +32,7 @@ import (
 
 const replicationPolicyPath = "/api/v2.0/replication/policies"
 
-func (r *registry) listReplicationRules() ([]globalregistry.ReplicationRule, error) {
+func (r *registry) listReplicationRules(ctx context.Context) ([]globalregistry.ReplicationRule, error) {
 	url := *r.parsedUrl
 	url.Path = replicationPolicyPath
 	r.logger.V(1).Info("creating new request", "url", url.String())
@@ -39,6 +40,7 @@ func (r *registry) listReplicationRules() ([]globalregistry.ReplicationRule, err
 	if err != nil {
 		return nil, err
 	}
+	req = req.WithContext(ctx)
 	r.logger.V(1).Info("sending HTTP request", "req-uri", req.RequestURI)
 
 	req.SetBasicAuth(r.GetUsername(), r.GetPassword())
@@ -90,7 +92,7 @@ func (r *registry) listReplicationRules() ([]globalregistry.ReplicationRule, err
 	return replicationRules, err
 }
 
-func (r *registry) createReplicationRule(project globalregistry.Project, remoteReg globalregistry.Registry, trigger, direction string) (globalregistry.ReplicationRule, error) {
+func (r *registry) createReplicationRule(ctx context.Context, project globalregistry.Project, remoteReg globalregistry.Registry, trigger, direction string) (globalregistry.ReplicationRule, error) {
 	r.logger.V(1).Info("ReplicationAPI.Create invoked",
 		"project_name", project.GetName(),
 		"remoteReg_name", remoteReg.GetName(),
@@ -133,7 +135,7 @@ func (r *registry) createReplicationRule(project globalregistry.Project, remoteR
 		Deletion:      true,
 		Override:      true,
 	}
-	remoteRegistry, err := r.getRemoteRegistryByNameOrCreate(remoteReg)
+	remoteRegistry, err := r.getRemoteRegistryByNameOrCreate(ctx, remoteReg)
 	if err != nil {
 		return nil, err
 	}
@@ -185,6 +187,7 @@ func (r *registry) createReplicationRule(project globalregistry.Project, remoteR
 	if err != nil {
 		return nil, err
 	}
+	req = req.WithContext(ctx)
 
 	req.Header["Content-Type"] = []string{"application/json"}
 	req.SetBasicAuth(r.GetUsername(), r.GetPassword())
@@ -214,7 +217,7 @@ func (r *registry) createReplicationRule(project globalregistry.Project, remoteR
 	}, nil
 }
 
-func (r *registry) deleteReplicationRule(id int) error {
+func (r *registry) deleteReplicationRule(ctx context.Context, id int) error {
 	url := *r.parsedUrl
 	url.Path = fmt.Sprintf("%s/%d", replicationPolicyPath, id)
 	r.logger.V(1).Info("creating new request", "url", url.String())
@@ -222,6 +225,7 @@ func (r *registry) deleteReplicationRule(id int) error {
 	if err != nil {
 		return err
 	}
+	req = req.WithContext(ctx)
 	r.logger.V(1).Info("sending HTTP request", "req-uri", req.URL)
 
 	req.Header["Content-Type"] = []string{"application/json"}
