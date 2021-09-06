@@ -18,6 +18,7 @@ package harbor
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -113,7 +114,7 @@ type projectMemberRequestBody struct {
 	MemberUser  *userEntity `json:"member_user"`
 }
 
-func (r *registry) getMembers(projectID int) ([]*projectMemberEntity, error) {
+func (r *registry) getMembers(ctx context.Context, projectID int) ([]*projectMemberEntity, error) {
 	url := *r.parsedUrl
 	url.Path = fmt.Sprintf("%s/%d/members", path, projectID)
 	r.logger.V(1).Info("creating new request", "url", url.String())
@@ -121,6 +122,7 @@ func (r *registry) getMembers(projectID int) ([]*projectMemberEntity, error) {
 	if err != nil {
 		return nil, err
 	}
+	req = req.WithContext(ctx)
 
 	req.SetBasicAuth(r.GetUsername(), r.GetPassword())
 
@@ -155,7 +157,7 @@ func (r *registry) getMembers(projectID int) ([]*projectMemberEntity, error) {
 	return projectMembersResult, err
 }
 
-func (r *registry) createProjectMember(projectID int, projectMember *projectMemberRequestBody) (int, error) {
+func (r *registry) createProjectMember(ctx context.Context, projectID int, projectMember *projectMemberRequestBody) (int, error) {
 	url := *r.parsedUrl
 	url.Path = fmt.Sprintf("%s/%d/members", path, projectID)
 	reqBodyBuf := bytes.NewBuffer(nil)
@@ -167,6 +169,7 @@ func (r *registry) createProjectMember(projectID int, projectMember *projectMemb
 	if err != nil {
 		return 0, err
 	}
+	req = req.WithContext(ctx)
 
 	req.Header["Content-Type"] = []string{"application/json"}
 	req.SetBasicAuth(r.GetUsername(), r.GetPassword())

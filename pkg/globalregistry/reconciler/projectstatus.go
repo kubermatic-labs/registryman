@@ -17,6 +17,7 @@
 package reconciler
 
 import (
+	"context"
 	"fmt"
 
 	api "github.com/kubermatic-labs/registryman/pkg/apis/registryman/v1alpha1"
@@ -34,13 +35,13 @@ func (pa *projectAddAction) String() string {
 	return fmt.Sprintf("adding project %s", pa.Name)
 }
 
-func (pa *projectAddAction) Perform(reg globalregistry.Registry) (SideEffect, error) {
+func (pa *projectAddAction) Perform(ctx context.Context, reg globalregistry.Registry) (SideEffect, error) {
 	papi, ok := reg.(globalregistry.ProjectCreator)
 	if !ok {
 		// registry provider does not implement project creation
 		return nilEffect, nil
 	}
-	_, err := papi.CreateProject(pa.Name)
+	_, err := papi.CreateProject(ctx, pa.Name)
 	return nilEffect, err
 }
 
@@ -54,8 +55,8 @@ func (pa *projectRemoveAction) String() string {
 	return fmt.Sprintf("removing project %s", pa.Name)
 }
 
-func (pa *projectRemoveAction) Perform(reg globalregistry.Registry) (SideEffect, error) {
-	project, err := reg.(globalregistry.RegistryWithProjects).GetProjectByName(pa.Name)
+func (pa *projectRemoveAction) Perform(ctx context.Context, reg globalregistry.Registry) (SideEffect, error) {
+	project, err := reg.(globalregistry.RegistryWithProjects).GetProjectByName(ctx, pa.Name)
 	if err != nil {
 		return nilEffect, err
 	}
@@ -63,7 +64,7 @@ func (pa *projectRemoveAction) Perform(reg globalregistry.Registry) (SideEffect,
 	if !ok {
 		return nilEffect, nil
 	}
-	return nilEffect, destructibleProject.Delete()
+	return nilEffect, destructibleProject.Delete(ctx)
 }
 
 // CompareProjectStatuses compares the actual and expected status of the projects

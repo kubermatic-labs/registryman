@@ -17,6 +17,7 @@
 package reconciler
 
 import (
+	"context"
 	"fmt"
 
 	api "github.com/kubermatic-labs/registryman/pkg/apis/registryman/v1alpha1"
@@ -49,8 +50,8 @@ func (a *scannerAssignAction) String() string {
 		a.Name, a.projectName)
 }
 
-func (a *scannerAssignAction) Perform(reg globalregistry.Registry) (SideEffect, error) {
-	project, err := reg.(globalregistry.RegistryWithProjects).GetProjectByName(a.projectName)
+func (a *scannerAssignAction) Perform(ctx context.Context, reg globalregistry.Registry) (SideEffect, error) {
+	project, err := reg.(globalregistry.RegistryWithProjects).GetProjectByName(ctx, a.projectName)
 	if err != nil {
 		return nilEffect, err
 	}
@@ -58,7 +59,7 @@ func (a *scannerAssignAction) Perform(reg globalregistry.Registry) (SideEffect, 
 	if !ok {
 		return nilEffect, nil
 	}
-	err = scannerManipulatorProject.AssignScanner((*scannerStatus)(a.ScannerStatus))
+	err = scannerManipulatorProject.AssignScanner(ctx, (*scannerStatus)(a.ScannerStatus))
 	return nilEffect, err
 }
 
@@ -72,8 +73,8 @@ func (a *scannerUnassignAction) String() string {
 		a.Name, a.projectName)
 }
 
-func (a *scannerUnassignAction) Perform(reg globalregistry.Registry) (SideEffect, error) {
-	project, err := reg.(globalregistry.RegistryWithProjects).GetProjectByName(a.projectName)
+func (a *scannerUnassignAction) Perform(ctx context.Context, reg globalregistry.Registry) (SideEffect, error) {
+	project, err := reg.(globalregistry.RegistryWithProjects).GetProjectByName(ctx, a.projectName)
 	if err != nil {
 		return nilEffect, err
 	}
@@ -81,7 +82,7 @@ func (a *scannerUnassignAction) Perform(reg globalregistry.Registry) (SideEffect
 	if !ok {
 		return nilEffect, nil
 	}
-	err = scannerManipulatorProject.UnassignScanner((*scannerStatus)(a.ScannerStatus))
+	err = scannerManipulatorProject.UnassignScanner(ctx, (*scannerStatus)(a.ScannerStatus))
 	return nilEffect, err
 }
 

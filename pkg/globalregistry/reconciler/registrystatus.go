@@ -17,6 +17,8 @@
 package reconciler
 
 import (
+	"context"
+
 	api "github.com/kubermatic-labs/registryman/pkg/apis/registryman/v1alpha1"
 	"github.com/kubermatic-labs/registryman/pkg/config"
 	"github.com/kubermatic-labs/registryman/pkg/globalregistry"
@@ -29,14 +31,14 @@ func Compare(store *config.ExpectedProvider, actual, expected *api.RegistryStatu
 	return CompareProjectStatuses(store, actual.Projects, expected.Projects, actual.Capabilities)
 }
 
-func getRegistryCapabilities(reg globalregistry.Registry) (api.RegistryCapabilities, error) {
+func getRegistryCapabilities(ctx context.Context, reg globalregistry.Registry) (api.RegistryCapabilities, error) {
 	replCap := globalregistry.GetReplicationCapability(reg.GetProvider())
 	regWithProjects := reg.(globalregistry.RegistryWithProjects)
 	registryCapabilities := api.RegistryCapabilities{
 		CanPullReplicate: replCap.CanPull(),
 		CanPushReplicate: replCap.CanPush(),
 	}
-	dummyProject, err := regWithProjects.GetProjectByName("")
+	dummyProject, err := regWithProjects.GetProjectByName(ctx, "")
 	if err != nil {
 		return registryCapabilities, err
 	}
@@ -75,13 +77,13 @@ func getRegistryCapabilities(reg globalregistry.Registry) (api.RegistryCapabilit
 // registry represents a configuration of registry, then the expected registry
 // status is returned. If the registry represents an actual (real) registry, the
 // actual status is returned.
-func GetRegistryStatus(reg globalregistry.Registry) (*api.RegistryStatus, error) {
+func GetRegistryStatus(ctx context.Context, reg globalregistry.Registry) (*api.RegistryStatus, error) {
 	regWithProjects := reg.(globalregistry.RegistryWithProjects)
-	registryCapabilities, err := getRegistryCapabilities(reg)
+	registryCapabilities, err := getRegistryCapabilities(ctx, reg)
 	if err != nil {
 		return nil, err
 	}
-	projects, err := regWithProjects.ListProjects()
+	projects, err := regWithProjects.ListProjects(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -92,7 +94,7 @@ func GetRegistryStatus(reg globalregistry.Registry) (*api.RegistryStatus, error)
 		projectWithMembers, ok := project.(globalregistry.ProjectWithMembers)
 		if ok {
 			// registry supports projects with members
-			members, err := projectWithMembers.GetMembers()
+			members, err := projectWithMembers.GetMembers(ctx)
 			if err != nil {
 				return nil, err
 			}
@@ -106,10 +108,12 @@ func GetRegistryStatus(reg globalregistry.Registry) (*api.RegistryStatus, error)
 					projectStatuses[i].Members[n].DN = m.GetDN()
 				}
 			}
+		} else {
+			projectStatuses[i].Members = make([]api.MemberStatus, 0)
 		}
 		projectWithReplication, ok := project.(globalregistry.ProjectWithReplication)
 		if ok {
-			replicationRules, err := projectWithReplication.GetReplicationRules("", "")
+			replicationRules, err := projectWithReplication.GetReplicationRules(ctx, "", "")
 			if err != nil {
 				return nil, err
 			}
@@ -119,11 +123,13 @@ func GetRegistryStatus(reg globalregistry.Registry) (*api.RegistryStatus, error)
 				projectStatuses[i].ReplicationRules[n].Trigger = string(rule.Trigger())
 				projectStatuses[i].ReplicationRules[n].Direction = rule.Direction()
 			}
+		} else {
+			projectStatuses[i].ReplicationRules = make([]api.ReplicationRuleStatus, 0)
 		}
 
 		projectWithStorage, ok := project.(globalregistry.ProjectWithStorage)
 		if ok {
-			storageUsed, err := projectWithStorage.GetUsedStorage()
+			storageUsed, err := projectWithStorage.GetUsedStorage(ctx)
 			if err != nil {
 				return nil, err
 			}
@@ -132,7 +138,7 @@ func GetRegistryStatus(reg globalregistry.Registry) (*api.RegistryStatus, error)
 
 		projectWithScanner, ok := project.(globalregistry.ProjectWithScanner)
 		if ok {
-			projectScanner, err := projectWithScanner.GetScanner()
+			projectScanner, err := projectWithScanner.GetScanner(ctx)
 			if err != nil {
 				return nil, err
 			}

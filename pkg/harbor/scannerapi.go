@@ -18,6 +18,7 @@ package harbor
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -62,7 +63,7 @@ type projectScanner struct {
 
 var _ globalregistry.Scanner = &scannerRegistrationRequest{}
 
-func (r *registry) createScanner(config globalregistry.Scanner) (string, error) {
+func (r *registry) createScanner(ctx context.Context, config globalregistry.Scanner) (string, error) {
 	url := *r.parsedUrl
 	url.Path = scannersPath
 
@@ -78,6 +79,7 @@ func (r *registry) createScanner(config globalregistry.Scanner) (string, error) 
 	if err != nil {
 		return "", err
 	}
+	req = req.WithContext(ctx)
 
 	req.Header["Content-Type"] = []string{"application/json"}
 	req.SetBasicAuth(r.GetUsername(), r.GetPassword())
@@ -103,9 +105,9 @@ func (r *registry) createScanner(config globalregistry.Scanner) (string, error) 
 	return scannerID, nil
 }
 
-func (r *registry) getScannerIDByNameOrCreate(targetScanner globalregistry.Scanner) (string, error) {
+func (r *registry) getScannerIDByNameOrCreate(ctx context.Context, targetScanner globalregistry.Scanner) (string, error) {
 	retrievedID := ""
-	currentScanners, err := r.listScanners()
+	currentScanners, err := r.listScanners(ctx)
 	if err != nil {
 		return "", err
 	}
@@ -128,7 +130,7 @@ func (r *registry) getScannerIDByNameOrCreate(targetScanner globalregistry.Scann
 				strings.EqualFold(scannerIterator.GetURL(), targetScanner.GetURL())) {
 
 			r.logger.V(1).Info("updating existing scanner", scannerIterator.GetName(), targetScanner.GetName())
-			err = r.updateScanner(scannerIterator.(*scanner).id, targetScanner)
+			err = r.updateScanner(ctx, scannerIterator.(*scanner).id, targetScanner)
 			return scannerIterator.(*scanner).id, err
 		}
 	}
@@ -141,23 +143,23 @@ func (r *registry) getScannerIDByNameOrCreate(targetScanner globalregistry.Scann
 		Disabled: false,
 	}
 
-	return r.createScanner(newScannerConfig)
+	return r.createScanner(ctx, newScannerConfig)
 }
 
-func (r *registry) listScanners() ([]globalregistry.Scanner, error) {
+func (r *registry) listScanners(ctx context.Context) ([]globalregistry.Scanner, error) {
 	url := *r.parsedUrl
 	url.Path = scannersPath
 	req, err := http.NewRequest(http.MethodGet, url.String(), nil)
 	if err != nil {
 		return nil, err
 	}
+	req = req.WithContext(ctx)
 
 	req.SetBasicAuth(r.GetUsername(), r.GetPassword())
 	resp, err := r.do(req)
 	if err != nil {
 		return nil, err
 	}
-
 	defer resp.Body.Close()
 
 	scannerResult := []*scannerRegistration{}
@@ -191,7 +193,7 @@ func (r *registry) listScanners() ([]globalregistry.Scanner, error) {
 	return scanners, err
 }
 
-func (r *registry) setScannerForProject(projectID int, scannerID string) error {
+func (r *registry) setScannerForProject(ctx context.Context, projectID int, scannerID string) error {
 	url := *r.parsedUrl
 	url.Path = fmt.Sprintf("%s/%d/scanner", path, projectID)
 
@@ -206,6 +208,7 @@ func (r *registry) setScannerForProject(projectID int, scannerID string) error {
 	if err != nil {
 		return err
 	}
+	req = req.WithContext(ctx)
 
 	req.SetBasicAuth(r.GetUsername(), r.GetPassword())
 	resp, err := r.do(req)
@@ -221,13 +224,14 @@ func (r *registry) setScannerForProject(projectID int, scannerID string) error {
 	return err
 }
 
-func (r *registry) getScannerOfProject(id int) (globalregistry.Scanner, error) {
+func (r *registry) getScannerOfProject(ctx context.Context, id int) (globalregistry.Scanner, error) {
 	url := *r.parsedUrl
 	url.Path = fmt.Sprintf("%s/%d/scanner", path, id)
 	req, err := http.NewRequest(http.MethodGet, url.String(), nil)
 	if err != nil {
 		return nil, err
 	}
+	req = req.WithContext(ctx)
 
 	req.SetBasicAuth(r.GetUsername(), r.GetPassword())
 	resp, err := r.do(req)
@@ -260,7 +264,7 @@ func (r *registry) getScannerOfProject(id int) (globalregistry.Scanner, error) {
 
 }
 
-func (r *registry) updateScanner(id string, targetScanner globalregistry.Scanner) error {
+func (r *registry) updateScanner(ctx context.Context, id string, targetScanner globalregistry.Scanner) error {
 	url := *r.parsedUrl
 	url.Path = fmt.Sprintf("%s/%s", scannersPath, id)
 
@@ -277,6 +281,7 @@ func (r *registry) updateScanner(id string, targetScanner globalregistry.Scanner
 	if err != nil {
 		return err
 	}
+	req = req.WithContext(ctx)
 
 	req.Header["Content-Type"] = []string{"application/json"}
 	req.SetBasicAuth(r.GetUsername(), r.GetPassword())

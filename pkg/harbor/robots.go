@@ -18,6 +18,7 @@ package harbor
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -102,7 +103,7 @@ type robotCreated struct {
 	Name         string    `json:"name,omitempty"`
 }
 
-func (r *registry) getRobotMembers(projectID int) ([]*robot, error) {
+func (r *registry) getRobotMembers(ctx context.Context, projectID int) ([]*robot, error) {
 	url := *r.parsedUrl
 	url.Path = fmt.Sprintf("%s/%d/robots", path, projectID)
 	r.logger.V(1).Info("creating new request", "url", url.String())
@@ -110,6 +111,7 @@ func (r *registry) getRobotMembers(projectID int) ([]*robot, error) {
 	if err != nil {
 		return nil, err
 	}
+	req = req.WithContext(ctx)
 	r.logger.V(1).Info("sending HTTP request", "req-uri", req.RequestURI)
 
 	req.SetBasicAuth(r.GetUsername(), r.GetPassword())

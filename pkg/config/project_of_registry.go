@@ -17,6 +17,7 @@
 package config
 
 import (
+	"context"
 	"fmt"
 	"net/url"
 
@@ -42,13 +43,13 @@ func (p *ProjectOfRegistry) GenerateProjectRepoName() (string, error) {
 	return fmt.Sprintf("%s/%s", url.Host, p.Project.GetName()), nil
 }
 
-func newProject(aos ApiObjectStore, reg *api.Registry, proj *api.Project) (*ProjectOfRegistry, error) {
+func newProject(ctx context.Context, aos ApiObjectStore, reg *api.Registry, proj *api.Project) (*ProjectOfRegistry, error) {
 	realRegistry, err := registry.New(reg, aos).ToReal()
 	if err != nil {
 		return nil, err
 	}
 	realRegistryWithProjects := realRegistry.(globalregistry.RegistryWithProjects)
-	realProject, err := realRegistryWithProjects.GetProjectByName(proj.GetName())
+	realProject, err := realRegistryWithProjects.GetProjectByName(ctx, proj.GetName())
 	if err != nil {
 		return nil, err
 	}
@@ -60,16 +61,16 @@ func newProject(aos ApiObjectStore, reg *api.Registry, proj *api.Project) (*Proj
 }
 
 // GetProjectByName returns a Project struct for a matching project name.
-func GetProjectByName(aos ApiObjectStore, projectName string) (*ProjectOfRegistry, error) {
-	projects := aos.GetProjects()
-	registries := aos.GetRegistries()
+func GetProjectByName(ctx context.Context, aos ApiObjectStore, projectName string) (*ProjectOfRegistry, error) {
+	projects := aos.GetProjects(ctx)
+	registries := aos.GetRegistries(ctx)
 	for _, project := range projects {
 		if project.GetName() == projectName {
 			switch project.Spec.Type {
 			case api.GlobalProjectType:
 				for _, reg := range registries {
 					if reg.Spec.Role == "GlobalHub" {
-						return newProject(aos, reg, project)
+						return newProject(ctx, aos, reg, project)
 					}
 				}
 			case api.LocalProjectType:
@@ -79,7 +80,7 @@ func GetProjectByName(aos ApiObjectStore, projectName string) (*ProjectOfRegistr
 				localRegistryName := project.Spec.LocalRegistries[0]
 				for _, reg := range registries {
 					if reg.Spec.Role == "Local" && reg.GetName() == localRegistryName {
-						return newProject(aos, reg, project)
+						return newProject(ctx, aos, reg, project)
 					}
 				}
 			default:

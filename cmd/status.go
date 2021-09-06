@@ -17,9 +17,11 @@
 package cmd
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"os"
+	"time"
 
 	api "github.com/kubermatic-labs/registryman/pkg/apis/registryman/v1alpha1"
 	"github.com/kubermatic-labs/registryman/pkg/config"
@@ -74,7 +76,9 @@ var statusCmd = &cobra.Command{
 				"host", clientConfig.Host)
 		}
 
-		expectedRegistries := config.NewExpectedProvider(aos).GetRegistries()
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
+		defer cancel()
+		expectedRegistries := config.NewExpectedProvider(aos).GetRegistries(ctx)
 		registryStatuses := map[string]*api.RegistryStatus{}
 		for _, expectedRegistry := range expectedRegistries {
 			if !registryInScope(expectedRegistry.GetName()) {
@@ -84,7 +88,7 @@ var statusCmd = &cobra.Command{
 			if err != nil {
 				return err
 			}
-			registryStatuses[expectedRegistry.GetName()], err = reconciler.GetRegistryStatus(actualRegistry)
+			registryStatuses[expectedRegistry.GetName()], err = reconciler.GetRegistryStatus(ctx, actualRegistry)
 			if err != nil {
 				return err
 			}

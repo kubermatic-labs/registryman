@@ -18,6 +18,7 @@ package harbor
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -110,13 +111,13 @@ func (reg *remoteRegistryStatus) GetOptions() globalregistry.RegistryOptions {
 	panic("not implemented")
 }
 
-func (r *registry) getRemoteRegistryByNameOrCreate(greg globalregistry.Registry) (*remoteRegistryStatus, error) {
-	reg, err := r.getRemoteRegistryByName(greg.GetName())
+func (r *registry) getRemoteRegistryByNameOrCreate(ctx context.Context, greg globalregistry.Registry) (*remoteRegistryStatus, error) {
+	reg, err := r.getRemoteRegistryByName(ctx, greg.GetName())
 	if err != nil {
 		return nil, err
 	}
 	if reg == nil {
-		reg, err = r.createRemoteRegistry(greg)
+		reg, err = r.createRemoteRegistry(ctx, greg)
 		if err != nil {
 			return nil, err
 		}
@@ -124,8 +125,8 @@ func (r *registry) getRemoteRegistryByNameOrCreate(greg globalregistry.Registry)
 	return reg, nil
 }
 
-func (r *registry) getRemoteRegistryByName(name string) (*remoteRegistryStatus, error) {
-	registries, err := r.listRemoteRegistries()
+func (r *registry) getRemoteRegistryByName(ctx context.Context, name string) (*remoteRegistryStatus, error) {
+	registries, err := r.listRemoteRegistries(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -137,7 +138,7 @@ func (r *registry) getRemoteRegistryByName(name string) (*remoteRegistryStatus, 
 	return nil, nil
 }
 
-func (r *registry) createRemoteRegistry(reg globalregistry.Registry) (*remoteRegistryStatus, error) {
+func (r *registry) createRemoteRegistry(ctx context.Context, reg globalregistry.Registry) (*remoteRegistryStatus, error) {
 	regStatus := remoteRegistryStatusFromRegistry(reg)
 	reqBodyBuf := bytes.NewBuffer(nil)
 	err := json.NewEncoder(reqBodyBuf).Encode(regStatus)
@@ -151,6 +152,7 @@ func (r *registry) createRemoteRegistry(reg globalregistry.Registry) (*remoteReg
 	if err != nil {
 		return nil, err
 	}
+	req = req.WithContext(ctx)
 
 	r.logger.V(1).Info("sending HTTP request", "req-uri", req.RequestURI)
 
@@ -173,7 +175,7 @@ func (r *registry) createRemoteRegistry(reg globalregistry.Registry) (*remoteReg
 	return regStatus, err
 }
 
-func (r *registry) listRemoteRegistries() ([]*remoteRegistryStatus, error) {
+func (r *registry) listRemoteRegistries(ctx context.Context) ([]*remoteRegistryStatus, error) {
 	url := *r.parsedUrl
 	url.Path = registriesPath
 	r.logger.V(1).Info("creating new request", "url", url.String())
@@ -181,6 +183,7 @@ func (r *registry) listRemoteRegistries() ([]*remoteRegistryStatus, error) {
 	if err != nil {
 		return nil, err
 	}
+	req = req.WithContext(ctx)
 	r.logger.V(1).Info("sending HTTP request", "req-uri", req.RequestURI)
 
 	req.SetBasicAuth(r.GetUsername(), r.GetPassword())

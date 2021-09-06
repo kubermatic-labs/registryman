@@ -17,6 +17,8 @@
 package config_test
 
 import (
+	"context"
+
 	"github.com/kubermatic-labs/registryman/pkg/config"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -32,7 +34,7 @@ var _ = Describe("Configreader", func() {
 		m, err := config.ReadLocalManifests("testdata", nil)
 		Expect(err).ToNot(HaveOccurred())
 		Expect(m).ToNot(BeNil())
-		registries := config.NewExpectedProvider(m).GetRegistries()
+		registries := config.NewExpectedProvider(m).GetRegistries(context.Background())
 		Expect(len(registries)).To(Equal(2))
 	})
 	It("reads the registries and projects even with other yamls present", func() {

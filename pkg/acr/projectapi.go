@@ -18,6 +18,7 @@ package acr
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -26,14 +27,14 @@ import (
 	"github.com/kubermatic-labs/registryman/pkg/globalregistry"
 )
 
-func (r *registry) GetProjectByName(name string) (globalregistry.Project, error) {
+func (r *registry) GetProjectByName(ctx context.Context, name string) (globalregistry.Project, error) {
 	if name == "" {
 		return &project{
 			name:     "",
 			registry: r,
 		}, nil
 	}
-	projects, err := r.ListProjects()
+	projects, err := r.ListProjects(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -86,12 +87,13 @@ func (s *registry) do(req *http.Request) (*http.Response, error) {
 	return resp, nil
 }
 
-func (r *registry) getRepositories() ([]string, error) {
+func (r *registry) getRepositories(ctx context.Context) ([]string, error) {
 	r.parsedUrl.Path = path
 	req, err := http.NewRequest(http.MethodGet, r.parsedUrl.String(), nil)
 	if err != nil {
 		return nil, err
 	}
+	req = req.WithContext(ctx)
 
 	req.SetBasicAuth(r.GetUsername(), r.GetPassword())
 
@@ -117,8 +119,8 @@ func (r *registry) getRepositories() ([]string, error) {
 	return repos.Repositories, nil
 }
 
-func (r *registry) ListProjects() ([]globalregistry.Project, error) {
-	repositories, err := r.getRepositories()
+func (r *registry) ListProjects(ctx context.Context) ([]globalregistry.Project, error) {
+	repositories, err := r.getRepositories(ctx)
 	if err != nil {
 		return nil, err
 	}
