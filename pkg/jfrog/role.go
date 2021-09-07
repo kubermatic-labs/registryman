@@ -18,6 +18,8 @@ package jfrog
 
 import (
 	"encoding/json"
+	"fmt"
+	"strings"
 )
 
 type role int
@@ -46,29 +48,33 @@ func (r role) MarshalJSON() ([]byte, error) {
 func (r role) String() string {
 	switch r {
 	case projectAdminRole:
-		return "ProjectAdmin"
+		return "Project Admin"
 	case developerRole:
 		return "Developer"
 	case guestRole:
-		return "Guest"
+		return "Viewer"
 	case maintainerRole:
-		return "Maintainer"
+		return "Release Manager"
 	default:
 		return "*unknown-role*"
 	}
 }
 
-// func roleFromString(s string) (role, error) {
-// 	switch s {
-// 	case "ProjectAdmin":
-// 		return projectAdminRole, nil
-// 	case "Developer":
-// 		return developerRole, nil
-// 	case "Guest":
-// 		return guestRole, nil
-// 	case "Maintainer":
-// 		return maintainerRole, nil
-// 	default:
-// 		return role(-1), fmt.Errorf("unknown role: %s", s)
-// 	}
-// }
+func roleFromString(s string) (role, error) {
+	for _, r := range strings.Split(s, ",") {
+
+		switch r {
+		case "Project Admin":
+			return projectAdminRole, nil
+		case "Developer":
+			return developerRole, nil
+		case "Viewer":
+			return guestRole, nil
+		case "Release Manager":
+			return maintainerRole, nil
+		default:
+			return role(-1), fmt.Errorf("unknown role: %s", s)
+		}
+	}
+	return role(-1), fmt.Errorf("unknown role: %s", s)
+}

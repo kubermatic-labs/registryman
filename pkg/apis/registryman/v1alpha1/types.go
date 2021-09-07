@@ -76,6 +76,10 @@ type RegistrySpec struct {
 	// APIEndpoint interface.
 	Password string `json:"password"`
 
+	// AccessToken is the token to be used during the authentication at the
+	// APIEndpoint interface.
+	AccessToken string `json:"accessToken,omitempty"`
+
 	// +kubebuilder:default=Local
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:validation:Enum=GlobalHub;Local

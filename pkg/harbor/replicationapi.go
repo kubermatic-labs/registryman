@@ -118,6 +118,12 @@ func (r *registry) createReplicationRule(project globalregistry.Project, remoteR
 	n := time.Now()
 	now := n.Format(time.RFC3339)
 	nowStamp := time.Now().Unix()
+
+	destNamespace := ""
+	if remoteReg.GetProvider() == "jfrog" {
+		destNamespace = fmt.Sprintf("%s-docker", project.GetName())
+	}
+
 	replicationPolicy := &replicationResponseBody{
 		CreationTime: now,
 		UpdateTime:   now,
@@ -128,7 +134,7 @@ func (r *registry) createReplicationRule(project globalregistry.Project, remoteR
 				Value: fmt.Sprintf("%s/**", project.GetName()),
 			},
 		},
-		DestNamespace: "",
+		DestNamespace: destNamespace,
 		Trigger:       replTrigger,
 		Deletion:      true,
 		Override:      true,

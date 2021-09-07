@@ -23,7 +23,7 @@ import (
 )
 
 type project struct {
-	id       string
+	key      string
 	registry *registry
 	Name     string
 }
@@ -31,8 +31,8 @@ type project struct {
 // interface guard
 var _ globalregistry.Project = &project{}
 var _ globalregistry.ProjectWithRepositories = &project{}
+var _ globalregistry.ProjectWithMembers = &project{}
 
-// var _ globalregistry.ProjectWithMembers = &project{}
 // var _ globalregistry.MemberManipulatorProject = &project{}
 var _ globalregistry.DestructibleProject = &project{}
 
@@ -65,7 +65,7 @@ func (p *project) Delete() error {
 		}
 
 	}
-	return p.registry.delete(p.id)
+	return p.registry.delete(p.key)
 }
 
 // func robotRoleToAccess(role string) []access {
@@ -105,111 +105,36 @@ func (p *project) Delete() error {
 // }
 
 // func (p *project) AssignMember(member globalregistry.ProjectMember) (*globalregistry.ProjectMemberCredentials, error) {
-// 	memberType := member.GetType()
-// 	switch memberType {
-// 	default:
-// 		return nil, fmt.Errorf("unhandled member type: %s", memberType)
-// 	case userType:
-// 		role, err := roleFromString(member.GetRole())
-// 		if err != nil {
-// 			return nil, err
-// 		}
-// 		pum := &projectMemberRequestBody{
-// 			RoleId: role,
-// 			MemberUser: &userEntity{
-// 				Username: member.GetName(),
-// 			},
-// 		}
-// 		_, err = p.registry.createProjectMember(p.id, pum)
-// 		return nil, err
-// 	case groupType:
-// 		groupMember, ok := member.(globalregistry.LdapMember)
-// 		if !ok {
-// 			return nil, fmt.Errorf("error assigning group %s to project %s: group is not LDAP group",
-// 				member.GetName(), p.Name)
-// 		}
-// 		role, err := roleFromString(member.GetRole())
-// 		if err != nil {
-// 			return nil, err
-// 		}
-// 		userGroup := &userGroup{
-// 			GroupName:   member.GetName(),
-// 			LdapGroupDn: groupMember.GetDN(),
-// 			GroupType:   1,
-// 		}
-
-// 		_, err = p.registry.updateIDOfUserGroup(userGroup)
-// 		// err = p.api.reg.getOrCreateUsergroup(userGroup)
-// 		if err != nil {
-// 			return nil, err
-// 		}
-
-// 		pum := &projectMemberRequestBody{
-// 			RoleId:      role,
-// 			MemberGroup: userGroup,
-// 		}
-// 		_, err = p.registry.createProjectMember(p.id, pum)
-// 		return nil, err
-// 	case robotType:
-// 		prm := &robot{
-// 			Description: "generated robot member",
-// 			Level:       "project",
-// 			// Editable:     false,
-// 			// ExpiresAt:    0,
-// 			Name: member.GetName(),
-// 			// Disable:      false,
-// 			// Duration:     0,
-// 			// Id:           0,
-// 			Permissions: []robotPermission{
-// 				{
-// 					Access:    robotRoleToAccess(member.GetRole()),
-// 					Kind:      "project",
-// 					Namespace: p.GetName(),
-// 				},
-// 			},
-// 		}
-// 		// Name:        member.GetName(),
-// 		// ExpiresAt:   1024,
-// 		// Description: "generated robot member",
-// 		// Access:      robotRoleToAccess(member.GetRole()),
-// 		r, err := p.registry.createProjectRobotMember(prm)
-// 		if err != nil {
-// 			return nil, err
-// 		}
-// 		return &globalregistry.ProjectMemberCredentials{
-// 			Username: r.Name,
-// 			Password: r.Secret,
-// 		}, nil
-// 	}
-
-// }
-
-// func (p *project) GetMembers() ([]globalregistry.ProjectMember, error) {
-// 	userGroupMembers, err := p.registry.getMembers(p.id)
+// 	role, err := roleFromString(member.GetRole())
 // 	if err != nil {
 // 		return nil, err
 // 	}
-// 	robotMembers, err := p.registry.getRobotMembers(p.id)
-// 	if err != nil {
-// 		return nil, err
+// 	pum := &projectMemberRequestBody{
+// 		RoleId: role,
+// 		MemberUser: &userEntity{
+// 			Username: member.GetName(),
+// 		},
 // 	}
-// 	members := make([]globalregistry.ProjectMember, len(userGroupMembers)+len(robotMembers))
+// 	_, err = p.registry.createProjectMember(p.id, pum)
+// 	return nil, err
 
-// 	c := 0
-// 	// collecting the members of type User
-// 	for _, userGroup := range userGroupMembers {
-// 		members[c] = userGroup.toProjectMember()
-// 		c++
-// 	}
-
-// 	// collecting the members of type Robot
-// 	for _, robot := range robotMembers {
-// 		robot.Name = strings.TrimPrefix(robot.Name, fmt.Sprintf("robot$%s+", p.GetName()))
-// 		members[c] = robot
-// 		c++
-// 	}
-// 	return members, nil
 // }
+
+func (p *project) GetMembers() ([]globalregistry.ProjectMember, error) {
+	members, err := p.registry.getMembers(p.key)
+	if err != nil {
+		return nil, err
+	}
+	projectMembers := make([]globalregistry.ProjectMember, len(members))
+
+	c := 0
+	for _, m := range members {
+		projectMembers[c] = m.toProjectMember()
+		c++
+	}
+
+	return projectMembers, nil
+}
 
 // func (p *project) UnassignMember(member globalregistry.ProjectMember) error {
 // 	memberType := member.GetType()
@@ -268,117 +193,7 @@ func (p *project) deleteRepository(r string) error {
 	return p.registry.deleteProjectRepository(p, r)
 }
 
-// func (p *project) GetReplicationRules(trigger, direction string) ([]globalregistry.ReplicationRule, error) {
-// 	p.registry.logger.V(1).Info("Project.GetReplicationRules invoked",
-// 		"projectName", p.Name,
-// 	)
-// 	replRules, err := p.registry.listReplicationRules()
-// 	if err != nil {
-// 		return nil, err
-// 	}
-// 	p.registry.logger.V(1).Info("replication rules fetched",
-// 		"count", len(replRules),
-// 	)
-// 	results := make([]globalregistry.ReplicationRule, 0)
-// 	for _, replRule := range replRules {
-// 		p.registry.logger.V(1).Info("checking replication rule",
-// 			"name", replRule.GetName(),
-// 			"projectName", replRule.GetProjectName(),
-// 		)
-// 		if replRule.GetProjectName() == p.Name {
-// 			p.registry.logger.V(1).Info("project name matches, replication rule stored")
-// 			if trigger != "" && trigger != replRule.Trigger() {
-// 				continue
-// 			}
-// 			if direction != "" && direction != replRule.Direction() {
-// 				continue
-// 			}
-// 			results = append(results, replRule)
-// 		}
-// 	}
-// 	return results, nil
-// }
-
-// func (p *project) GetScanner() (globalregistry.Scanner, error) {
-// 	return p.registry.getScannerOfProject(p.id)
-// }
-
-// func (p *project) AssignScanner(targetScanner globalregistry.Scanner) error {
-// 	scannerID, err := p.registry.getScannerIDByNameOrCreate(targetScanner)
-// 	if err != nil {
-// 		return err
-// 	}
-// 	return p.registry.setScannerForProject(p.id, scannerID)
-// }
-
-// func (p *project) UnassignScanner(targetScanner globalregistry.Scanner) error {
-// 	var defaultScanner globalregistry.Scanner
-// 	currentScanners, err := p.registry.listScanners()
-
-// 	if err != nil {
-// 		return fmt.Errorf("couldn't list scanners for project, %w", err)
-// 	}
-
-// 	for _, s := range currentScanners {
-// 		if s.(*scanner).isDefault {
-// 			defaultScanner = s
-// 		}
-// 	}
-
-// 	if defaultScanner.GetName() == targetScanner.GetName() {
-// 		return nil
-// 	}
-// 	if defaultScanner.GetName() == "" {
-// 		p.registry.logger.Error(err, "couldn't find default scanner for project", p)
-// 		return err
-// 	}
-
-// 	return p.AssignScanner(defaultScanner)
-// }
-
-// type projectStatusQuotaUsed struct {
-// 	Storage int `json:"storage"`
-// }
-// type projectStatusQuota struct {
-// 	Used projectStatusQuotaUsed `json:"used"`
-// }
-
-// type projectStatusResponse struct {
-// 	Quota projectStatusQuota `json:"quota"`
-// }
-
-// // GetUsedStorage implements the globalregistry.Project interface.
-// func (p *project) GetUsedStorage() (int, error) {
-// 	p.registry.logger.V(1).Info("getting storage usage of a project",
-// 		"projectName", p.Name,
-// 	)
-// 	url := *p.registry.parsedUrl
-// 	url.Path = fmt.Sprintf("/api/v2.0/projects/%d/summary", p.id)
-// 	req, err := http.NewRequest(http.MethodGet, url.String(), nil)
-// 	if err != nil {
-// 		return -1, err
-// 	}
-
-// 	req.SetBasicAuth(p.registry.GetUsername(), p.registry.GetPassword())
-
-// 	resp, err := p.registry.do(req)
-// 	if err != nil {
-// 		return -1, err
-// 	}
-
-// 	defer resp.Body.Close()
-
-// 	parsedResponse := &projectStatusResponse{}
-
-// 	err = json.NewDecoder(resp.Body).Decode(&parsedResponse)
-// 	if err != nil {
-// 		p.registry.logger.Error(err, "json decoding failed")
-// 		b := bytes.NewBuffer(nil)
-// 		_, err := b.ReadFrom(resp.Body)
-// 		if err != nil {
-// 			panic(err)
-// 		}
-// 		p.registry.logger.Info(b.String())
-// 	}
-// 	return parsedResponse.Quota.Used.Storage, nil
-// }
+// GetUsedStorage implements the globalregistry.Project interface.
+func (p *project) GetUsedStorage() (int, error) {
+	return p.registry.getUsedStorage(p)
+}

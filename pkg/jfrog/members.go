@@ -17,6 +17,12 @@
 package jfrog
 
 import (
+	"bytes"
+	"encoding/json"
+	"fmt"
+	"net/http"
+	"strings"
+
 	"github.com/kubermatic-labs/registryman/pkg/globalregistry"
 )
 
@@ -26,36 +32,19 @@ const (
 	groupType = "Group"
 )
 
-type projectMemberEntity struct {
-	EntityId   int    `json:"entity_id"`
-	RoleName   string `json:"role_name"`
-	EntityName string `json:"entity_name"`
-	EntityType string `json:"entity_type"`
-	ProjectId  int    `json:"project_id"`
-	Id         int    `json:"id"`
-	RoleId     role   `json:"role_id"`
-
-	// distinguished name for ldap groups
-	dn string
+type projectMembers struct {
+	Members []projectMember `json:"members"`
 }
 
-// func (m *projectMemberEntity) toProjectMember() globalregistry.ProjectMember {
-// 	switch m.EntityType {
-// 	default:
-// 		panic(fmt.Sprintf("unhandled EntityType: %s", m.EntityType))
-// 	case "u":
-// 		return (*projectMember)(m)
-// 	case "g":
-// 		return (*ldapMember)(m)
-// 	}
-// }
-
-type projectMember projectMemberEntity
+type projectMember struct {
+	Name  string   `json:"name"`
+	Roles []string `json:"roles"`
+}
 
 var _ globalregistry.ProjectMember = &projectMember{}
 
 func (m *projectMember) GetName() string {
-	return m.EntityName
+	return m.Name
 }
 
 func (m *projectMember) GetType() string {
@@ -63,27 +52,12 @@ func (m *projectMember) GetType() string {
 }
 
 func (m *projectMember) GetRole() string {
-	return m.RoleId.String()
+	return strings.Join(m.Roles, ",")
 }
 
-type ldapMember projectMemberEntity
+func (m *projectMember) toProjectMember() globalregistry.ProjectMember {
+	return (*projectMember)(m)
 
-var _ globalregistry.LdapMember = &ldapMember{}
-
-func (m *ldapMember) GetName() string {
-	return m.EntityName
-}
-
-func (m *ldapMember) GetType() string {
-	return groupType
-}
-
-func (m *ldapMember) GetRole() string {
-	return m.RoleId.String()
-}
-
-func (m *ldapMember) GetDN() string {
-	return m.dn
 }
 
 // type userGroup struct {
@@ -105,47 +79,40 @@ func (m *ldapMember) GetDN() string {
 // 	MemberUser  *userEntity `json:"member_user"`
 // }
 
-// func (r *registry) getMembers(projectID int) ([]*projectMemberEntity, error) {
-// 	url := *r.parsedUrl
-// 	url.Path = fmt.Sprintf("%s/%d/members", path, projectID)
-// 	r.logger.V(1).Info("creating new request", "url", url.String())
-// 	req, err := http.NewRequest(http.MethodGet, url.String(), nil)
-// 	if err != nil {
-// 		return nil, err
-// 	}
+func (r *registry) getMembers(projectKey string) ([]projectMember, error) {
+	url := *r.parsedUrl
+	url.Path = fmt.Sprintf("%s/%s/users", projectPath, projectKey)
+	r.logger.V(1).Info("creating new request", "url", url.String())
+	req, err := http.NewRequest(http.MethodGet, url.String(), nil)
+	if err != nil {
+		return nil, err
+	}
 
-// 	req.SetBasicAuth(r.GetUsername(), r.GetPassword())
+	req.Header.Add("Authorization", "Bearer "+r.GetAccessToken())
+	req.Header.Add("Accept", "application/json")
 
-// 	resp, err := r.do(req)
-// 	if err != nil {
-// 		return nil, err
-// 	}
+	resp, err := r.do(req)
+	if err != nil {
+		return nil, err
+	}
 
-// 	defer resp.Body.Close()
+	defer resp.Body.Close()
 
-// 	projectMembersResult := []*projectMemberEntity{}
+	projectMembersResult := &projectMembers{}
 
-// 	err = json.NewDecoder(resp.Body).Decode(&projectMembersResult)
-// 	if err != nil {
-// 		r.logger.Error(err, "json decoding failed")
-// 		b := bytes.NewBuffer(nil)
-// 		_, err := b.ReadFrom(resp.Body)
-// 		if err != nil {
-// 			panic(err)
-// 		}
-// 		r.logger.Info(b.String())
-// 		fmt.Printf("body: %+v\n", b.String())
-// 	}
-// 	for _, member := range projectMembersResult {
-// 		if member.EntityType == "g" {
-// 			member.dn, err = r.searchLdapGroup(member.EntityName)
-// 			if err != nil {
-// 				return nil, err
-// 			}
-// 		}
-// 	}
-// 	return projectMembersResult, err
-// }
+	err = json.NewDecoder(resp.Body).Decode(&projectMembersResult)
+	if err != nil {
+		r.logger.Error(err, "json decoding failed")
+		b := bytes.NewBuffer(nil)
+		_, err := b.ReadFrom(resp.Body)
+		if err != nil {
+			panic(err)
+		}
+		r.logger.Info(b.String())
+		fmt.Printf("body: %+v\n", b.String())
+	}
+	return projectMembersResult.Members, err
+}
 
 // func (r *registry) createProjectMember(projectID int, projectMember *projectMemberRequestBody) (int, error) {
 // 	url := *r.parsedUrl

@@ -57,9 +57,9 @@ func remoteRegistryStatusFromRegistry(reg globalregistry.Registry) *remoteRegist
 	case "acr":
 		regType = "azure-acr"
 	case "artifactory":
-		regType = "artifactory"
+		regType = "jfrog-artifactory"
 	case "jfrog":
-		regType = "jfrog"
+		regType = "jfrog-artifactory"
 	default:
 		panic(fmt.Sprintf("provider %s not implemented", reg.GetProvider()))
 	}
@@ -73,7 +73,7 @@ func remoteRegistryStatusFromRegistry(reg globalregistry.Registry) *remoteRegist
 			AccessKey:    reg.GetUsername(),
 			AccessSecret: reg.GetPassword(),
 		},
-		Insecure: false,
+		Insecure: true,
 		Type:     regType,
 		Description: fmt.Sprintf("%s is a remote %s registry",
 			reg.GetName(),
@@ -100,6 +100,10 @@ func (reg *remoteRegistryStatus) GetUsername() string {
 
 func (reg *remoteRegistryStatus) GetPassword() string {
 	return reg.Credential.AccessSecret
+}
+
+func (reg *remoteRegistryStatus) GetAccessToken() string {
+	panic("not implemented")
 }
 
 func (reg *remoteRegistryStatus) GetName() string {

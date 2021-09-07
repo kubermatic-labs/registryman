@@ -42,8 +42,6 @@ type registry struct {
 	parsedUrl *url.URL
 	globalregistry.Registry
 	*http.Client
-	token  *bearerToken
-	aToken *accessToken
 }
 
 var _ globalregistry.Registry = &registry{}
@@ -74,17 +72,6 @@ func newRegistry(logger logr.Logger, config globalregistry.Registry) (globalregi
 	if err != nil {
 		return nil, err
 	}
-	err = c.createBearerToken()
-
-	if err != nil {
-		return nil, err
-	}
-
-	// err = c.createAccessToken()
-
-	// if err != nil {
-	// 	return nil, err
-	// }
 
 	return c, nil
 }
