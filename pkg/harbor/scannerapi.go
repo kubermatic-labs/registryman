@@ -79,11 +79,10 @@ func (r *registry) createScanner(ctx context.Context, config globalregistry.Scan
 	if err != nil {
 		return "", err
 	}
-	req = req.WithContext(ctx)
 
 	req.Header["Content-Type"] = []string{"application/json"}
 	req.SetBasicAuth(r.GetUsername(), r.GetPassword())
-	resp, err := r.do(req)
+	resp, err := r.do(ctx, req)
 	if err != nil {
 		return "", err
 	}
@@ -153,10 +152,9 @@ func (r *registry) listScanners(ctx context.Context) ([]globalregistry.Scanner, 
 	if err != nil {
 		return nil, err
 	}
-	req = req.WithContext(ctx)
 
 	req.SetBasicAuth(r.GetUsername(), r.GetPassword())
-	resp, err := r.do(req)
+	resp, err := r.do(ctx, req)
 	if err != nil {
 		return nil, err
 	}
@@ -208,10 +206,9 @@ func (r *registry) setScannerForProject(ctx context.Context, projectID int, scan
 	if err != nil {
 		return err
 	}
-	req = req.WithContext(ctx)
 
 	req.SetBasicAuth(r.GetUsername(), r.GetPassword())
-	resp, err := r.do(req)
+	resp, err := r.do(ctx, req)
 	if err != nil {
 		return err
 	}
@@ -231,10 +228,9 @@ func (r *registry) getScannerOfProject(ctx context.Context, id int) (globalregis
 	if err != nil {
 		return nil, err
 	}
-	req = req.WithContext(ctx)
 
 	req.SetBasicAuth(r.GetUsername(), r.GetPassword())
-	resp, err := r.do(req)
+	resp, err := r.do(ctx, req)
 	if err != nil {
 		return nil, err
 	}
@@ -281,12 +277,11 @@ func (r *registry) updateScanner(ctx context.Context, id string, targetScanner g
 	if err != nil {
 		return err
 	}
-	req = req.WithContext(ctx)
 
 	req.Header["Content-Type"] = []string{"application/json"}
 	req.SetBasicAuth(r.GetUsername(), r.GetPassword())
 
-	resp, err := r.do(req)
+	resp, err := r.do(ctx, req)
 	if err != nil {
 		return err
 	}
@@ -299,30 +294,30 @@ func (r *registry) updateScanner(ctx context.Context, id string, targetScanner g
 	return err
 }
 
-func (r *registry) deleteScanner(id string) error {
-	url := *r.parsedUrl
-	url.Path = fmt.Sprintf("%s/%s", scannersPath, id)
+// func (r *registry) deleteScanner(ctx context.Context, id string) error {
+// 	url := *r.parsedUrl
+// 	url.Path = fmt.Sprintf("%s/%s", scannersPath, id)
 
-	req, err := http.NewRequest(http.MethodDelete, url.String(), nil)
-	if err != nil {
-		return err
-	}
+// 	req, err := http.NewRequest(http.MethodDelete, url.String(), nil)
+// 	if err != nil {
+// 		return err
+// 	}
 
-	req.Header["Content-Type"] = []string{"application/json"}
-	req.SetBasicAuth(r.GetUsername(), r.GetPassword())
+// 	req.Header["Content-Type"] = []string{"application/json"}
+// 	req.SetBasicAuth(r.GetUsername(), r.GetPassword())
 
-	resp, err := r.do(req)
-	if err != nil {
-		return err
-	}
+// 	resp, err := r.do(ctx, req)
+// 	if err != nil {
+// 		return err
+// 	}
 
-	defer resp.Body.Close()
+// 	defer resp.Body.Close()
 
-	if resp.StatusCode != 200 {
-		return fmt.Errorf("failed to remove scanner, %w", globalregistry.ErrRecoverableError)
-	}
-	return err
-}
+// 	if resp.StatusCode != 200 {
+// 		return fmt.Errorf("failed to remove scanner, %w", globalregistry.ErrRecoverableError)
+// 	}
+// 	return err
+// }
 
 func (c *scannerRegistrationRequest) GetName() string {
 	return c.Name

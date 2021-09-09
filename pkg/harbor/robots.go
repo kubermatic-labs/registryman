@@ -111,12 +111,11 @@ func (r *registry) getRobotMembers(ctx context.Context, projectID int) ([]*robot
 	if err != nil {
 		return nil, err
 	}
-	req = req.WithContext(ctx)
 	r.logger.V(1).Info("sending HTTP request", "req-uri", req.RequestURI)
 
 	req.SetBasicAuth(r.GetUsername(), r.GetPassword())
 
-	resp, err := r.do(req)
+	resp, err := r.do(ctx, req)
 	if err != nil {
 		return nil, err
 	}
@@ -140,7 +139,7 @@ func (r *registry) getRobotMembers(ctx context.Context, projectID int) ([]*robot
 	return robotMembersResult, err
 }
 
-func (r *registry) createProjectRobotMember(robotMember *robot) (*robotCreated, error) {
+func (r *registry) createProjectRobotMember(ctx context.Context, robotMember *robot) (*robotCreated, error) {
 	url := *r.parsedUrl
 	url.Path = "/api/v2.0/robots"
 	reqBodyBuf := bytes.NewBuffer(nil)
@@ -156,7 +155,7 @@ func (r *registry) createProjectRobotMember(robotMember *robot) (*robotCreated, 
 	req.Header["Content-Type"] = []string{"application/json"}
 	req.SetBasicAuth(r.GetUsername(), r.GetPassword())
 
-	resp, err := r.do(req)
+	resp, err := r.do(ctx, req)
 	if err != nil {
 		return nil, err
 	}
@@ -179,7 +178,7 @@ func (r *registry) createProjectRobotMember(robotMember *robot) (*robotCreated, 
 	return robotResult, err
 }
 
-func (r *registry) deleteProjectRobotMember(projectID int, robotMemberID int) error {
+func (r *registry) deleteProjectRobotMember(ctx context.Context, projectID int, robotMemberID int) error {
 	url := *r.parsedUrl
 	url.Path = fmt.Sprintf("%s/%d/robots/%d", path, projectID, robotMemberID)
 	r.logger.V(1).Info("creating new request", "url", url.String())
@@ -192,7 +191,7 @@ func (r *registry) deleteProjectRobotMember(projectID int, robotMemberID int) er
 	req.Header["Content-Type"] = []string{"application/json"}
 	req.SetBasicAuth(r.GetUsername(), r.GetPassword())
 
-	resp, err := r.do(req)
+	resp, err := r.do(ctx, req)
 	if err != nil {
 		return err
 	}
