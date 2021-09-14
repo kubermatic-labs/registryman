@@ -166,6 +166,20 @@ will be fetched from the configured Kubernetes API server.
 $ registryman status --context my-kubernetes
 ```
 
+By default, all configured registried are checked. You can filter for registries
+using the `-r` flag.
+
+```bash
+$ registryman status -r harbor-1,harbor-2
+```
+
+The default output format is JSON. It's possible to output the result as YAML
+too.
+
+```bash
+$ registryman status -r harbor-1 -o yaml
+```
+
 ### Validating the config files in CLI mode
 
 Registryman can validate the configuration files using the `validate` command.
