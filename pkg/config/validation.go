@@ -22,7 +22,7 @@ import (
 	api "github.com/kubermatic-labs/registryman/pkg/apis/registryman/v1alpha1"
 )
 
-// ValidateConsistent performs all validations that require the full context,
+// ValidateConsistency performs all validations that require the full context,
 // i.e. all resources parsed. If there is a consistency issue, an error is
 // returned.
 func ValidateConsistency(aos ApiObjectStore) error {
