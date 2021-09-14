@@ -40,12 +40,11 @@ func (r *registry) listReplicationRules(ctx context.Context) ([]globalregistry.R
 	if err != nil {
 		return nil, err
 	}
-	req = req.WithContext(ctx)
 	r.logger.V(1).Info("sending HTTP request", "req-uri", req.RequestURI)
 
 	req.SetBasicAuth(r.GetUsername(), r.GetPassword())
 
-	resp, err := r.do(req)
+	resp, err := r.do(ctx, req)
 	if err != nil {
 		return nil, err
 	}
@@ -187,12 +186,11 @@ func (r *registry) createReplicationRule(ctx context.Context, project globalregi
 	if err != nil {
 		return nil, err
 	}
-	req = req.WithContext(ctx)
 
 	req.Header["Content-Type"] = []string{"application/json"}
 	req.SetBasicAuth(r.GetUsername(), r.GetPassword())
 
-	resp, err := r.do(req)
+	resp, err := r.do(ctx, req)
 	if err != nil {
 		return nil, err
 	}
@@ -225,13 +223,12 @@ func (r *registry) deleteReplicationRule(ctx context.Context, id int) error {
 	if err != nil {
 		return err
 	}
-	req = req.WithContext(ctx)
 	r.logger.V(1).Info("sending HTTP request", "req-uri", req.URL)
 
 	req.Header["Content-Type"] = []string{"application/json"}
 	req.SetBasicAuth(r.GetUsername(), r.GetPassword())
 
-	resp, err := r.do(req)
+	resp, err := r.do(ctx, req)
 	if err != nil {
 		return err
 	}

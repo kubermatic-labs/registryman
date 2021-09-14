@@ -66,7 +66,7 @@ func (p *project) Delete(ctx context.Context) error {
 				p.registry.logger.V(1).Info("deleting repository",
 					"repositoryName", repos,
 				)
-				err = p.deleteRepository(repo)
+				err = p.deleteRepository(ctx, repo)
 				if err != nil {
 					return err
 				}
@@ -74,7 +74,7 @@ func (p *project) Delete(ctx context.Context) error {
 		}
 
 	}
-	return p.registry.delete(p.id)
+	return p.registry.delete(ctx, p.id)
 }
 
 func robotRoleToAccess(role string) []access {
@@ -180,7 +180,7 @@ func (p *project) AssignMember(ctx context.Context, member globalregistry.Projec
 		// ExpiresAt:   1024,
 		// Description: "generated robot member",
 		// Access:      robotRoleToAccess(member.GetRole()),
-		r, err := p.registry.createProjectRobotMember(prm)
+		r, err := p.registry.createProjectRobotMember(ctx, prm)
 		if err != nil {
 			return nil, err
 		}
@@ -241,7 +241,7 @@ func (p *project) UnassignMember(ctx context.Context, member globalregistry.Proj
 		if m == nil {
 			return fmt.Errorf("user member not found")
 		}
-		err = p.registry.deleteProjectMember(p.id, m.Id)
+		err = p.registry.deleteProjectMember(ctx, p.id, m.Id)
 	case robotType:
 		var m *robot
 		var members []*robot
@@ -259,7 +259,7 @@ func (p *project) UnassignMember(ctx context.Context, member globalregistry.Proj
 		if m == nil {
 			return fmt.Errorf("robot member not found")
 		}
-		err = p.registry.deleteProjectRobotMember(p.id, m.Id)
+		err = p.registry.deleteProjectRobotMember(ctx, p.id, m.Id)
 	}
 	return err
 }
@@ -272,8 +272,8 @@ func (p *project) GetRepositories(ctx context.Context) ([]string, error) {
 	return p.registry.listProjectRepositories(ctx, p)
 }
 
-func (p *project) deleteRepository(r string) error {
-	return p.registry.deleteProjectRepository(p, r)
+func (p *project) deleteRepository(ctx context.Context, r string) error {
+	return p.registry.deleteProjectRepository(ctx, p, r)
 }
 
 func (p *project) GetReplicationRules(ctx context.Context, trigger, direction string) ([]globalregistry.ReplicationRule, error) {
@@ -366,11 +366,9 @@ func (p *project) GetUsedStorage(ctx context.Context) (int, error) {
 	if err != nil {
 		return -1, err
 	}
-	req = req.WithContext(ctx)
-
 	req.SetBasicAuth(p.registry.GetUsername(), p.registry.GetPassword())
 
-	resp, err := p.registry.do(req)
+	resp, err := p.registry.do(ctx, req)
 	if err != nil {
 		return -1, err
 	}

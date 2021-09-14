@@ -152,13 +152,12 @@ func (r *registry) createRemoteRegistry(ctx context.Context, reg globalregistry.
 	if err != nil {
 		return nil, err
 	}
-	req = req.WithContext(ctx)
 
 	r.logger.V(1).Info("sending HTTP request", "req-uri", req.RequestURI)
 
 	req.SetBasicAuth(r.GetUsername(), r.GetPassword())
 
-	resp, err := r.do(req)
+	resp, err := r.do(ctx, req)
 	if err != nil {
 		return nil, err
 	}
@@ -183,12 +182,11 @@ func (r *registry) listRemoteRegistries(ctx context.Context) ([]*remoteRegistryS
 	if err != nil {
 		return nil, err
 	}
-	req = req.WithContext(ctx)
 	r.logger.V(1).Info("sending HTTP request", "req-uri", req.RequestURI)
 
 	req.SetBasicAuth(r.GetUsername(), r.GetPassword())
 
-	resp, err := r.do(req)
+	resp, err := r.do(ctx, req)
 	if err != nil {
 		return nil, err
 	}

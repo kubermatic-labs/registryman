@@ -122,11 +122,10 @@ func (r *registry) getMembers(ctx context.Context, projectID int) ([]*projectMem
 	if err != nil {
 		return nil, err
 	}
-	req = req.WithContext(ctx)
 
 	req.SetBasicAuth(r.GetUsername(), r.GetPassword())
 
-	resp, err := r.do(req)
+	resp, err := r.do(ctx, req)
 	if err != nil {
 		return nil, err
 	}
@@ -148,7 +147,7 @@ func (r *registry) getMembers(ctx context.Context, projectID int) ([]*projectMem
 	}
 	for _, member := range projectMembersResult {
 		if member.EntityType == "g" {
-			member.dn, err = r.searchLdapGroup(member.EntityName)
+			member.dn, err = r.searchLdapGroup(ctx, member.EntityName)
 			if err != nil {
 				return nil, err
 			}
@@ -169,12 +168,11 @@ func (r *registry) createProjectMember(ctx context.Context, projectID int, proje
 	if err != nil {
 		return 0, err
 	}
-	req = req.WithContext(ctx)
 
 	req.Header["Content-Type"] = []string{"application/json"}
 	req.SetBasicAuth(r.GetUsername(), r.GetPassword())
 
-	resp, err := r.do(req)
+	resp, err := r.do(ctx, req)
 	if err != nil {
 		return 0, err
 	}
@@ -208,7 +206,7 @@ func (r *registry) createProjectMember(ctx context.Context, projectID int, proje
 	return memberID, nil
 }
 
-func (r *registry) deleteProjectMember(projectID int, memberId int) error {
+func (r *registry) deleteProjectMember(ctx context.Context, projectID int, memberId int) error {
 	url := *r.parsedUrl
 	url.Path = fmt.Sprintf("%s/%d/members/%d", path, projectID, memberId)
 	r.logger.V(1).Info("creating new request", "url", url.String())
@@ -221,7 +219,7 @@ func (r *registry) deleteProjectMember(projectID int, memberId int) error {
 	req.Header["Content-Type"] = []string{"application/json"}
 	req.SetBasicAuth(r.GetUsername(), r.GetPassword())
 
-	resp, err := r.do(req)
+	resp, err := r.do(ctx, req)
 	if err != nil {
 		return err
 	}

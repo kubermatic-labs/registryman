@@ -17,6 +17,8 @@
 package harbor
 
 import (
+	// "context"
+
 	"github.com/kubermatic-labs/registryman/pkg/globalregistry"
 )
 
@@ -30,9 +32,9 @@ type scanner struct {
 
 var _ globalregistry.Scanner = &scanner{}
 
-func (s *scanner) Delete() error {
-	return s.registry.deleteScanner(s.id)
-}
+// func (s *scanner) Delete(ctx context.Context) error {
+// 	return s.registry.deleteScanner(ctx, s.id)
+// }
 
 func (s *scanner) GetName() string {
 	return s.name
