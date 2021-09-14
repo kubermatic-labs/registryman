@@ -106,11 +106,9 @@ func (r *registry) ListProjects(ctx context.Context) ([]globalregistry.Project, 
 	if err != nil {
 		return nil, err
 	}
-	req = req.WithContext(ctx)
-
 	req.SetBasicAuth(r.GetUsername(), r.GetPassword())
 
-	resp, err := r.do(req)
+	resp, err := r.do(ctx, req)
 	if err != nil {
 		return nil, err
 	}
@@ -159,13 +157,11 @@ func (r *registry) CreateProject(ctx context.Context, name string) (globalregist
 	if err != nil {
 		return nil, err
 	}
-	req = req.WithContext(ctx)
-
 	req.Header["Content-Type"] = []string{"application/json"}
 	// p.registry.AddBasicAuth(req)
 	req.SetBasicAuth(r.GetUsername(), r.GetPassword())
 
-	resp, err := r.do(req)
+	resp, err := r.do(ctx, req)
 	if err != nil {
 		return nil, err
 	}
@@ -197,7 +193,7 @@ func (r *registry) CreateProject(ctx context.Context, name string) (globalregist
 		r.logger.V(-1).Info("could not find implicit admin member", "username", r.GetUsername())
 		return proj, nil
 	}
-	err = r.deleteProjectMember(proj.id, m.Id)
+	err = r.deleteProjectMember(ctx, proj.id, m.Id)
 	if err != nil {
 		r.logger.V(-1).Info("could not delete implicit admin member",
 			"username", r.GetUsername(),
@@ -207,7 +203,7 @@ func (r *registry) CreateProject(ctx context.Context, name string) (globalregist
 	return proj, nil
 }
 
-func (r *registry) delete(id int) error {
+func (r *registry) delete(ctx context.Context, id int) error {
 	url := *r.parsedUrl
 	url.Path = fmt.Sprintf("%s/%d", path, id)
 	r.logger.V(1).Info("creating new request", "url", url.String())
@@ -220,7 +216,7 @@ func (r *registry) delete(id int) error {
 	req.Header["Content-Type"] = []string{"application/json"}
 	req.SetBasicAuth(r.GetUsername(), r.GetPassword())
 
-	resp, err := r.do(req)
+	resp, err := r.do(ctx, req)
 	if err != nil {
 		return err
 	}
@@ -241,11 +237,9 @@ func (r *registry) listProjectRepositories(ctx context.Context, proj *project) (
 	if err != nil {
 		return nil, err
 	}
-	req = req.WithContext(ctx)
-
 	req.SetBasicAuth(r.GetUsername(), r.GetPassword())
 
-	resp, err := r.do(req)
+	resp, err := r.do(ctx, req)
 	if err != nil {
 		return nil, err
 	}
@@ -274,7 +268,7 @@ func (r *registry) listProjectRepositories(ctx context.Context, proj *project) (
 	return repositoryNames, err
 }
 
-func (r *registry) deleteProjectRepository(proj *project, repo string) error {
+func (r *registry) deleteProjectRepository(ctx context.Context, proj *project, repo string) error {
 	url := *r.parsedUrl
 	url.Path = fmt.Sprintf("%s/%s/repositories/%s", path, proj.Name, repo)
 	req, err := http.NewRequest(http.MethodDelete, url.String(), nil)
@@ -284,7 +278,7 @@ func (r *registry) deleteProjectRepository(proj *project, repo string) error {
 
 	req.SetBasicAuth(r.GetUsername(), r.GetPassword())
 
-	resp, err := r.do(req)
+	resp, err := r.do(ctx, req)
 	if err != nil {
 		return err
 	}

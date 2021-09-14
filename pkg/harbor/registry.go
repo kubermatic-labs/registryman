@@ -77,7 +77,8 @@ func (bb bytesBody) Close() error { return nil }
 // it prints extra information in case of unexpected response codes. The
 // response body is replaced with a bytesBody which provides the bytes.Buffer
 // (e.g. String()) methods too.
-func (r *registry) do(req *http.Request) (*http.Response, error) {
+func (r *registry) do(ctx context.Context, req *http.Request) (*http.Response, error) {
+	req = req.WithContext(ctx)
 	resp, err := r.Client.Do(req)
 	if err != nil {
 		r.logger.Error(err, "http.Client cannot Do",
@@ -122,7 +123,7 @@ type searchLdapGroupRespBody struct {
 
 // searchLdapGroup returns with the distinguished name of the LDAP group. If
 // LDAP group is not found, it returns with "", nil.
-func (r *registry) searchLdapGroup(ldapGroupName string) (string, error) {
+func (r *registry) searchLdapGroup(ctx context.Context, ldapGroupName string) (string, error) {
 	r.logger.V(1).Info("searching for LDAP group",
 		"ldapGroupName", ldapGroupName,
 	)
@@ -141,7 +142,7 @@ func (r *registry) searchLdapGroup(ldapGroupName string) (string, error) {
 
 	req.SetBasicAuth(r.GetUsername(), r.GetPassword())
 
-	resp, err := r.do(req)
+	resp, err := r.do(ctx, req)
 	if err != nil {
 		return "", err
 	}
@@ -171,7 +172,7 @@ func (r *registry) searchLdapGroup(ldapGroupName string) (string, error) {
 	}
 }
 
-func (r *registry) getUserGroups() ([]*userGroup, error) {
+func (r *registry) getUserGroups(ctx context.Context) ([]*userGroup, error) {
 	r.logger.V(1).Info("listing usergroups")
 	url := *r.parsedUrl
 	url.Path = "/api/v2.0/usergroups"
@@ -182,7 +183,7 @@ func (r *registry) getUserGroups() ([]*userGroup, error) {
 
 	req.SetBasicAuth(r.GetUsername(), r.GetPassword())
 
-	resp, err := r.do(req)
+	resp, err := r.do(ctx, req)
 	if err != nil {
 		return nil, err
 	}
@@ -205,7 +206,7 @@ func (r *registry) getUserGroups() ([]*userGroup, error) {
 	return parsedResponse, nil
 }
 
-func (r *registry) createUserGroup(ug *userGroup) error {
+func (r *registry) createUserGroup(ctx context.Context, ug *userGroup) error {
 	r.logger.V(1).Info("creating usergroup",
 		"GroupName", ug.GroupName,
 		"LdapGroupDN", ug.LdapGroupDn,
@@ -226,7 +227,7 @@ func (r *registry) createUserGroup(ug *userGroup) error {
 
 	req.SetBasicAuth(r.GetUsername(), r.GetPassword())
 
-	resp, err := r.do(req)
+	resp, err := r.do(ctx, req)
 	if err != nil {
 		return err
 	}
@@ -259,7 +260,7 @@ func (r *registry) deleteUserGroup(ctx context.Context, ug *userGroup) error {
 
 	req.SetBasicAuth(r.GetUsername(), r.GetPassword())
 
-	_, err = r.do(req)
+	_, err = r.do(ctx, req)
 	return err
 }
 
@@ -269,7 +270,7 @@ func (r *registry) updateIDOfUserGroup(ctx context.Context, ug *userGroup) (bool
 		"LdapGroupDN", ug.LdapGroupDn,
 		"GroupType", ug.GroupType,
 	)
-	userGroups, err := r.getUserGroups()
+	userGroups, err := r.getUserGroups(ctx)
 	if err != nil {
 		return false, err
 	}
@@ -291,7 +292,7 @@ func (r *registry) updateIDOfUserGroup(ctx context.Context, ug *userGroup) (bool
 			if err != nil {
 				return false, err
 			}
-			return true, r.createUserGroup(ug)
+			return true, r.createUserGroup(ctx, ug)
 		}
 	}
 	return false, nil
