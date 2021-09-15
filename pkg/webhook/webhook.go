@@ -28,34 +28,45 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	k8sjson "k8s.io/apimachinery/pkg/runtime/serializer/json"
+	"sync"
 )
 
 var (
-	aos        config.ApiObjectStore
-	serializer *k8sjson.Serializer
+	serializer     *k8sjson.Serializer
+	aos            config.ApiObjectStore
+	aosOnce        sync.Once
+	serializerOnce sync.Once
 )
 
-func init() {
-	var err error
-	aos, _, err = config.ConnectToKube(nil)
-	if err != nil {
-		panic(err)
-	}
+func getSerializer() *k8sjson.Serializer {
+	serializerOnce.Do(func() {
+		scheme := runtime.NewScheme()
+		err := api.AddToScheme(scheme)
+		if err != nil {
+			panic(err)
+		}
+		serializer = k8sjson.NewSerializerWithOptions(
+			k8sjson.DefaultMetaFactory,
+			scheme,
+			scheme,
+			k8sjson.SerializerOptions{
+				Yaml:   false,
+				Pretty: false,
+				Strict: true,
+			})
+	})
+	return serializer
+}
 
-	scheme := runtime.NewScheme()
-	err = api.AddToScheme(scheme)
-	if err != nil {
-		panic(err)
-	}
-	serializer = k8sjson.NewSerializerWithOptions(
-		k8sjson.DefaultMetaFactory,
-		scheme,
-		scheme,
-		k8sjson.SerializerOptions{
-			Yaml:   false,
-			Pretty: false,
-			Strict: true,
-		})
+func getAos() config.ApiObjectStore {
+	aosOnce.Do(func() {
+		var err error
+		aos, _, err = config.ConnectToKube(nil)
+		if err != nil {
+			panic(err)
+		}
+	})
+	return aos
 }
 
 type mockApiObjestStore struct {
@@ -139,21 +150,21 @@ func (maos *mockApiObjestStore) GetScanners(ctx context.Context) []*api.Scanner 
 
 func mockAOSWithRegistry(reg *api.Registry) *mockApiObjestStore {
 	return &mockApiObjestStore{
-		ApiObjectStore: aos,
+		ApiObjectStore: getAos(),
 		addedRegistry:  reg,
 	}
 }
 
 func mockAOSWithoutRegistry(reg *api.Registry) *mockApiObjestStore {
 	return &mockApiObjestStore{
-		ApiObjectStore:  aos,
+		ApiObjectStore:  getAos(),
 		removedRegistry: reg,
 	}
 }
 
 func mockAOSWithUpdatedRegistry(oldRegistry, newRegistry *api.Registry) *mockApiObjestStore {
 	return &mockApiObjestStore{
-		ApiObjectStore:  aos,
+		ApiObjectStore:  getAos(),
 		addedRegistry:   newRegistry,
 		removedRegistry: oldRegistry,
 	}
@@ -161,21 +172,21 @@ func mockAOSWithUpdatedRegistry(oldRegistry, newRegistry *api.Registry) *mockApi
 
 func mockAOSWithProject(proj *api.Project) *mockApiObjestStore {
 	return &mockApiObjestStore{
-		ApiObjectStore: aos,
+		ApiObjectStore: getAos(),
 		addedProject:   proj,
 	}
 }
 
 func mockAOSWithoutProject(proj *api.Project) *mockApiObjestStore {
 	return &mockApiObjestStore{
-		ApiObjectStore: aos,
+		ApiObjectStore: getAos(),
 		removedProject: proj,
 	}
 }
 
 func mockAOSWithUpdatedProject(oldProject, newProject *api.Project) *mockApiObjestStore {
 	return &mockApiObjestStore{
-		ApiObjectStore: aos,
+		ApiObjectStore: getAos(),
 		addedProject:   newProject,
 		removedProject: oldProject,
 	}
@@ -183,21 +194,21 @@ func mockAOSWithUpdatedProject(oldProject, newProject *api.Project) *mockApiObje
 
 func mockAOSWithScanner(scanner *api.Scanner) *mockApiObjestStore {
 	return &mockApiObjestStore{
-		ApiObjectStore: aos,
+		ApiObjectStore: getAos(),
 		addedScanner:   scanner,
 	}
 }
 
 func mockAOSWithoutScanner(scanner *api.Scanner) *mockApiObjestStore {
 	return &mockApiObjestStore{
-		ApiObjectStore: aos,
+		ApiObjectStore: getAos(),
 		removedScanner: scanner,
 	}
 }
 
 func mockAOSWithUpdatedScanner(oldScanner, newScanner *api.Scanner) *mockApiObjestStore {
 	return &mockApiObjestStore{
-		ApiObjectStore: aos,
+		ApiObjectStore: getAos(),
 		addedScanner:   newScanner,
 		removedScanner: oldScanner,
 	}
@@ -276,7 +287,7 @@ func validateConsistency(w http.ResponseWriter, aos config.ApiObjectStore, admis
 }
 
 func createAdmissionHandler(w http.ResponseWriter, admissionRev *admissionV1.AdmissionReview) {
-	o, gvk, err := serializer.Decode(admissionRev.Request.Object.Raw, nil, nil)
+	o, gvk, err := getSerializer().Decode(admissionRev.Request.Object.Raw, nil, nil)
 	if err != nil {
 		logger.V(-2).Info("unknwon resource",
 			"error", err.Error(),
@@ -333,7 +344,7 @@ func createAdmissionHandler(w http.ResponseWriter, admissionRev *admissionV1.Adm
 }
 
 func deleteAdmissionHandler(w http.ResponseWriter, admissionRev *admissionV1.AdmissionReview) {
-	o, gvk, err := serializer.Decode(admissionRev.Request.OldObject.Raw, nil, nil)
+	o, gvk, err := getSerializer().Decode(admissionRev.Request.OldObject.Raw, nil, nil)
 	if err != nil {
 		logger.V(-2).Info("unknwon resource",
 			"error", err.Error(),
@@ -390,7 +401,7 @@ func deleteAdmissionHandler(w http.ResponseWriter, admissionRev *admissionV1.Adm
 }
 
 func updateAdmissionHandler(w http.ResponseWriter, admissionRev *admissionV1.AdmissionReview) {
-	o, gvk, err := serializer.Decode(admissionRev.Request.Object.Raw, nil, nil)
+	o, gvk, err := getSerializer().Decode(admissionRev.Request.Object.Raw, nil, nil)
 	if err != nil {
 		logger.V(-2).Info("unknwon resource",
 			"error", err.Error(),
@@ -399,7 +410,7 @@ func updateAdmissionHandler(w http.ResponseWriter, admissionRev *admissionV1.Adm
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	oldO, _, err := serializer.Decode(admissionRev.Request.OldObject.Raw, nil, nil)
+	oldO, _, err := getSerializer().Decode(admissionRev.Request.OldObject.Raw, nil, nil)
 	if err != nil {
 		logger.V(-2).Info("unknwon resource",
 			"error", err.Error(),
