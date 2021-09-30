@@ -15,7 +15,7 @@
 */
 
 // jfrog package implements the globalregistry.Registry interface for the registry
-// provider Harbor.
+// provider JFrog.
 package jfrog
 
 import (

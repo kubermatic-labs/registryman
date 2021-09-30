@@ -21,6 +21,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strings"
 
 	"github.com/kubermatic-labs/registryman/pkg/globalregistry"
 )
@@ -279,7 +280,7 @@ func (r *registry) listProjectRepositories(proj *project) ([]string, error) {
 
 	var repositoryNames []string
 	for _, rep := range repositories {
-		if rep.Name[0:3] == proj.key && byte(rep.Name[4]) == 105 && rep.PackageType == "Docker" && rep.Type == "LOCAL" {
+		if strings.HasPrefix(rep.Name, fmt.Sprintf("%s-", proj.key)) && rep.PackageType == "Docker" && rep.Type == "LOCAL" {
 			repositoryNames = append(
 				repositoryNames,
 				rep.Name,
