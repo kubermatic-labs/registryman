@@ -77,6 +77,11 @@ spec:
               scanner:
                 description: Scanner specifies the name of the assigned scanner.
                 type: string
+              trigger:
+                description: Trigger specifies the preferred replication trigger.
+                  If it is not possible to implement the selected replication trigger,
+                  the trigger may be overridden.
+                type: string
               type:
                 description: Type selects whether the project is global or local.
                 enum:

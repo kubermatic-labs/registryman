@@ -339,6 +339,13 @@ func schema_pkg_apis_registryman_v1alpha1_ProjectSpec(ref common.ReferenceCallba
 							Format:      "",
 						},
 					},
+					"trigger": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Trigger specifies the preferred replication trigger. If it is not possible to implement the selected replication trigger, the trigger may be overridden.",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
 				},
 				Required: []string{"type"},
 			},

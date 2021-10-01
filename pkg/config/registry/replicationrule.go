@@ -17,6 +17,8 @@
 package registry
 
 import (
+	"strings"
+
 	"github.com/kubermatic-labs/registryman/pkg/globalregistry"
 )
 
@@ -67,7 +69,16 @@ func (rule *replicationRule) GetProjectName() string {
 func (rule *replicationRule) GetName() string {
 	panic("not implemented")
 }
+
+var fallbackPullTrigger = "cron */10 * * * *"
+
 func (rule *replicationRule) Trigger() string {
+	triggerWords := strings.SplitN(rule.project.Spec.Trigger, " ", 2)
+	triggerWord := ""
+	if len(triggerWords) > 0 {
+		triggerWord = triggerWords[0]
+	}
+
 	switch rule.calculatedReplication {
 	case noReplication:
 		panic("noReplication not handled")
@@ -75,12 +86,22 @@ func (rule *replicationRule) Trigger() string {
 		// In case of push replication we always configure event-based
 		// replication triger
 	case pushReplication:
-		return "event_based"
+		switch triggerWord {
+		case "cron", "manual":
+			return rule.project.Spec.Trigger
+		default:
+			return "event_based"
+		}
 
 		// In case of pull replication we always configure manual
 		// replication triger
 	case pullReplication:
-		return "manual"
+		switch triggerWord {
+		case "cron", "manual":
+			return rule.project.Spec.Trigger
+		default:
+			return fallbackPullTrigger
+		}
 	default:
 		panic("unhandled case")
 	}

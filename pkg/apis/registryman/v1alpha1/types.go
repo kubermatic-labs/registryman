@@ -261,6 +261,13 @@ type ProjectSpec struct {
 
 	// Scanner specifies the name of the assigned scanner.
 	Scanner string `json:"scanner,omitempty"`
+
+	// +kubebuilder:validation:Optional
+
+	// Trigger specifies the preferred replication trigger. If it is not
+	// possible to implement the selected replication trigger, the trigger
+	// may be overridden.
+	Trigger string `json:"trigger,omitempty"`
 }
 
 //------------------------------------------------

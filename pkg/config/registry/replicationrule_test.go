@@ -18,6 +18,8 @@ package registry
 
 import (
 	"testing"
+
+	"github.com/kubermatic-labs/registryman/pkg/apis/registryman/v1alpha1"
 )
 
 type testRepCap struct {
@@ -145,4 +147,88 @@ func TestComputeReplicationRule(t *testing.T) {
 	if calculateReplicationRule(locNocap, globNocap) != noReplication {
 		t.Error("unexpected result")
 	}
+}
+
+func testReplicationRule(proj *project, cRep calculatedReplication) *replicationRule {
+	return &replicationRule{
+		calculatedReplication: cRep,
+		project:               proj,
+	}
+}
+
+func TestReplicationRuleTrigger(t *testing.T) {
+	projectWantsEventBased := &project{
+		Project: &v1alpha1.Project{
+			Spec: &v1alpha1.ProjectSpec{
+				Trigger: "event_based",
+			},
+		},
+		registry: &Registry{},
+	}
+	projectWantsManual := &project{
+		Project: &v1alpha1.Project{
+			Spec: &v1alpha1.ProjectSpec{
+				Trigger: "manual",
+			},
+		},
+		registry: &Registry{},
+	}
+	projectWantsCron := &project{
+		Project: &v1alpha1.Project{
+			Spec: &v1alpha1.ProjectSpec{
+				Trigger: "cron */5 * * * *",
+			},
+		},
+		registry: &Registry{},
+	}
+	projectWantsUnknown := &project{
+		Project: &v1alpha1.Project{
+			Spec: &v1alpha1.ProjectSpec{
+				Trigger: "unknown",
+			},
+		},
+		registry: &Registry{},
+	}
+	projectWantsNone := &project{
+		Project: &v1alpha1.Project{
+			Spec: &v1alpha1.ProjectSpec{},
+		},
+		registry: &Registry{},
+	}
+
+	if testReplicationRule(projectWantsUnknown, pushReplication).Trigger() != "event_based" {
+		t.Error("unexpected result")
+	}
+	if testReplicationRule(projectWantsUnknown, pullReplication).Trigger() != fallbackPullTrigger {
+		t.Error("unexpected result")
+	}
+
+	if testReplicationRule(projectWantsCron, pushReplication).Trigger() != "cron */5 * * * *" {
+		t.Error("unexpected result")
+	}
+	if testReplicationRule(projectWantsCron, pullReplication).Trigger() != "cron */5 * * * *" {
+		t.Error("unexpected result")
+	}
+
+	if testReplicationRule(projectWantsEventBased, pushReplication).Trigger() != "event_based" {
+		t.Error("unexpected result")
+	}
+	if testReplicationRule(projectWantsEventBased, pullReplication).Trigger() != fallbackPullTrigger {
+		t.Error("unexpected result")
+	}
+
+	if testReplicationRule(projectWantsManual, pushReplication).Trigger() != "manual" {
+		t.Error("unexpected result")
+	}
+	if testReplicationRule(projectWantsManual, pullReplication).Trigger() != "manual" {
+		t.Error("unexpected result")
+	}
+
+	if testReplicationRule(projectWantsNone, pushReplication).Trigger() != "event_based" {
+		t.Error("unexpected result")
+	}
+	if testReplicationRule(projectWantsNone, pullReplication).Trigger() != fallbackPullTrigger {
+		t.Error("unexpected result")
+	}
+
 }
