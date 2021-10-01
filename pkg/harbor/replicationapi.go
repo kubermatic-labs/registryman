@@ -104,7 +104,12 @@ func (r *registry) createReplicationRule(ctx context.Context, project globalregi
 		Update_time:  time.Time{}.Format(time.RFC3339),
 	}
 	var replTrigger *replicationTrigger
-	switch trigger {
+	triggerWords := strings.SplitN(trigger, " ", 2)
+	triggerWord := trigger
+	if len(triggerWords) > 0 {
+		triggerWord = triggerWords[0]
+	}
+	switch triggerWord {
 	case "manual":
 		replTrigger = &replicationTrigger{
 			Type: "manual",
@@ -112,6 +117,16 @@ func (r *registry) createReplicationRule(ctx context.Context, project globalregi
 	case "event_based":
 		replTrigger = &replicationTrigger{
 			Type: "event_based",
+		}
+	case "cron":
+		if len(triggerWords) == 0 {
+			return nil, fmt.Errorf("invalid cron format: %s", trigger)
+		}
+		replTrigger = &replicationTrigger{
+			Type: "scheduled",
+			TriggerSettings: triggerSettings{
+				Cron: triggerWords[1],
+			},
 		}
 	default:
 		return nil, fmt.Errorf("invalid replication trigger: %s", trigger)
