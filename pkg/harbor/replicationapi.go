@@ -125,7 +125,11 @@ func (r *registry) createReplicationRule(ctx context.Context, project globalregi
 		replTrigger = &replicationTrigger{
 			Type: "scheduled",
 			TriggerSettings: triggerSettings{
-				Cron: triggerWords[1],
+				// Harbor implements a cron rule for the seconds
+				// as the first element in the cron string. We
+				// set it to constant 0 since we don't want cron
+				// replication on the granularity of seconds.
+				Cron: "0 " + triggerWords[1],
 			},
 		}
 	default:

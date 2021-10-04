@@ -13,4 +13,4 @@ spec:
   - name: beta
     role: Developer
   scanner: anchore-scanner
-  trigger: cron */15 * * * * *
+  trigger: cron */15 * * * *
