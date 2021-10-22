@@ -99,7 +99,7 @@ func (rule *replicationRule) Trigger() globalregistry.ReplicationTrigger {
 	case noReplication:
 		panic("noReplication not handled")
 
-		// In case of push replication we respedct cron and manual,
+		// In case of push replication we respect cron and manual,
 		// otherwise use the event-based replication trigger
 	case pushReplication:
 		switch rule.project.Spec.Trigger.Type {
