@@ -85,14 +85,9 @@ func (rt replicationTrigger) TriggerSchedule() string {
 }
 
 var (
-	manualReplicationTrigger     = replicationTrigger{api.ManualReplicationTriggerType, ""}
 	eventBasedReplicationTrigger = replicationTrigger{api.EventBasedReplicationTriggerType, ""}
 	fallbackTrigger              = replicationTrigger{api.CronReplicationTriggerType, "*/10 * * * *"}
 )
-
-func cronReplicationTrigger(schedule string) replicationTrigger {
-	return replicationTrigger{api.CronReplicationTriggerType, schedule}
-}
 
 func (rule *replicationRule) Trigger() globalregistry.ReplicationTrigger {
 	switch rule.calculatedReplication {
