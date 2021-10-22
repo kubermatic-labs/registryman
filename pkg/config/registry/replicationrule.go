@@ -17,6 +17,7 @@
 package registry
 
 import (
+	api "github.com/kubermatic-labs/registryman/pkg/apis/registryman/v1alpha1"
 	"github.com/kubermatic-labs/registryman/pkg/globalregistry"
 )
 
@@ -67,20 +68,51 @@ func (rule *replicationRule) GetProjectName() string {
 func (rule *replicationRule) GetName() string {
 	panic("not implemented")
 }
-func (rule *replicationRule) Trigger() string {
+
+type replicationTrigger struct {
+	triggerType     api.ReplicationTriggerType
+	triggerSchedule string
+}
+
+var _ globalregistry.ReplicationTrigger = replicationTrigger{}
+
+func (rt replicationTrigger) TriggerType() api.ReplicationTriggerType {
+	return rt.triggerType
+}
+
+func (rt replicationTrigger) TriggerSchedule() string {
+	return rt.triggerSchedule
+}
+
+var (
+	eventBasedReplicationTrigger = replicationTrigger{api.EventBasedReplicationTriggerType, ""}
+	fallbackTrigger              = replicationTrigger{api.CronReplicationTriggerType, "*/10 * * * *"}
+)
+
+func (rule *replicationRule) Trigger() globalregistry.ReplicationTrigger {
 	switch rule.calculatedReplication {
 	case noReplication:
 		panic("noReplication not handled")
 
-		// In case of push replication we always configure event-based
-		// replication triger
+		// In case of push replication we respect cron and manual,
+		// otherwise use the event-based replication trigger
 	case pushReplication:
-		return "event_based"
+		switch rule.project.Spec.Trigger.Type {
+		case api.CronReplicationTriggerType, api.ManualReplicationTriggerType:
+			return rule.project.Spec.Trigger
+		default:
+			return eventBasedReplicationTrigger
+		}
 
-		// In case of pull replication we always configure manual
-		// replication triger
+		// In case of pull replication we respect cron and manual,
+		// otherwise use the fallback trigger
 	case pullReplication:
-		return "manual"
+		switch rule.project.Spec.Trigger.Type {
+		case api.CronReplicationTriggerType, api.ManualReplicationTriggerType:
+			return rule.project.Spec.Trigger
+		default:
+			return fallbackTrigger
+		}
 	default:
 		panic("unhandled case")
 	}

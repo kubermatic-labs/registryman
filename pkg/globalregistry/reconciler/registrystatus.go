@@ -113,14 +113,17 @@ func GetRegistryStatus(ctx context.Context, reg globalregistry.Registry) (*api.R
 		}
 		projectWithReplication, ok := project.(globalregistry.ProjectWithReplication)
 		if ok {
-			replicationRules, err := projectWithReplication.GetReplicationRules(ctx, "", "")
+			replicationRules, err := projectWithReplication.GetReplicationRules(ctx, nil, "")
 			if err != nil {
 				return nil, err
 			}
 			projectStatuses[i].ReplicationRules = make([]api.ReplicationRuleStatus, len(replicationRules))
 			for n, rule := range replicationRules {
 				projectStatuses[i].ReplicationRules[n].RemoteRegistryName = rule.RemoteRegistry().GetName()
-				projectStatuses[i].ReplicationRules[n].Trigger = string(rule.Trigger())
+				projectStatuses[i].ReplicationRules[n].Trigger = api.ReplicationTrigger{
+					Type:     rule.Trigger().TriggerType(),
+					Schedule: rule.Trigger().TriggerSchedule(),
+				}
 				projectStatuses[i].ReplicationRules[n].Direction = rule.Direction()
 			}
 		} else {

@@ -17,6 +17,12 @@
 package globalregistry
 
 import "context"
+import api "github.com/kubermatic-labs/registryman/pkg/apis/registryman/v1alpha1"
+
+type ReplicationTrigger interface {
+	TriggerType() api.ReplicationTriggerType
+	TriggerSchedule() string
+}
 
 // ReplicationRule interface declares the methods that can be used to manipulate
 // the replication rule of a project.
@@ -30,7 +36,7 @@ type ReplicationRule interface {
 	GetName() string
 
 	// Trigger returns the event that starts the replication.
-	Trigger() string
+	Trigger() ReplicationTrigger
 
 	// Direction returns the direction of the synchronization.
 	Direction() string
