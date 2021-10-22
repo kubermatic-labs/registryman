@@ -185,7 +185,7 @@ type ReplicationRuleStatus struct {
 	RemoteRegistryName string `json:"remoteRegistryName"`
 
 	// Trigger describes the event that shall trigger the replication.
-	Trigger string `json:"trigger"`
+	Trigger ReplicationTrigger `json:"trigger"`
 
 	// Direction shows whether the replication is of type pull or push.
 	Direction string `json:"direction"`
@@ -267,7 +267,7 @@ type ProjectSpec struct {
 	// Trigger specifies the preferred replication trigger. If it is not
 	// possible to implement the selected replication trigger, the trigger
 	// may be overridden.
-	Trigger string `json:"trigger,omitempty"`
+	Trigger ReplicationTrigger `json:"trigger,omitempty"`
 }
 
 //------------------------------------------------
@@ -370,6 +370,7 @@ func (pm *ProjectMember) UnmarshalJSON(data []byte) error {
 }
 
 // +kubebuilder:validation:Type=string
+// +kubebuilder:validation:Enum=User;Group;Robot
 
 // MemberType selects the type of the membership, like, User, Group or Robot.
 type MemberType int
@@ -510,6 +511,71 @@ func (mr *MemberRole) UnmarshalJSON(data []byte) error {
 		*mr = PullAndPushRole
 	}
 	return nil
+}
+
+// +kubebuilder:validation:Type=string
+type ReplicationTriggerType int
+
+const (
+	UndefinedRepliationTriggerType ReplicationTriggerType = iota
+	ManualReplicationTriggerType
+	EventBasedReplicationTriggerType
+	CronReplicationTriggerType
+)
+
+func (rtt ReplicationTriggerType) String() string {
+	switch rtt {
+	case ManualReplicationTriggerType:
+		return "manual"
+	case EventBasedReplicationTriggerType:
+		return "event_based"
+	case CronReplicationTriggerType:
+		return "cron"
+	default:
+		return "undefined"
+	}
+}
+
+func (rtt ReplicationTriggerType) MarshalText() ([]byte, error) {
+	return []byte(rtt.String()), nil
+}
+
+func (rtt *ReplicationTriggerType) UnmarshalText(text []byte) error {
+	switch string(text) {
+	case "manual":
+		*rtt = ManualReplicationTriggerType
+	case "event_based":
+		*rtt = EventBasedReplicationTriggerType
+	case "cron":
+		*rtt = CronReplicationTriggerType
+	default:
+		*rtt = UndefinedRepliationTriggerType
+	}
+	return nil
+}
+
+// ReplicationTrigger indicates the replication trigger of a project.
+type ReplicationTrigger struct {
+	Type ReplicationTriggerType `json:"type"`
+
+	// +kubebuilder:validation:Optional
+	Schedule string `json:"schedule,omitempty"`
+}
+
+func (rt ReplicationTrigger) TriggerType() ReplicationTriggerType {
+	return rt.Type
+}
+
+func (rt ReplicationTrigger) TriggerSchedule() string {
+	return rt.Schedule
+}
+
+func (rt ReplicationTrigger) String() string {
+	rType, err := rt.Type.MarshalText()
+	if err != nil {
+		panic(err)
+	}
+	return fmt.Sprintf("%s %s", string(rType), rt.Schedule)
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object

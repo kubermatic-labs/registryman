@@ -17,8 +17,7 @@
 package registry
 
 import (
-	"strings"
-
+	api "github.com/kubermatic-labs/registryman/pkg/apis/registryman/v1alpha1"
 	"github.com/kubermatic-labs/registryman/pkg/globalregistry"
 )
 
@@ -70,37 +69,54 @@ func (rule *replicationRule) GetName() string {
 	panic("not implemented")
 }
 
-var fallbackPullTrigger = "cron */10 * * * *"
+type replicationTrigger struct {
+	triggerType     api.ReplicationTriggerType
+	triggerSchedule string
+}
 
-func (rule *replicationRule) Trigger() string {
-	triggerWords := strings.SplitN(rule.project.Spec.Trigger, " ", 2)
-	triggerWord := ""
-	if len(triggerWords) > 0 {
-		triggerWord = triggerWords[0]
-	}
+var _ globalregistry.ReplicationTrigger = replicationTrigger{}
 
+func (rt replicationTrigger) TriggerType() api.ReplicationTriggerType {
+	return rt.triggerType
+}
+
+func (rt replicationTrigger) TriggerSchedule() string {
+	return rt.triggerSchedule
+}
+
+var (
+	manualReplicationTrigger     = replicationTrigger{api.ManualReplicationTriggerType, ""}
+	eventBasedReplicationTrigger = replicationTrigger{api.EventBasedReplicationTriggerType, ""}
+	fallbackTrigger              = replicationTrigger{api.CronReplicationTriggerType, "*/10 * * * *"}
+)
+
+func cronReplicationTrigger(schedule string) replicationTrigger {
+	return replicationTrigger{api.CronReplicationTriggerType, schedule}
+}
+
+func (rule *replicationRule) Trigger() globalregistry.ReplicationTrigger {
 	switch rule.calculatedReplication {
 	case noReplication:
 		panic("noReplication not handled")
 
-		// In case of push replication we always configure event-based
-		// replication triger
+		// In case of push replication we respedct cron and manual,
+		// otherwise use the event-based replication trigger
 	case pushReplication:
-		switch triggerWord {
-		case "cron", "manual":
+		switch rule.project.Spec.Trigger.Type {
+		case api.CronReplicationTriggerType, api.ManualReplicationTriggerType:
 			return rule.project.Spec.Trigger
 		default:
-			return "event_based"
+			return eventBasedReplicationTrigger
 		}
 
-		// In case of pull replication we always configure manual
-		// replication triger
+		// In case of pull replication we respect cron and manual,
+		// otherwise use the fallback trigger
 	case pullReplication:
-		switch triggerWord {
-		case "cron", "manual":
+		switch rule.project.Spec.Trigger.Type {
+		case api.CronReplicationTriggerType, api.ManualReplicationTriggerType:
 			return rule.project.Spec.Trigger
 		default:
-			return fallbackPullTrigger
+			return fallbackTrigger
 		}
 	default:
 		panic("unhandled case")

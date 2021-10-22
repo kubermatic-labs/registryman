@@ -160,7 +160,10 @@ func TestReplicationRuleTrigger(t *testing.T) {
 	projectWantsEventBased := &project{
 		Project: &v1alpha1.Project{
 			Spec: &v1alpha1.ProjectSpec{
-				Trigger: "event_based",
+				Trigger: v1alpha1.ReplicationTrigger{
+					Type:     v1alpha1.EventBasedReplicationTriggerType,
+					Schedule: "",
+				},
 			},
 		},
 		registry: &Registry{},
@@ -168,7 +171,10 @@ func TestReplicationRuleTrigger(t *testing.T) {
 	projectWantsManual := &project{
 		Project: &v1alpha1.Project{
 			Spec: &v1alpha1.ProjectSpec{
-				Trigger: "manual",
+				Trigger: v1alpha1.ReplicationTrigger{
+					Type:     v1alpha1.ManualReplicationTriggerType,
+					Schedule: "",
+				},
 			},
 		},
 		registry: &Registry{},
@@ -176,7 +182,10 @@ func TestReplicationRuleTrigger(t *testing.T) {
 	projectWantsCron := &project{
 		Project: &v1alpha1.Project{
 			Spec: &v1alpha1.ProjectSpec{
-				Trigger: "cron */5 * * * *",
+				Trigger: v1alpha1.ReplicationTrigger{
+					Type:     v1alpha1.CronReplicationTriggerType,
+					Schedule: "*/5 * * * *",
+				},
 			},
 		},
 		registry: &Registry{},
@@ -184,7 +193,10 @@ func TestReplicationRuleTrigger(t *testing.T) {
 	projectWantsUnknown := &project{
 		Project: &v1alpha1.Project{
 			Spec: &v1alpha1.ProjectSpec{
-				Trigger: "unknown",
+				Trigger: v1alpha1.ReplicationTrigger{
+					Type:     -1,
+					Schedule: "",
+				},
 			},
 		},
 		registry: &Registry{},
@@ -196,39 +208,45 @@ func TestReplicationRuleTrigger(t *testing.T) {
 		registry: &Registry{},
 	}
 
-	if testReplicationRule(projectWantsUnknown, pushReplication).Trigger() != "event_based" {
+	if testReplicationRule(projectWantsUnknown, pushReplication).Trigger().TriggerType().String() != "event_based" {
 		t.Error("unexpected result")
 	}
-	if testReplicationRule(projectWantsUnknown, pullReplication).Trigger() != fallbackPullTrigger {
-		t.Error("unexpected result")
-	}
-
-	if testReplicationRule(projectWantsCron, pushReplication).Trigger() != "cron */5 * * * *" {
-		t.Error("unexpected result")
-	}
-	if testReplicationRule(projectWantsCron, pullReplication).Trigger() != "cron */5 * * * *" {
+	if testReplicationRule(projectWantsUnknown, pullReplication).Trigger() != fallbackTrigger {
 		t.Error("unexpected result")
 	}
 
-	if testReplicationRule(projectWantsEventBased, pushReplication).Trigger() != "event_based" {
+	if testReplicationRule(projectWantsCron, pushReplication).Trigger().TriggerType().String() != "cron" {
 		t.Error("unexpected result")
 	}
-	if testReplicationRule(projectWantsEventBased, pullReplication).Trigger() != fallbackPullTrigger {
-		t.Error("unexpected result")
-	}
-
-	if testReplicationRule(projectWantsManual, pushReplication).Trigger() != "manual" {
-		t.Error("unexpected result")
-	}
-	if testReplicationRule(projectWantsManual, pullReplication).Trigger() != "manual" {
+	if testReplicationRule(projectWantsCron, pushReplication).Trigger().TriggerSchedule() != "*/5 * * * *" {
 		t.Error("unexpected result")
 	}
 
-	if testReplicationRule(projectWantsNone, pushReplication).Trigger() != "event_based" {
+	if testReplicationRule(projectWantsCron, pullReplication).Trigger().TriggerType().String() != "cron" {
 		t.Error("unexpected result")
 	}
-	if testReplicationRule(projectWantsNone, pullReplication).Trigger() != fallbackPullTrigger {
+	if testReplicationRule(projectWantsCron, pullReplication).Trigger().TriggerSchedule() != "*/5 * * * *" {
 		t.Error("unexpected result")
 	}
 
+	if testReplicationRule(projectWantsEventBased, pushReplication).Trigger().TriggerType().String() != "event_based" {
+		t.Error("unexpected result")
+	}
+	if testReplicationRule(projectWantsEventBased, pullReplication).Trigger() != fallbackTrigger {
+		t.Error("unexpected result")
+	}
+
+	if testReplicationRule(projectWantsManual, pushReplication).Trigger().TriggerType().String() != "manual" {
+		t.Error("unexpected result")
+	}
+	if testReplicationRule(projectWantsManual, pullReplication).Trigger().TriggerType().String() != "manual" {
+		t.Error("unexpected result")
+	}
+
+	if testReplicationRule(projectWantsNone, pushReplication).Trigger().TriggerType().String() != "event_based" {
+		t.Error("unexpected result")
+	}
+	if testReplicationRule(projectWantsNone, pullReplication).Trigger() != fallbackTrigger {
+		t.Error("unexpected result")
+	}
 }

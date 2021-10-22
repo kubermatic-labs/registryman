@@ -42,6 +42,7 @@ func GetOpenAPIDefinitions(ref common.ReferenceCallback) map[string]common.OpenA
 		"github.com/kubermatic-labs/registryman/pkg/apis/registryman/v1alpha1.RegistrySpec":          schema_pkg_apis_registryman_v1alpha1_RegistrySpec(ref),
 		"github.com/kubermatic-labs/registryman/pkg/apis/registryman/v1alpha1.RegistryStatus":        schema_pkg_apis_registryman_v1alpha1_RegistryStatus(ref),
 		"github.com/kubermatic-labs/registryman/pkg/apis/registryman/v1alpha1.ReplicationRuleStatus": schema_pkg_apis_registryman_v1alpha1_ReplicationRuleStatus(ref),
+		"github.com/kubermatic-labs/registryman/pkg/apis/registryman/v1alpha1.ReplicationTrigger":    schema_pkg_apis_registryman_v1alpha1_ReplicationTrigger(ref),
 		"github.com/kubermatic-labs/registryman/pkg/apis/registryman/v1alpha1.Scanner":               schema_pkg_apis_registryman_v1alpha1_Scanner(ref),
 		"github.com/kubermatic-labs/registryman/pkg/apis/registryman/v1alpha1.ScannerList":           schema_pkg_apis_registryman_v1alpha1_ScannerList(ref),
 		"github.com/kubermatic-labs/registryman/pkg/apis/registryman/v1alpha1.ScannerSpec":           schema_pkg_apis_registryman_v1alpha1_ScannerSpec(ref),
@@ -342,8 +343,8 @@ func schema_pkg_apis_registryman_v1alpha1_ProjectSpec(ref common.ReferenceCallba
 					"trigger": {
 						SchemaProps: spec.SchemaProps{
 							Description: "Trigger specifies the preferred replication trigger. If it is not possible to implement the selected replication trigger, the trigger may be overridden.",
-							Type:        []string{"string"},
-							Format:      "",
+							Default:     map[string]interface{}{},
+							Ref:         ref("github.com/kubermatic-labs/registryman/pkg/apis/registryman/v1alpha1.ReplicationTrigger"),
 						},
 					},
 				},
@@ -351,7 +352,7 @@ func schema_pkg_apis_registryman_v1alpha1_ProjectSpec(ref common.ReferenceCallba
 			},
 		},
 		Dependencies: []string{
-			"github.com/kubermatic-labs/registryman/pkg/apis/registryman/v1alpha1.ProjectMember"},
+			"github.com/kubermatic-labs/registryman/pkg/apis/registryman/v1alpha1.ProjectMember", "github.com/kubermatic-labs/registryman/pkg/apis/registryman/v1alpha1.ReplicationTrigger"},
 	}
 }
 
@@ -747,9 +748,8 @@ func schema_pkg_apis_registryman_v1alpha1_ReplicationRuleStatus(ref common.Refer
 					"trigger": {
 						SchemaProps: spec.SchemaProps{
 							Description: "Trigger describes the event that shall trigger the replication.",
-							Default:     "",
-							Type:        []string{"string"},
-							Format:      "",
+							Default:     map[string]interface{}{},
+							Ref:         ref("github.com/kubermatic-labs/registryman/pkg/apis/registryman/v1alpha1.ReplicationTrigger"),
 						},
 					},
 					"direction": {
@@ -762,6 +762,35 @@ func schema_pkg_apis_registryman_v1alpha1_ReplicationRuleStatus(ref common.Refer
 					},
 				},
 				Required: []string{"remoteRegistryName", "trigger", "direction"},
+			},
+		},
+		Dependencies: []string{
+			"github.com/kubermatic-labs/registryman/pkg/apis/registryman/v1alpha1.ReplicationTrigger"},
+	}
+}
+
+func schema_pkg_apis_registryman_v1alpha1_ReplicationTrigger(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Description: "ReplicationTrigger indicates the replication trigger of a project.",
+				Type:        []string{"object"},
+				Properties: map[string]spec.Schema{
+					"type": {
+						SchemaProps: spec.SchemaProps{
+							Default: 0,
+							Type:    []string{"integer"},
+							Format:  "int32",
+						},
+					},
+					"schedule": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"string"},
+							Format: "",
+						},
+					},
+				},
+				Required: []string{"type"},
 			},
 		},
 	}

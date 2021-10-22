@@ -65,6 +65,10 @@ spec:
                     type:
                       description: Type of the project member, e.g. User, Group, Robot.
                         If not set, the default value (User) is applied.
+                      enum:
+                      - User
+                      - Group
+                      - Robot
                       type: string
                   required:
                   - name
@@ -81,7 +85,14 @@ spec:
                 description: Trigger specifies the preferred replication trigger.
                   If it is not possible to implement the selected replication trigger,
                   the trigger may be overridden.
-                type: string
+                properties:
+                  schedule:
+                    type: string
+                  type:
+                    type: string
+                required:
+                - type
+                type: object
               type:
                 description: Type selects whether the project is global or local.
                 enum:
