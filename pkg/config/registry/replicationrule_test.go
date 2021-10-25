@@ -18,6 +18,8 @@ package registry
 
 import (
 	"testing"
+
+	"github.com/kubermatic-labs/registryman/pkg/apis/registryman/v1alpha1"
 )
 
 type testRepCap struct {
@@ -143,6 +145,108 @@ func TestComputeReplicationRule(t *testing.T) {
 		t.Error("unexpected result")
 	}
 	if calculateReplicationRule(locNocap, globNocap) != noReplication {
+		t.Error("unexpected result")
+	}
+}
+
+func testReplicationRule(proj *project, cRep calculatedReplication) *replicationRule {
+	return &replicationRule{
+		calculatedReplication: cRep,
+		project:               proj,
+	}
+}
+
+func TestReplicationRuleTrigger(t *testing.T) {
+	projectWantsEventBased := &project{
+		Project: &v1alpha1.Project{
+			Spec: &v1alpha1.ProjectSpec{
+				Trigger: v1alpha1.ReplicationTrigger{
+					Type:     v1alpha1.EventBasedReplicationTriggerType,
+					Schedule: "",
+				},
+			},
+		},
+		registry: &Registry{},
+	}
+	projectWantsManual := &project{
+		Project: &v1alpha1.Project{
+			Spec: &v1alpha1.ProjectSpec{
+				Trigger: v1alpha1.ReplicationTrigger{
+					Type:     v1alpha1.ManualReplicationTriggerType,
+					Schedule: "",
+				},
+			},
+		},
+		registry: &Registry{},
+	}
+	projectWantsCron := &project{
+		Project: &v1alpha1.Project{
+			Spec: &v1alpha1.ProjectSpec{
+				Trigger: v1alpha1.ReplicationTrigger{
+					Type:     v1alpha1.CronReplicationTriggerType,
+					Schedule: "*/5 * * * *",
+				},
+			},
+		},
+		registry: &Registry{},
+	}
+	projectWantsUnknown := &project{
+		Project: &v1alpha1.Project{
+			Spec: &v1alpha1.ProjectSpec{
+				Trigger: v1alpha1.ReplicationTrigger{
+					Type:     -1,
+					Schedule: "",
+				},
+			},
+		},
+		registry: &Registry{},
+	}
+	projectWantsNone := &project{
+		Project: &v1alpha1.Project{
+			Spec: &v1alpha1.ProjectSpec{},
+		},
+		registry: &Registry{},
+	}
+
+	if testReplicationRule(projectWantsUnknown, pushReplication).Trigger().TriggerType().String() != "event_based" {
+		t.Error("unexpected result")
+	}
+	if testReplicationRule(projectWantsUnknown, pullReplication).Trigger() != fallbackTrigger {
+		t.Error("unexpected result")
+	}
+
+	if testReplicationRule(projectWantsCron, pushReplication).Trigger().TriggerType().String() != "cron" {
+		t.Error("unexpected result")
+	}
+	if testReplicationRule(projectWantsCron, pushReplication).Trigger().TriggerSchedule() != "*/5 * * * *" {
+		t.Error("unexpected result")
+	}
+
+	if testReplicationRule(projectWantsCron, pullReplication).Trigger().TriggerType().String() != "cron" {
+		t.Error("unexpected result")
+	}
+	if testReplicationRule(projectWantsCron, pullReplication).Trigger().TriggerSchedule() != "*/5 * * * *" {
+		t.Error("unexpected result")
+	}
+
+	if testReplicationRule(projectWantsEventBased, pushReplication).Trigger().TriggerType().String() != "event_based" {
+		t.Error("unexpected result")
+	}
+	if testReplicationRule(projectWantsEventBased, pullReplication).Trigger() != fallbackTrigger {
+		t.Error("unexpected result")
+	}
+
+	if testReplicationRule(projectWantsManual, pushReplication).Trigger().TriggerType().String() != "manual" {
+		t.Error("unexpected result")
+	}
+	if testReplicationRule(projectWantsManual, pullReplication).Trigger().TriggerType().String() != "manual" {
+		t.Error("unexpected result")
+	}
+
+	if testReplicationRule(projectWantsNone, pushReplication).Trigger().TriggerType().String() != "event_based" {
+		t.Error("unexpected result")
+	}
+	if testReplicationRule(projectWantsNone, pullReplication).Trigger() != fallbackTrigger {
 		t.Error("unexpected result")
 	}
 }

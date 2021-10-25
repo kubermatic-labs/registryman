@@ -27,6 +27,7 @@ import (
 
 	"time"
 
+	api "github.com/kubermatic-labs/registryman/pkg/apis/registryman/v1alpha1"
 	"github.com/kubermatic-labs/registryman/pkg/globalregistry"
 )
 
@@ -91,7 +92,7 @@ func (r *registry) listReplicationRules(ctx context.Context) ([]globalregistry.R
 	return replicationRules, err
 }
 
-func (r *registry) createReplicationRule(ctx context.Context, project globalregistry.Project, remoteReg globalregistry.Registry, trigger, direction string) (globalregistry.ReplicationRule, error) {
+func (r *registry) createReplicationRule(ctx context.Context, project globalregistry.Project, remoteReg globalregistry.Registry, trigger globalregistry.ReplicationTrigger, direction string) (globalregistry.ReplicationRule, error) {
 	r.logger.V(1).Info("ReplicationAPI.Create invoked",
 		"project_name", project.GetName(),
 		"remoteReg_name", remoteReg.GetName(),
@@ -104,14 +105,28 @@ func (r *registry) createReplicationRule(ctx context.Context, project globalregi
 		Update_time:  time.Time{}.Format(time.RFC3339),
 	}
 	var replTrigger *replicationTrigger
-	switch trigger {
-	case "manual":
+	switch trigger.TriggerType() {
+	case api.ManualReplicationTriggerType:
 		replTrigger = &replicationTrigger{
 			Type: "manual",
 		}
-	case "event_based":
+	case api.EventBasedReplicationTriggerType:
 		replTrigger = &replicationTrigger{
 			Type: "event_based",
+		}
+	case api.CronReplicationTriggerType:
+		// if len(triggerWords) == 0 {
+		// 	return nil, fmt.Errorf("invalid cron format: %s", trigger)
+		// }
+		replTrigger = &replicationTrigger{
+			Type: "scheduled",
+			TriggerSettings: triggerSettings{
+				// Harbor implements a cron rule for the seconds
+				// as the first element in the cron string. We
+				// set it to constant 0 since we don't want cron
+				// replication on the granularity of seconds.
+				Cron: "0 " + trigger.TriggerSchedule(),
+			},
 		}
 	default:
 		return nil, fmt.Errorf("invalid replication trigger: %s", trigger)
