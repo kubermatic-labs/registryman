@@ -42,6 +42,10 @@ var ErrValidationRegistryNameNotUnique error = errors.New("validation error: mul
 // non-existing Scanner.
 var ErrValidationScannerNameReference error = errors.New("validation error: multiple registries present with the same name")
 
-// ErrValidationScannerNameReference error indicates that a project refers to a
-// non-existing Scanner.
+// ErrValidationGroupWithoutDN error indicates that a project group member
+// doesn't have its DN field set.
 var ErrValidationGroupWithoutDN error = errors.New("validation error: project group member with missing DN field")
+
+// ErrValidationReplicationRuleWrongSchedule error indicates that the replication rule's
+// schedule field isn't empty while the replication type is not 'cron'.
+var ErrValidationReplicationRuleWrongSchedule error = errors.New("validation error: replication rule with incorrect schedule field")
