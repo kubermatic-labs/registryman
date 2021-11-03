@@ -546,7 +546,7 @@ func (rtt *ReplicationTriggerType) UnmarshalText(text []byte) error {
 		*rtt = ManualReplicationTriggerType
 	case "event_based":
 		*rtt = EventBasedReplicationTriggerType
-	case "cron":
+	case "scheduled", "cron":
 		*rtt = CronReplicationTriggerType
 	default:
 		*rtt = UndefinedRepliationTriggerType
