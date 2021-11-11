@@ -29,7 +29,6 @@ import (
 	"github.com/kubermatic-labs/registryman/pkg/globalregistry/reconciler"
 	"github.com/spf13/cobra"
 	"gopkg.in/yaml.v2"
-	"k8s.io/client-go/rest"
 )
 
 var filteredRegistries []string
@@ -63,19 +62,15 @@ var statusCmd = &cobra.Command{
 		var aos config.ApiObjectStore
 		var err error
 		if len(args) == 1 {
-			logger.Info("reading config files", "dir", args[0])
 			aos, err = config.ReadLocalManifests(args[0], nil)
 			if err != nil {
 				return err
 			}
 		} else {
-			var clientConfig *rest.Config
-			aos, clientConfig, err = config.ConnectToKube(nil)
+			aos, _, err = config.ConnectToKube(nil)
 			if err != nil {
 				return err
 			}
-			logger.Info("connecting to Kubernetes for resources",
-				"host", clientConfig.Host)
 		}
 
 		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
