@@ -25,6 +25,7 @@ import (
 
 	api "github.com/kubermatic-labs/registryman/pkg/apis/registryman/v1alpha1"
 	"github.com/kubermatic-labs/registryman/pkg/config"
+	"github.com/kubermatic-labs/registryman/pkg/globalregistry"
 	"github.com/kubermatic-labs/registryman/pkg/globalregistry/reconciler"
 	"github.com/spf13/cobra"
 	"gopkg.in/yaml.v2"
@@ -33,6 +34,7 @@ import (
 
 var filteredRegistries []string
 var outputEncoder string
+var showExpected bool
 
 func registryInScope(registryName string) bool {
 	if len(filteredRegistries) == 0 {
@@ -84,9 +86,14 @@ var statusCmd = &cobra.Command{
 			if !registryInScope(expectedRegistry.GetName()) {
 				continue
 			}
-			actualRegistry, err := expectedRegistry.ToReal()
-			if err != nil {
-				return err
+			var actualRegistry globalregistry.Registry
+			if showExpected {
+				actualRegistry = expectedRegistry
+			} else {
+				actualRegistry, err = expectedRegistry.ToReal()
+				if err != nil {
+					return err
+				}
 			}
 			registryStatuses[expectedRegistry.GetName()], err = reconciler.GetRegistryStatus(ctx, actualRegistry)
 			if err != nil {
@@ -116,4 +123,5 @@ func init() {
 		"r",
 		[]string{}, "Select which registries shall be checked. When not set all registries will be checked.")
 	statusCmd.PersistentFlags().StringVarP(&outputEncoder, "output", "o", "json", "Output format. Supported values are json or yaml.")
+	statusCmd.PersistentFlags().BoolVarP(&showExpected, "expected", "e", false, "Show the expected state rather than the actual state.")
 }
