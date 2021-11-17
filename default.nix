@@ -64,7 +64,8 @@ let
 
   registryman = registryman-source: registryman-vendor:
     pkgs.runCommand "registryman-local" {
-      nativeBuildInputs = [ pkgs.go ];
+      buildInputs = [ pkgs.go pkgs.removeReferencesTo ];
+      disallowedReferences = [ pkgs.go ];
     } ''
        mkdir -p $out/bin
        mkdir -p $TMPDIR/go/src/github.com/kubermatic-labs/registryman
@@ -73,7 +74,8 @@ let
        cd $TMPDIR/go/src/github.com/kubermatic-labs/registryman
        export GOPATH=$TMPDIR/go
        export CGO_ENABLED=0
-       go build -tags "exclude_graphdriver_devicemapper exclude_graphdriver_btrfs containers_image_openpgp"
+       go build -tags "exclude_graphdriver_devicemapper exclude_graphdriver_btrfs containers_image_openpgp" -ldflags="-s -w"
+       remove-references-to -t ${pkgs.go} $TMPDIR/go/src/github.com/kubermatic-labs/registryman/registryman
        mv $TMPDIR/go/src/github.com/kubermatic-labs/registryman/registryman $out/bin
    '';
 
@@ -88,14 +90,25 @@ let
   registryman-git-vendor = registryman-vendor registryman-git-source git-vendor-sha256;
 
   registryman-git = registryman registryman-git-source registryman-git-vendor;
+
+  dockerimage = registryman-pkg: pkgs.dockerTools.buildLayeredImage {
+    name = "registryman";
+    config = {
+      Entrypoint = [ "${registryman-pkg}/bin/registryman" ];
+    };
+  };
+
 in {
+  inherit registryman-local registryman-git;
+
   dev = pkgs.mkShell {
     nativeBuildInputs = [ registryman-local ];
   };
 
   git = pkgs.mkShell {
     nativeBuildInputs = [ registryman-git ];
-    REGISTRYMAN_SRC = registryman-git-source;
-    REGISTRYMAN_VENDOR = registryman-git-vendor;
   };
+
+  dockerimage-git = dockerimage registryman-git;
+  dockerimage-local = dockerimage registryman-local;
 }
