@@ -334,6 +334,10 @@ func checkProject(project *api.Project) error {
 			err = ErrValidationGroupWithoutDN
 		}
 	}
+	if project.Spec.Trigger.Schedule != "" &&
+		project.Spec.Trigger.TriggerType() != api.CronReplicationTriggerType {
+		return ErrValidationReplicationRuleWrongSchedule
+	}
 	return err
 }
 

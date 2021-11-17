@@ -295,7 +295,9 @@ func (p *project) GetReplicationRules(ctx context.Context, trigger globalregistr
 		)
 		if replRule.GetProjectName() == p.Name {
 			p.registry.logger.V(1).Info("project name matches, replication rule stored")
-			if trigger != nil && trigger != replRule.Trigger() {
+			if trigger != nil &&
+				trigger.TriggerType() != replRule.Trigger().TriggerType() &&
+				trigger.TriggerSchedule() != replRule.Trigger().TriggerSchedule() {
 				continue
 			}
 			if direction != "" && direction != replRule.Direction() {
