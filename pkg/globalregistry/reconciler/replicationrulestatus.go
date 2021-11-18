@@ -94,8 +94,7 @@ func (ra *rRuleRemoveAction) Perform(ctx context.Context, reg globalregistry.Reg
 	for _, rRule := range rRules {
 		destructibleReplicationRule, ok := rRule.(globalregistry.DestructibleReplicationRule)
 		if !ok {
-			// TODO: error handling
-			continue
+			return nilEffect, fmt.Errorf("replication rule cannot be deleted: %w", err)
 		}
 		err := destructibleReplicationRule.Delete(ctx)
 		if err != nil {

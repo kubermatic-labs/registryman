@@ -294,13 +294,24 @@ func (p *project) GetReplicationRules(ctx context.Context, trigger globalregistr
 			"projectName", replRule.GetProjectName(),
 		)
 		if replRule.GetProjectName() == p.Name {
-			p.registry.logger.V(1).Info("project name matches, replication rule stored")
-			if trigger != nil && trigger != replRule.Trigger() {
+			if trigger != nil && (trigger.TriggerType() != replRule.Trigger().TriggerType() ||
+				trigger.TriggerSchedule() != replRule.Trigger().TriggerSchedule()) {
+				p.registry.logger.V(1).Info("trigger does not match, replication rule skipped",
+					"expected-triggertype", trigger.TriggerType(),
+					"expected-triggerschedule", trigger.TriggerSchedule(),
+					"rule-triggertype", replRule.Trigger().TriggerType(),
+					"expected-triggerschedule", replRule.Trigger().TriggerSchedule(),
+				)
 				continue
 			}
 			if direction != "" && direction != replRule.Direction() {
+				p.registry.logger.V(1).Info("direction does not match, replication rule skipped",
+					"expected-direction", direction,
+					"rule-direction", replRule.Direction(),
+				)
 				continue
 			}
+			p.registry.logger.V(1).Info("project name matches, replication rule stored")
 			results = append(results, replRule)
 		}
 	}
