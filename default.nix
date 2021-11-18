@@ -5,6 +5,8 @@
         sha256 = "02li241rz5668nfyp88zfjilxf0mr9yansa93fbl38hjwkhf3ix6";
       }) {},
   registryman-git-rev ? "",
+  registryman-git-ref ? "",
+  registryman-git-url ? "git@github.com:origoss/registryman.git",
   local-vendor-sha256 ? "0gcxhzi24ali7kn9433igmzkw36yf7svvgnvv2jc7xsfhg165p63",
   git-vendor-sha256 ? "0gcxhzi24ali7kn9433igmzkw36yf7svvgnvv2jc7xsfhg165p63",
   registryman-from ? "local",
@@ -12,6 +14,7 @@
 
 assert registryman-from == "local" || registryman-from == "git";
 assert registryman-from == "git" -> registryman-git-rev != "";
+assert registryman-from == "git" -> registryman-git-url != "";
 
 let
   registryman-local-source = pkgs.runCommand "registryman-local-source" {
@@ -88,8 +91,8 @@ let
    '';
 
   registryman-git-source = fetchGit {
-      url = "git@github.com:origoss/registryman.git";
-      # ref = "HEAD";
+      url = registryman-git-url;
+      ref = registryman-git-ref;
       rev = registryman-git-rev;
     };
 
