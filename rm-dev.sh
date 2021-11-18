@@ -1,3 +1,5 @@
 #!/bin/bash
 #
-nix-shell --pure -A dev --command "registryman $*" default.nix 
+nix-shell --pure -A shell \
+          --argstr registryman-from local \
+          --command "registryman $*" default.nix

@@ -4,14 +4,23 @@
         url = https://github.com/NixOS/nixpkgs/archive/34ad3ffe08adfca17fcb4e4a47bb5f3b113687be.tar.gz;
         sha256 = "02li241rz5668nfyp88zfjilxf0mr9yansa93fbl38hjwkhf3ix6";
       }) {},
-  git-rev ? "83af670cd32d39cefcb49c3a23851af5ca0195ce",
+  registryman-git-rev ? "",
+  registryman-git-ref ? "master",
   local-vendor-sha256 ? "0gcxhzi24ali7kn9433igmzkw36yf7svvgnvv2jc7xsfhg165p63",
   git-vendor-sha256 ? "0gcxhzi24ali7kn9433igmzkw36yf7svvgnvv2jc7xsfhg165p63",
+  registryman-from ? "local",
 }:
+
+assert registryman-from == "local" || registryman-from == "git";
+assert registryman-from == "git" -> registryman-git-rev != "";
+
 let
   registryman-local-source = pkgs.runCommand "registryman-local-source" {
     src = pkgs.nix-gitignore.gitignoreSource [
       "*.nix"
+      "rm-dev.sh"
+      "rm-git.sh"
+      "docker-build.sh"
       "pkg/apis/registryman/v1alpha1/openapi_generated.go"
       "pkg/apis/registryman/v1alpha1/zz_generated.deepcopy.go"
       "pkg/apis/registryman/v1alpha1/zz_generated.register.go"
@@ -79,17 +88,17 @@ let
        mv $TMPDIR/go/src/github.com/kubermatic-labs/registryman/registryman $out/bin
    '';
 
-  registryman-local = registryman registryman-local-generated registryman-local-vendor;
-
   registryman-git-source = fetchGit {
       url = "git@github.com:kubermatic-labs/registryman.git";
-      ref = "master";
-      rev = git-rev;
+      ref = registryman-git-ref;
+      rev = registryman-git-rev;
     };
 
   registryman-git-vendor = registryman-vendor registryman-git-source git-vendor-sha256;
 
-  registryman-git = registryman registryman-git-source registryman-git-vendor;
+  registryman-built = if registryman-from == "local" then
+    registryman registryman-local-generated registryman-local-vendor else
+      registryman registryman-git-source registryman-git-vendor;
 
   dockerimage = registryman-pkg: pkgs.dockerTools.buildLayeredImage {
     name = "registryman";
@@ -99,16 +108,13 @@ let
   };
 
 in {
-  inherit registryman-local registryman-git;
+  # inherit registryman-local registryman-git;
+  inherit registryman-built;
 
-  dev = pkgs.mkShell {
-    nativeBuildInputs = [ registryman-local ];
+  shell = pkgs.mkShell {
+    nativeBuildInputs = [ registryman-built ];
   };
 
-  git = pkgs.mkShell {
-    nativeBuildInputs = [ registryman-git ];
-  };
+  docker = dockerimage registryman-built;
 
-  dockerimage-git = dockerimage registryman-git;
-  dockerimage-local = dockerimage registryman-local;
 }
