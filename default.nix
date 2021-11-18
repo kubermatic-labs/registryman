@@ -89,7 +89,7 @@ let
 
   registryman-git-source = fetchGit {
       url = "git@github.com:kubermatic-labs/registryman.git";
-      ref = "HEAD";
+      # ref = "HEAD";
       rev = registryman-git-rev;
     };
 
