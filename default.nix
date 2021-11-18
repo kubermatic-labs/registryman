@@ -5,7 +5,6 @@
         sha256 = "02li241rz5668nfyp88zfjilxf0mr9yansa93fbl38hjwkhf3ix6";
       }) {},
   registryman-git-rev ? "",
-  registryman-git-ref ? "master",
   local-vendor-sha256 ? "0gcxhzi24ali7kn9433igmzkw36yf7svvgnvv2jc7xsfhg165p63",
   git-vendor-sha256 ? "0gcxhzi24ali7kn9433igmzkw36yf7svvgnvv2jc7xsfhg165p63",
   registryman-from ? "local",
@@ -90,7 +89,7 @@ let
 
   registryman-git-source = fetchGit {
       url = "git@github.com:kubermatic-labs/registryman.git";
-      ref = registryman-git-ref;
+      ref = "HEAD";
       rev = registryman-git-rev;
     };
 
