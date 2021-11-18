@@ -73,14 +73,14 @@ let
     mv $TMPDIR/go/src/github.com/kubermatic-labs/registryman/* $out
 '';
 
-  registryman = registryman-source: registryman-vendor:
+  registryman = registryman-vendor:
     pkgs.runCommand "registryman-local" {
       buildInputs = [ pkgs.go pkgs.removeReferencesTo ];
       disallowedReferences = [ pkgs.go ];
     } ''
        mkdir -p $out/bin
        mkdir -p $TMPDIR/go/src/github.com/kubermatic-labs/registryman
-       cp -a ${registryman-source}/* $TMPDIR/go/src/github.com/kubermatic-labs/registryman
+       cp -a ${registryman-generated}/* $TMPDIR/go/src/github.com/kubermatic-labs/registryman
        ln -s ${registryman-vendor} $TMPDIR/go/src/github.com/kubermatic-labs/registryman/vendor
        cd $TMPDIR/go/src/github.com/kubermatic-labs/registryman
        export GOPATH=$TMPDIR/go
@@ -98,9 +98,12 @@ let
 
   registryman-git-vendor = registryman-vendor registryman-git-source git-vendor-sha256;
 
+  registryman-generated = if registryman-from == "local" then registryman-local-generated
+    else registryman-git-source;
+
   registryman-built = if registryman-from == "local" then
-    registryman registryman-local-generated registryman-local-vendor else
-      registryman registryman-git-source registryman-git-vendor;
+    registryman registryman-local-vendor else
+      registryman registryman-git-vendor;
 
   dockerimage = registryman-pkg: pkgs.dockerTools.buildLayeredImage {
     name = "registryman";
@@ -119,4 +122,7 @@ in {
 
   docker = dockerimage registryman-built;
 
+  project-crd = "${registryman-generated}/pkg/apis/registryman/v1alpha1/registryman.kubermatic.com_projects.yaml";
+  registry-crd = "${registryman-generated}/pkg/apis/registryman/v1alpha1/registryman.kubermatic.com_registries.yaml";
+  scanner-crd = "${registryman-generated}/pkg/apis/registryman/v1alpha1/registryman.kubermatic.com_scanners.yaml";
 }
