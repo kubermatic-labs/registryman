@@ -18,11 +18,11 @@ require (
 	github.com/spf13/viper v1.7.1
 	go.uber.org/zap v1.17.0
 	gopkg.in/yaml.v2 v2.4.0
-	k8s.io/api v0.21.1
-	k8s.io/apiextensions-apiserver v0.21.1
-	k8s.io/apimachinery v0.21.1
-	k8s.io/client-go v0.21.1
-	k8s.io/code-generator v0.21.1
-	k8s.io/kube-openapi v0.0.0-20210527164424-3c818078ee3d
+	k8s.io/api v0.22.4
+	k8s.io/apiextensions-apiserver v0.22.4
+	k8s.io/apimachinery v0.22.4
+	k8s.io/client-go v0.22.4
+	k8s.io/code-generator v0.22.4
+	k8s.io/kube-openapi v0.0.0-20211109043538-20434351676c
 	sigs.k8s.io/controller-tools v0.5.0
 )
