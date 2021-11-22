@@ -25,14 +25,15 @@ import (
 
 	api "github.com/kubermatic-labs/registryman/pkg/apis/registryman/v1alpha1"
 	"github.com/kubermatic-labs/registryman/pkg/config"
+	"github.com/kubermatic-labs/registryman/pkg/globalregistry"
 	"github.com/kubermatic-labs/registryman/pkg/globalregistry/reconciler"
 	"github.com/spf13/cobra"
 	"gopkg.in/yaml.v2"
-	"k8s.io/client-go/rest"
 )
 
 var filteredRegistries []string
 var outputEncoder string
+var showExpected bool
 
 func registryInScope(registryName string) bool {
 	if len(filteredRegistries) == 0 {
@@ -61,19 +62,15 @@ var statusCmd = &cobra.Command{
 		var aos config.ApiObjectStore
 		var err error
 		if len(args) == 1 {
-			logger.Info("reading config files", "dir", args[0])
 			aos, err = config.ReadLocalManifests(args[0], nil)
 			if err != nil {
 				return err
 			}
 		} else {
-			var clientConfig *rest.Config
-			aos, clientConfig, err = config.ConnectToKube(nil)
+			aos, _, err = config.ConnectToKube(nil)
 			if err != nil {
 				return err
 			}
-			logger.Info("connecting to Kubernetes for resources",
-				"host", clientConfig.Host)
 		}
 
 		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
@@ -84,9 +81,14 @@ var statusCmd = &cobra.Command{
 			if !registryInScope(expectedRegistry.GetName()) {
 				continue
 			}
-			actualRegistry, err := expectedRegistry.ToReal()
-			if err != nil {
-				return err
+			var actualRegistry globalregistry.Registry
+			if showExpected {
+				actualRegistry = expectedRegistry
+			} else {
+				actualRegistry, err = expectedRegistry.ToReal()
+				if err != nil {
+					return err
+				}
 			}
 			registryStatuses[expectedRegistry.GetName()], err = reconciler.GetRegistryStatus(ctx, actualRegistry)
 			if err != nil {
@@ -116,4 +118,5 @@ func init() {
 		"r",
 		[]string{}, "Select which registries shall be checked. When not set all registries will be checked.")
 	statusCmd.PersistentFlags().StringVarP(&outputEncoder, "output", "o", "json", "Output format. Supported values are json or yaml.")
+	statusCmd.PersistentFlags().BoolVarP(&showExpected, "expected", "e", false, "Show the expected state rather than the actual state.")
 }
