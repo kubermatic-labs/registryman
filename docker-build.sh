@@ -13,5 +13,5 @@
 # Environment variables:
 #
 docker load < $(nix-build -A docker \
-                          --argstr registryman-from $1 \
-                          --argstr registryman-git-rev $REGISTRYMAN_REV)
+                          --argstr registryman-from "$1" \
+                          --argstr registryman-git-rev "$REGISTRYMAN_REV")

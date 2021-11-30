@@ -257,8 +257,8 @@ let
     GOROOT = collected-go-sources;
   } ''
     mkdir -p $out/
-    mkdir -p $TMPDIR/modcache
-    export GOMODCACHE=$TMPDIR/modcache
+    mkdir -p $TMPDIR/gocache
+    export GOCACHE=$TMPDIR/gocache
     mkdir -p $TMPDIR/go/src/github.com/kubermatic-labs/registryman
     cp -a ${registryman-local-source}/* $TMPDIR/go/src/github.com/kubermatic-labs/registryman
     ln -s ${registryman-local-vendor} $TMPDIR/go/src/github.com/kubermatic-labs/registryman/vendor
