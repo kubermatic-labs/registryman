@@ -37,6 +37,8 @@ var webhookCmd = &cobra.Command{
 	Long:  "Start validating webhook server",
 	Run: func(cmd *cobra.Command, args []string) {
 		webhook.SetLogger(logger)
+		logger.V(1).Info("startup configuration",
+			"verbose", verbose)
 		http.HandleFunc("/", webhook.AdmissionRequestHandler)
 		logger.Info("starting validating webhook server",
 			"port", *webhookListenPort,
@@ -50,6 +52,6 @@ func init() {
 	rootCmd.AddCommand(webhookCmd)
 
 	webhookListenPort = webhookCmd.PersistentFlags().IntP("port", "p", 443, "Port where the webhook service listens on.")
-	keyFilePath = webhookCmd.Flags().StringP("key", "k", "tls/ca-key.pem", "TLS key file path.")
-	certFilePath = webhookCmd.Flags().StringP("cert", "c", "tls/ca.pem", "TLS cert file path.")
+	keyFilePath = webhookCmd.Flags().StringP("key", "k", "tls/tls.key", "TLS key file path.")
+	certFilePath = webhookCmd.Flags().StringP("cert", "c", "tls/tls.crt", "TLS cert file path.")
 }

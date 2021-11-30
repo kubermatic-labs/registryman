@@ -26,6 +26,7 @@ import (
 // i.e. all resources parsed. If there is a consistency issue, an error is
 // returned.
 func ValidateConsistency(aos ApiObjectStore) error {
+	logger.V(1).Info("ValidateConsistency invoked")
 	ctx := context.Background()
 	registries := aos.GetRegistries(ctx)
 	projects := aos.GetProjects(ctx)
@@ -108,15 +109,22 @@ func checkGlobalRegistryCount(registries []*api.Registry) error {
 // checkLocalRegistryNamesInProjects checks that the registries referenced by
 // the local projects exist.
 func checkLocalRegistryNamesInProjects(registries []*api.Registry, projects []*api.Project) error {
+	logger.V(1).Info("checkLocalRegistryNamesInProjects invoked")
 	var err error
 	localRegistries := make([]string, 0)
 	for _, registry := range registries {
 		if registry.Spec.Role == "Local" {
+			logger.V(1).Info("local registry found",
+				"registry", registry.Name)
 			localRegistries = append(localRegistries, registry.Name)
 		}
 	}
 	for _, project := range projects {
+		logger.V(1).Info("checking project",
+			"project", project.Name)
 		if project.Spec.Type == api.LocalProjectType {
+			logger.V(1).Info("project is of type local",
+				"project", project.Name)
 			localRegistryExists := false
 			for _, localRegistry := range project.Spec.LocalRegistries {
 				for _, registry := range localRegistries {
