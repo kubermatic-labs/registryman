@@ -73,6 +73,8 @@ let
     } ''
        mkdir -p $out/bin
        mkdir -p $TMPDIR/go/src/github.com/kubermatic-labs/registryman
+       mkdir -p $TMPDIR/gocache
+       export GOCACHE=$TMPDIR/gocache
        cp -a ${registryman-generated}/* $TMPDIR/go/src/github.com/kubermatic-labs/registryman
        ln -s ${registryman-vendor} $TMPDIR/go/src/github.com/kubermatic-labs/registryman/vendor
        cd $TMPDIR/go/src/github.com/kubermatic-labs/registryman
