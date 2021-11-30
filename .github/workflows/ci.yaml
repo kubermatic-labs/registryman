@@ -68,3 +68,10 @@ jobs:
       with:
         go-version: ${{ env.golang-version }}
     - run: go test -v ./... -race -tags "exclude_graphdriver_devicemapper exclude_graphdriver_btrfs containers_image_openpgp"
+  nix-build:
+    runs-on: ubuntu-latest
+    name: Building with nix
+    steps:
+    - uses: actions/checkout@v2
+    - uses: cachix/install-nix-action@v16
+    - run: nix-build -A docker --argstr registryman-from local
