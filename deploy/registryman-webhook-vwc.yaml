@@ -1,0 +1,21 @@
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingWebhookConfiguration
+metadata:
+  name: registryman.kubermatic.com
+  annotations:
+    cert-manager.io/inject-ca-from: registryman/registryman-webhook
+webhooks:
+- name: registryman.kubermatic.com
+  rules:
+  - apiGroups:   ["registryman.kubermatic.com"]
+    apiVersions: ["v1alpha1"]
+    operations:  ["CREATE", "DELETE", "UPDATE"]
+    resources:   ["registries", "projects", "scanners"]
+    scope:       "Namespaced"
+  clientConfig:
+    service:
+      namespace: "default"
+      name: "registryman-webhook"
+  admissionReviewVersions: ["v1"]
+  sideEffects: None
+  timeoutSeconds: 5

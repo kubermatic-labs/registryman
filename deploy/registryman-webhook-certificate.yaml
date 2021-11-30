@@ -1,0 +1,10 @@
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: registryman-webhook
+spec:
+  secretName: registryman-webhook-cert
+  dnsNames:
+  - registryman-webhook.registryman.svc
+  issuerRef:
+    name: registryman-ca-issuer
