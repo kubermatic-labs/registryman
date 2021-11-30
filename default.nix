@@ -104,6 +104,9 @@ let
       rev = registryman-git-rev;
     };
 
+  registryman-source = if registryman-from == "local" then registryman-local-source
+    else registryman-git-source;
+
   registryman-git-vendor = registryman-vendor registryman-git-source git-vendor-sha256;
 
   registryman-generated = if registryman-from == "local" then registryman-local-generated
@@ -113,10 +116,109 @@ let
     registryman registryman-local-vendor else
       registryman registryman-git-vendor;
 
-  dockerimage = registryman-pkg: pkgs.dockerTools.buildLayeredImage {
+  registryman-kustomization-yaml = pkgs.writeTextFile {
+    name = "registryman-kustomization-yaml";
+    destination = "/kustomization.yaml";
+    text = builtins.toJSON {
+      apiVersion = "kustomize.config.k8s.io/v1beta1";
+      kind = "Kustomization";
+      namespace = "registryman";
+      resources = [
+        "registryman-namespace.yaml"
+        "registryman-ca-certificate.yaml"
+        "registryman-cert-issuer.yaml"
+        "registryman-webhook-certificate.yaml"
+        "registryman-webhook-serviceaccount.yaml"
+        "registryman-webhook-deployment.yaml"
+        "registryman-webhook-clusterrole.yaml"
+        "registryman-webhook-clusterrolebinding.yaml"
+        "registryman-webhook-vwc.yaml"
+        "registryman-webhook-service.yaml"
+      ];
+      images = [
+        {
+          name = "registryman";
+          newName = "registryman";
+          newTag = image-tag;
+        }
+      ];
+    };
+  };
+
+  registryman-kustomization-yaml-verbose = pkgs.writeTextFile {
+    name = "registryman-kustomization-yaml";
+    destination = "/kustomization.yaml";
+    text = builtins.toJSON {
+      apiVersion = "kustomize.config.k8s.io/v1beta1";
+      kind = "Kustomization";
+      namespace = "registryman";
+      resources = [
+        "registryman-namespace.yaml"
+        "registryman-ca-certificate.yaml"
+        "registryman-cert-issuer.yaml"
+        "registryman-webhook-certificate.yaml"
+        "registryman-webhook-serviceaccount.yaml"
+        "registryman-webhook-deployment.yaml"
+        "registryman-webhook-clusterrole.yaml"
+        "registryman-webhook-clusterrolebinding.yaml"
+        "registryman-webhook-vwc.yaml"
+        "registryman-webhook-service.yaml"
+      ];
+      images = [
+        {
+          name = "registryman";
+          newName = "registryman";
+          newTag = image-tag;
+        }
+      ];
+      patchesStrategicMerge = [
+        "registryman-webhook-deployment-verbose-patch.yaml"
+      ];
+    };
+  };
+
+  registryman-deployment-manifests = pkgs.runCommand "registryman-deployment-manifests" {
+    src = (builtins.toString registryman-source) + "/deploy";
+  } ''
+      mkdir -p $out
+      cp -a ${registryman-kustomization-yaml}/kustomization.yaml $out/kustomization.yaml
+      cp -a $src/registryman-namespace.yaml $out
+      cp -a $src/registryman-ca-certificate.yaml $out
+      cp -a $src/registryman-cert-issuer.yaml $out
+      cp -a $src/registryman-webhook-certificate.yaml $out
+      cp -a $src/registryman-webhook-serviceaccount.yaml $out
+      cp -a $src/registryman-webhook-deployment.yaml $out
+      cp -a $src/registryman-webhook-clusterrole.yaml $out
+      cp -a $src/registryman-webhook-clusterrolebinding.yaml $out
+      cp -a $src/registryman-webhook-vwc.yaml $out
+      cp -a $src/registryman-webhook-service.yaml $out
+    '';
+
+  registryman-deployment-manifests-verbose = pkgs.runCommand "registryman-deployment-manifests" {
+    src = (builtins.toString registryman-source) + "/deploy";
+  } ''
+      mkdir -p $out
+      cp -a ${registryman-kustomization-yaml-verbose}/kustomization.yaml $out/kustomization.yaml
+      cp -a $src/registryman-namespace.yaml $out
+      cp -a $src/registryman-ca-certificate.yaml $out
+      cp -a $src/registryman-cert-issuer.yaml $out
+      cp -a $src/registryman-webhook-certificate.yaml $out
+      cp -a $src/registryman-webhook-serviceaccount.yaml $out
+      cp -a $src/registryman-webhook-deployment.yaml $out
+      cp -a $src/registryman-webhook-clusterrole.yaml $out
+      cp -a $src/registryman-webhook-clusterrolebinding.yaml $out
+      cp -a $src/registryman-webhook-vwc.yaml $out
+      cp -a $src/registryman-webhook-service.yaml $out
+      cp -a $src/registryman-webhook-deployment-verbose-patch.yaml $out
+    '';
+
+  image-tag = builtins.hashString "sha256" (builtins.toString registryman-built);
+
+  dockerimage = pkgs.dockerTools.buildLayeredImage {
     name = "registryman";
+    tag = image-tag;
     config = {
-      Entrypoint = [ "${registryman-pkg}/bin/registryman" ];
+      Entrypoint = [ "${registryman-built}/bin/registryman" ];
     };
   };
 
@@ -209,7 +311,8 @@ let
 
 in {
   # inherit registryman-local registryman-git;
-  inherit registryman-built generated-code;
+  inherit registryman-built generated-code registryman-deployment-manifests
+    registryman-deployment-manifests-verbose image-tag;
 
   shell = pkgs.mkShell {
     nativeBuildInputs = [ registryman-built ];
@@ -223,7 +326,7 @@ in {
     GOROOT = collected-go-sources;
     REGISTRYMAN_GENERATED = generated-code;
   };
-  docker = dockerimage registryman-built;
+  docker = dockerimage;
 
   project-crd = "${registryman-generated}/pkg/apis/registryman/v1alpha1/registryman.kubermatic.com_projects.yaml";
   registry-crd = "${registryman-generated}/pkg/apis/registryman/v1alpha1/registryman.kubermatic.com_registries.yaml";
