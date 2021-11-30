@@ -139,22 +139,26 @@ func (r *registry) getRemoteRegistryByName(ctx context.Context, name string) (*r
 }
 
 func (r *registry) createRemoteRegistry(ctx context.Context, reg globalregistry.Registry) (*remoteRegistryStatus, error) {
+	r.logger.V(1).Info("createRemoteRegistry invoked",
+		"reg-name", reg.GetName())
 	regStatus := remoteRegistryStatusFromRegistry(reg)
 	reqBodyBuf := bytes.NewBuffer(nil)
 	err := json.NewEncoder(reqBodyBuf).Encode(regStatus)
 	if err != nil {
 		return nil, err
 	}
-	r.logger.V(1).Info(reqBodyBuf.String())
 	url := *r.parsedUrl
 	url.Path = registriesPath
+	r.logger.V(1).Info("sending POST request",
+		"url", url.String(),
+		"body", reqBodyBuf.String(),
+	)
 	req, err := http.NewRequest(http.MethodPost, url.String(), reqBodyBuf)
 	if err != nil {
 		return nil, err
 	}
 
-	r.logger.V(1).Info("sending HTTP request", "req-uri", req.RequestURI)
-
+	req.Header["Content-Type"] = []string{"application/json"}
 	req.SetBasicAuth(r.GetUsername(), r.GetPassword())
 
 	resp, err := r.do(ctx, req)

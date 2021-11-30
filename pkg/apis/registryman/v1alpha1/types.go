@@ -308,24 +308,16 @@ func (rt ProjectType) String() string {
 	return s
 }
 
-// MarshalJSON implements the Marshaller interface
-func (rt ProjectType) MarshalJSON() ([]byte, error) {
-	s, err := rt.string()
-	if err != nil {
-		return nil, err
-	}
-	return json.Marshal(s)
+// MarshalText implements the Marshaller interface
+func (rt ProjectType) MarshalText() ([]byte, error) {
+	return []byte(rt.String()), nil
 }
 
-func (rt *ProjectType) UnmarshalJSON(data []byte) error {
-	var s string
-	err := json.Unmarshal(data, &s)
-	if err != nil {
-		return err
-	}
-	switch s {
+// UnmarshalText implements the Unmarshaller interface
+func (rt *ProjectType) UnmarshalText(text []byte) error {
+	switch string(text) {
 	default:
-		return fmt.Errorf("failed unmarshalling %s to ProjectType", s)
+		return fmt.Errorf("failed unmarshalling %s to ProjectType", string(text))
 	case "Global":
 		*rt = GlobalProjectType
 	case "Local":
@@ -402,23 +394,16 @@ func (mt MemberType) String() string {
 	return s
 }
 
-func (mt MemberType) MarshalJSON() ([]byte, error) {
-	s, err := mt.string()
-	if err != nil {
-		return nil, err
-	}
-	return json.Marshal(s)
+// MarshalText implements the Marshaller interface
+func (mt MemberType) MarshalText() ([]byte, error) {
+	return []byte(mt.String()), nil
 }
 
-func (mt *MemberType) UnmarshalJSON(data []byte) error {
-	var s string
-	err := json.Unmarshal(data, &s)
-	if err != nil {
-		return err
-	}
-	switch s {
+// UnmarshalText implements the Unmarshaller interface
+func (mt *MemberType) UnmarshalText(text []byte) error {
+	switch string(text) {
 	default:
-		return fmt.Errorf("failed unmarshalling %s to MemberType", s)
+		return fmt.Errorf("failed unmarshalling %s to MemberType", string(text))
 	case "User":
 		*mt = UserMemberType
 	case "Group":
@@ -476,23 +461,16 @@ func (mr MemberRole) String() string {
 	return s
 }
 
-func (mr MemberRole) MarshalJSON() ([]byte, error) {
-	s, err := mr.string()
-	if err != nil {
-		return nil, err
-	}
-	return json.Marshal(s)
+// MarshalText implements the Marshaller interface
+func (mr MemberRole) MarshalText() ([]byte, error) {
+	return []byte(mr.String()), nil
 }
 
-func (mr *MemberRole) UnmarshalJSON(data []byte) error {
-	var s string
-	err := json.Unmarshal(data, &s)
-	if err != nil {
-		return err
-	}
-	switch s {
+// UnmarshalText implements the Unmarshaller interface
+func (mr *MemberRole) UnmarshalText(text []byte) error {
+	switch string(text) {
 	default:
-		return fmt.Errorf("failed unmarshalling %s to MemberRole", s)
+		return fmt.Errorf("failed unmarshalling %s to MemberRole", string(text))
 	case "LimitedGuest":
 		*mr = LimitedGuestRole
 	case "Guest":
@@ -536,10 +514,12 @@ func (rtt ReplicationTriggerType) String() string {
 	}
 }
 
+// MarshalText implements the Marshaller interface
 func (rtt ReplicationTriggerType) MarshalText() ([]byte, error) {
 	return []byte(rtt.String()), nil
 }
 
+// UnmarshalText implements the Unmarshaller interface
 func (rtt *ReplicationTriggerType) UnmarshalText(text []byte) error {
 	switch string(text) {
 	case "manual":
