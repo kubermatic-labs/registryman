@@ -44,11 +44,14 @@ let
       outputHash = sha256;
     } ''
        mkdir -p $out
-       mkdir -p tmp
+       mkdir -p $TMPDIR/tmp
+       mkdir -p $TMPDIR/gomodules
+       export GOMODCACHE=$TMPDIR/gomodules
        cp -a ${registryman-src}/* $TMPDIR/tmp
        chmod a+w $TMPDIR/tmp/go.mod
        cd tmp
        go mod vendor
+       ls -l $TMPDIR/gomodules
        mv vendor/* $out
     '';
 
@@ -62,24 +65,6 @@ let
       cp -a ${generated-code}/* $TMPDIR/pkg/apis/registryman/v1alpha1/
       cp -a $TMPDIR/* $out
     '';
-
-#   registryman-local-generated = pkgs.runCommand "registryman-local-generated" {
-#     nativeBuildInputs = [ pkgs.go ];
-#   } ''
-#     mkdir -p $out
-#     # cp ${registryman-local-source}/* $out
-#     # cp ${generated-code}/* $out/pkg/apis/registryman/v1alpha1/
-#     # mkdir -p $TMPDIR/go/src/github.com/kubermatic-labs/registryman
-#     # cp -a ${registryman-local-source}/* $TMPDIR/go/src/github.com/kubermatic-labs/registryman
-#     # ln -s ${registryman-local-vendor} $TMPDIR/go/src/github.com/kubermatic-labs/registryman/vendor
-#     # cd $TMPDIR/go/src/github.com/kubermatic-labs/registryman
-#     # chmod a+rw -R .
-#     # patchShebangs --build $TMPDIR/go/src/github.com/kubermatic-labs/registryman/hack/update-codegen.sh
-#     # export GOPATH=$TMPDIR/go
-#     # hack/update-codegen.sh
-#     # rm $TMPDIR/go/src/github.com/kubermatic-labs/registryman/vendor
-#     # mv $TMPDIR/go/src/github.com/kubermatic-labs/registryman/* $out
-# '';
 
   registryman = registryman-vendor:
     pkgs.runCommand "registryman-local" {
