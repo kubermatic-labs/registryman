@@ -1,0 +1,15 @@
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: registryman-ca
+spec:
+  isCA: true
+  commonName: registryman-ca
+  secretName: ca-certificate
+  privateKey:
+    algorithm: ECDSA
+    size: 256
+  issuerRef:
+    name: selfsigned
+    kind: ClusterIssuer
+    group: cert-manager.io

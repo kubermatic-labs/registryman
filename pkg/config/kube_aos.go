@@ -163,10 +163,13 @@ func (aos *kubeApiObjectStore) RemoveResource(ctx context.Context, obj runtime.O
 
 // GetRegistries returns the parsed registries as API objects.
 func (aos *kubeApiObjectStore) GetRegistries(ctx context.Context) []*api.Registry {
+	logger.V(1).Info("GetRegistries invoked")
 	namespace, _, err := kubeConfig.Namespace()
 	if err != nil {
 		panic(err)
 	}
+	logger.V(1).Info("namespace in GetRegistries",
+		"namespace", namespace)
 	registryList, err := aos.regmanClient.RegistrymanV1alpha1().Registries(namespace).List(ctx, v1.ListOptions{})
 	if err != nil {
 		panic(err)
