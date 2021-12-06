@@ -90,9 +90,11 @@ func initLogger() {
 	var logConfig zap.Config
 	if verbose {
 		logConfig = zap.NewDevelopmentConfig()
+		logConfig.OutputPaths = []string{"stdout"}
 	} else {
 		logConfig = zap.NewProductionConfig()
 		logConfig.Encoding = "console"
+		logConfig.OutputPaths = []string{"stdout"}
 		logConfig.DisableCaller = true
 	}
 	zapLogger, err = logConfig.Build()

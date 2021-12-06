@@ -19,6 +19,7 @@ assert registryman-from == "git" -> registryman-git-url != "";
 let
   registryman-local-source = pkgs.runCommand "registryman-local-source" {
     src = pkgs.nix-gitignore.gitignoreSource [
+      ".git"
       "*.nix"
       "rm-dev.sh"
       "rm-git.sh"
