@@ -60,6 +60,6 @@
           (registry-api-endpoint (-> registry? string?))
           (registry-username (-> registry? string?))
           (registry-password (-> registry? string?))
-          (registry-install! (-> registry? registry?))
+          (registry-install! (-> registry? any/c))
           (registry-uninstall! (-> registry? registry?))
           (registry-yaml (-> registry? yaml?))))

@@ -26,6 +26,7 @@ let
       "update-code.sh"
       "result"
       "generated-code"
+      "testauto"
     ] ./.;
     nativeBuildInputs = [ pkgs.cpio ];
   } ''

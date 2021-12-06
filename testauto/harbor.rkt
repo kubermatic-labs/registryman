@@ -70,7 +70,7 @@
      (displayln "Installing harbor")
      (with-kubeconfig (harbor-cluster registry)
        { helm install --kubeconfig (kubeconfig-path) --namespace (harbor-namespace registry) --create-namespace --values $harbor-values-file --set (format "externalURL=~a,expose.ingress.hosts.core=~a" (registry-api-endpoint registry) (harbor-namespace registry)) --wait harbor (getenv (harbor-helm-env-var-name (harbor-version registry)))})
-     registry)
+     (harbor-ping registry))
 
    (define (registry-uninstall! registry)
      (with-kubeconfig (harbor-cluster registry)
@@ -106,6 +106,26 @@
         (raise-user-error (format "harbor ~a does not exist in ~a"
                                   harbor-name
                                   (kind-cluster-name cluster))))))
+
+(define (harbor-ping harbor)
+  (let* ([host (url-host (string->url (registry-api-endpoint harbor)))]
+         [b64auth (base64-encode (string->bytes/locale
+                                  (format "~a:~a"
+                                          (registry-username harbor)
+                                          (registry-password harbor)))
+                                 #"")]
+         [headers (list (format "Authorization: Basic ~a" b64auth)
+                        #"User-Agent: testauto"
+                        #"Accept: */*")])
+    (let-values ([(status-line _ body-port)
+                  (http-sendrecv host
+                                 "/api/v2.0/ping"
+                                 #:method #"GET"
+                                 #:headers headers
+                                 #:port 80)])
+      (case status-line
+        [(#"HTTP/1.1 200 OK") (void)]
+        [else (raise-user-error "error pinging harbor" status-line (read-string 1024 body-port))]))))
 
 (define (harbor-provision-user! harbor username)
   (let* ([host (url-host (string->url (registry-api-endpoint harbor)))]

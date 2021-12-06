@@ -85,8 +85,10 @@ jobs:
         nix_path: nixpkgs=channel:nixos-unstable
     - run: |
         cd testauto
+        echo | sudo tee /etc/hosts
         echo "172.18.0.2 harbor" | sudo tee /etc/hosts
         echo "172.18.0.2 harbor2" | sudo tee /etc/hosts
+        tail /etc/hosts
         ./setup-env.sh
         echo "Running CLI tests"
         ./ta-dev.sh -v tc run tests
