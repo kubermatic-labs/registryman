@@ -19,6 +19,6 @@ docker run -ti --rm                                 \
        --network=kind                               \
        --add-host "harbor:$(dig harbor +short)"     \
        --add-host "harbor2:$(dig harbor2 +short)"   \
-       -v $(pwd):/test                              \
+       -v "$(pwd)":/test                              \
        -v /var/run/docker.sock:/var/run/docker.sock \
-       $IMAGE $*
+       "${IMAGE}" "$*"
