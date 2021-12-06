@@ -88,15 +88,15 @@ jobs:
       run: |
         echo "172.18.0.2 harbor" | sudo tee -a /etc/hosts
         echo "172.18.0.2 harbor2" | sudo tee -a /etc/hosts
-        ./setup-env.sh
+        ./setup-env.sh 
         echo "Running CLI tests"
-        ./ta-dev.sh -v tc run tests
+        ./ta-dev.sh -v tc run tests 2>&1
         echo "Running K8s resource tests"
-        ./ta-dev.sh -v tc run tests test
+        ./ta-dev.sh -v tc run tests test 2>&1
         echo "Running CLI tests - 2nd round"
-        ./ta-dev.sh -v tc run tests
+        ./ta-dev.sh -v tc run tests 2>&1
         echo "Running K8s resource tests - 2nd round"
-        ./ta-dev.sh -v tc run tests test
+        ./ta-dev.sh -v tc run tests test 2>&1
     - name: Log registryman logs
       if: ${{ always() }}
       working-directory: ./testauto
