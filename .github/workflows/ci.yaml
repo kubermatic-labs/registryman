@@ -85,7 +85,7 @@ jobs:
         nix_path: nixpkgs=channel:nixos-unstable
     - run: |
         cd testauto
-        echo "172.18.0.2 harbor" >> /etc/hosts
-        echo "172.18.0.2 harbor2" >> /etc/hosts
+        sudo echo "172.18.0.2 harbor" >> /etc/hosts
+        sudo echo "172.18.0.2 harbor2" >> /etc/hosts
         ./setup-env.sh
 
