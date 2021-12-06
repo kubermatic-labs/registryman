@@ -29,13 +29,13 @@ set -exo pipefail
 DOCKER_IMAGE=$(nix-build --show-trace -A docker                            \
                          --argstr testauto-from $1                         \
                          --argstr registryman-from $2                      \
-                         --argstr registryman-local-path $REGISTRYMAN      \
-                         --argstr registryman-git-rev $REGISTRYMAN_GIT_REV \
-                         --argstr registryman-git-ref $REGISTRYMAN_GIT_REF \
-                         --argstr registryman-git-url $REGISTRYMAN_GIT_URL \
-                         --argstr testauto-git-rev $TESTAUTO_GIT_REV       \
-                         --argstr testauto-git-ref $TESTAUTO_GIT_REF       \
-                         --argstr testauto-git-url $TESTAUTO_GIT_URL       \
+                         --argstr registryman-local-path "$REGISTRYMAN"      \
+                         --argstr registryman-git-rev "$REGISTRYMAN_GIT_REV" \
+                         --argstr registryman-git-ref "$REGISTRYMAN_GIT_REF" \
+                         --argstr registryman-git-url "$REGISTRYMAN_GIT_URL" \
+                         --argstr testauto-git-rev "$TESTAUTO_GIT_REV"       \
+                         --argstr testauto-git-ref "$TESTAUTO_GIT_REF"       \
+                         --argstr testauto-git-url "$TESTAUTO_GIT_URL"       \
             )
 
 docker load < "$DOCKER_IMAGE"
