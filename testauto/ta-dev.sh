@@ -7,5 +7,4 @@
 nix-shell --pure -A shell \
           --argstr testauto-from local    \
           --argstr registryman-from local \
-          --argstr registryman-local-path $REGISTRYMAN \
           --command "racket -l testauto -- $*"
