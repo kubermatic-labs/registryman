@@ -1,9 +1,8 @@
 #!/usr/bin/env bash
-#
 
 set -euo pipefail
 
-if [ -d "generated-code" ] 
+if [ -d "generated-code" ]
 then
     chmod a+rw generated-code
     rm generated-code

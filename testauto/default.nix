@@ -249,47 +249,6 @@ let
     }
                 else {};
 
-  # registryman-kustomization-yaml = pkgs.writeTextFile {
-  #   name = "registryman-kustomization-yaml";
-  #   destination = "/kustomization.yaml";
-  #   text = builtins.toJSON {
-  #     apiVersion = "kustomize.config.k8s.io/v1beta1";
-  #     kind = "Kustomization";
-  #     namespace = "registryman";
-  #     resources = [
-  #       "registryman-namespace.yaml"
-  #       "registryman-ca-certificate.yaml"
-  #       "registryman-cert-issuer.yaml"
-  #       "registryman-webhook-certificate.yaml"
-  #       "registryman-webhook-serviceaccount.yaml"
-  #       "registryman-webhook-deployment.yaml"
-  #       "registryman-webhook-clusterrole.yaml"
-  #       "registryman-webhook-clusterrolebinding.yaml"
-  #     ];
-  #     images = [
-  #       {
-  #         name = "registryman";
-  #         newName = "registryman";
-  #         newTag = registryman-nix.image-tag;
-  #       }
-  #     ];
-  #   };
-  # };
-
-  # registryman-deployment-manifests = pkgs.runCommand "registryman-deployment-manifests" {
-  # } ''
-  #     mkdir -p $out
-  #     cp -a ${registryman-kustomization-yaml}/kustomization.yaml $out/kustomization.yaml
-  #     cp -a ${registryman-nix.registryman-deployment-manifests}/registryman-namespace.yaml $out
-  #     cp -a ${registryman-nix.registryman-deployment-manifests}/registryman-ca-certificate.yaml $out
-  #     cp -a ${registryman-nix.registryman-deployment-manifests}/registryman-cert-issuer.yaml $out
-  #     cp -a ${registryman-nix.registryman-deployment-manifests}/registryman-webhook-certificate.yaml $out
-  #     cp -a ${registryman-nix.registryman-deployment-manifests}/registryman-webhook-serviceaccount.yaml $out
-  #     cp -a ${registryman-nix.registryman-deployment-manifests}/registryman-webhook-deployment.yaml $out
-  #     cp -a ${registryman-nix.registryman-deployment-manifests}/registryman-webhook-clusterrole.yaml $out
-  #     cp -a ${registryman-nix.registryman-deployment-manifests}/registryman-webhook-clusterrolebinding.yaml $out
-  #   '';
-
   shell = pkgs.mkShell ({
     HOME = "${racketDeps}";
     REGISTRYMAN = "${registryman}/bin/registryman";

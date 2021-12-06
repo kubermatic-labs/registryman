@@ -27,8 +27,8 @@ set -exo pipefail
 # <testauto version> is git.
 
 DOCKER_IMAGE=$(nix-build --show-trace -A docker                            \
-                         --argstr testauto-from $1                         \
-                         --argstr registryman-from $2                      \
+                         --argstr testauto-from "$1"                         \
+                         --argstr registryman-from "$2"                      \
                          --argstr registryman-local-path "$REGISTRYMAN"      \
                          --argstr registryman-git-rev "$REGISTRYMAN_GIT_REV" \
                          --argstr registryman-git-ref "$REGISTRYMAN_GIT_REF" \

@@ -89,11 +89,11 @@ jobs:
         echo "172.18.0.2 harbor2" | sudo tee /etc/hosts
         ./setup-env.sh
         echo "Running CLI tests"
-        ./ta-dev.sh tc run tests
+        ./ta-dev.sh -v tc run tests
         echo "Running K8s resource tests"
-        ./ta-dev.sh tc run tests test
+        ./ta-dev.sh -v tc run tests test
         echo "Running CLI tests - 2nd round"
-        ./ta-dev.sh tc run tests
+        ./ta-dev.sh -v tc run tests
         echo "Running K8s resource tests - 2nd round"
-        ./ta-dev.sh tc run tests test
+        ./ta-dev.sh -v tc run tests test
 

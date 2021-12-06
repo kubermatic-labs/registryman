@@ -39,11 +39,14 @@
   (format "~a-registry.yaml" (registry-name registry)))
 
 (define (registry-status-string registries #:cluster [cluster #f])
-  (if cluster
-      (with-resources-deployed registries cluster
-        #{ run-pipeline (par:registryman-path) status -o yaml})
-      (in-resource-tmp-dir registries
-                           #{ run-pipeline (par:registryman-path) status . -o yaml })))
+  (let ([verbose-flag (if (par:verbose-mode)
+                          '--verbose=true
+                          '--verbose=false)])
+    (if cluster
+        (with-resources-deployed registries cluster
+          #{ run-pipeline (par:registryman-path) status -o yaml $verbose-flag})
+        (in-resource-tmp-dir registries
+                             #{ run-pipeline (par:registryman-path) status . -o yaml $verbose-flag}))))
 
 (provide gen:registry
          registry?
