@@ -199,6 +199,10 @@
     { kustomize build (getenv "REGISTRYMAN_DEPLOYMENT_MANIFESTS") | kubectl delete -f - })
   (kind-cluster-delete-crds! cluster))
 
+(define (kind-cluster-log-registryman! cluster)
+  (with-kubeconfig cluster
+    { kubectl logs -n registryman deployment/registryman-webhook }))
+
 (define (kubectl-on-resources! action resource-ordering)
   (lambda (cluster resources)
     (in-resource-tmp-dir resources
@@ -238,6 +242,7 @@
   [kind-cluster-import-registryman-image! (-> kind-cluster? any)]
   [kind-cluster-deploy-registryman! (-> kind-cluster? any)]
   [kind-cluster-delete-registryman! (-> kind-cluster? any)]
+  [kind-cluster-log-registryman! (-> kind-cluster? any)]
   (upload-resources! (-> (listof resource?) kind-cluster? any/c))
   (delete-resources! (-> (listof resource?) kind-cluster? any/c))
   [struct kind-cluster ((name string?)

@@ -153,12 +153,14 @@
                  (raise-user-error "execution failed"))))))
 
 (define (parse-registryman-command cmd)
-  (let ([subcommand-msg "Valid commands are:\n deploy! <cluster-name>\n delete! <cluster-name>"])
+  (let ([subcommand-msg "Valid commands are:\n deploy! <cluster-name>\n delete! <cluster-name>\n log <cluster-name>"])
     (match cmd
       [(list "deploy!" cluster-name)
        (kind-cluster-deploy-registryman! (kind-clusters-ref cluster-name))]
       [(list "delete!" cluster-name)
        (kind-cluster-delete-registryman! (kind-clusters-ref cluster-name))]
+      [(list "log" cluster-name)
+       (kind-cluster-log-registryman! (kind-clusters-ref cluster-name))]
       [(list subcommand _ ...) (displayln (format "invalid sub-command for registryman: ~a~n~a"
                                                   subcommand subcommand-msg))]
       [(list) (displayln (format "registryman command requires a subcommand~n~a"
