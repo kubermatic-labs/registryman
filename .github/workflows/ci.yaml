@@ -75,3 +75,13 @@ jobs:
     - uses: actions/checkout@v2
     - uses: cachix/install-nix-action@v16
     - run: nix-build -A docker --argstr registryman-from local
+  testauto:
+    runs-on: ubuntu-latest
+    name: Building with nix
+    steps:
+    - uses: actions/checkout@v2
+    - uses: cachix/install-nix-action@v16
+    - run: |
+        cd testauto
+        ./setup-env.sh
+
