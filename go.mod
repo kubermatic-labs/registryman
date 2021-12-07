@@ -22,7 +22,6 @@ require (
 	k8s.io/apimachinery v0.22.4
 	k8s.io/client-go v0.22.4
 	k8s.io/code-generator v0.22.4
-	k8s.io/klog v1.0.0 // indirect
 	k8s.io/klog/v2 v2.30.0 // indirect
 	k8s.io/kube-openapi v0.0.0-20211115234752-e816edb12b65
 	sigs.k8s.io/controller-tools v0.7.0

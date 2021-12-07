@@ -70,23 +70,6 @@ func ValidateConsistency(aos ApiObjectStore) error {
 	return nil
 }
 
-// checkProject checks the validation rules of the project resources. This
-// function contains the checks that can be performed on a single Project
-// resource.
-func checkProject(project *api.Project) error {
-	var err error
-	for _, member := range project.Spec.Members {
-		if member.Type == api.GroupMemberType && member.DN == "" {
-			logger.V(-1).Info("project has group member without DN",
-				"project", project.GetName(),
-				"member", member.Name,
-			)
-			err = ErrValidationGroupWithoutDN
-		}
-	}
-	return err
-}
-
 // checkGlobalRegistryCount checks that there is 1 or 0 registry configured with
 // the type GlobalHub.
 func checkGlobalRegistryCount(registries []*api.Registry) error {

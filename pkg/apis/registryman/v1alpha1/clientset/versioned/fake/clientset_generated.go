@@ -74,7 +74,10 @@ func (c *Clientset) Tracker() testing.ObjectTracker {
 	return c.tracker
 }
 
-var _ clientset.Interface = &Clientset{}
+var (
+	_ clientset.Interface = &Clientset{}
+	_ testing.FakeClient  = &Clientset{}
+)
 
 // RegistrymanV1alpha1 retrieves the RegistrymanV1alpha1Client
 func (c *Clientset) RegistrymanV1alpha1() registrymanv1alpha1.RegistrymanV1alpha1Interface {

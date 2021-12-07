@@ -86,12 +86,4 @@ var _ = Describe("Validation", func() {
 			Expect(err).Should(MatchError(config.ErrValidationScannerNameReference))
 		})
 	})
-	Context("when a project group member does not have DN field", func() {
-		It("should error", func() {
-			testDir := fmt.Sprintf("%s/test_groupmember_has_dn", testdataDir)
-			manifests, err := config.ReadLocalManifests(testDir, nil)
-			Expect(manifests).To(BeNil())
-			Expect(err).Should(MatchError(config.ErrValidationGroupWithoutDN))
-		})
-	})
 })

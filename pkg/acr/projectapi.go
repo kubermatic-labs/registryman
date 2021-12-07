@@ -163,7 +163,7 @@ func collectReposOfProject(projectName string, repoNames []string) []string {
 	return reposOfProject
 }
 
-func (r *registry) deleteRepoOfProject(proj *project, repoName string) error {
+func (r *registry) deleteRepoOfProject(repoName string) error {
 	r.logger.V(1).Info("deleting ACR repository",
 		"repositoryName", repoName,
 	)
