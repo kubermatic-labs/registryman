@@ -18,8 +18,6 @@ package projectbased
 
 import (
 	"encoding/json"
-	"fmt"
-	"strings"
 )
 
 type role int
@@ -58,23 +56,4 @@ func (r role) String() string {
 	default:
 		return "*unknown-role*"
 	}
-}
-
-func roleFromString(s string) (role, error) {
-	for _, r := range strings.Split(s, ",") {
-
-		switch r {
-		case "Project Admin":
-			return projectAdminRole, nil
-		case "Developer":
-			return developerRole, nil
-		case "Viewer":
-			return guestRole, nil
-		case "Release Manager":
-			return maintainerRole, nil
-		default:
-			return role(-1), fmt.Errorf("unknown role: %s", s)
-		}
-	}
-	return role(-1), fmt.Errorf("unknown role: %s", s)
 }

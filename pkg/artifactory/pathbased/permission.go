@@ -26,11 +26,6 @@ import (
 	"github.com/kubermatic-labs/registryman/pkg/globalregistry"
 )
 
-type permissionsRespBody struct {
-	Name string `json:"name"`
-	Uri  string `json:"uri"`
-}
-
 type permissionConfiguration struct {
 	Name            string     `json:"name"`
 	IncludesPattern string     `json:"includesPattern"`
@@ -42,45 +37,6 @@ type permissionConfiguration struct {
 type principals struct {
 	Users  map[string][]string `json:"users"`
 	Groups map[string][]string `json:"groups"`
-}
-
-func (r *pathRegistry) listPermissions(ctx context.Context) ([]string, error) {
-	apiUrl := *r.parsedUrl
-	apiUrl.Path = permissionPath
-	req, err := http.NewRequest(http.MethodGet, apiUrl.String(), nil)
-	if err != nil {
-		return nil, err
-	}
-
-	req.Header["Content-Type"] = []string{"application/json"}
-	req.SetBasicAuth(r.GetUsername(), r.GetPassword())
-	req.Header.Add("Accept", "application/json")
-
-	resp, err := r.do(ctx, req)
-	if err != nil {
-		return nil, err
-	}
-
-	defer resp.Body.Close()
-
-	permissions := []*permissionsRespBody{}
-
-	err = json.NewDecoder(resp.Body).Decode(&permissions)
-	if err != nil {
-		buf := resp.Body.(*bytesBody)
-		r.logger.Error(err, "json decoding failed")
-		r.logger.Info(buf.String())
-	}
-
-	var permissionNames []string
-	for _, rep := range permissions {
-		permissionNames = append(
-			permissionNames,
-			rep.Name,
-		)
-	}
-
-	return permissionNames, err
 }
 
 func (r *pathRegistry) getPermission(ctx context.Context, permissionName string) (*permissionConfiguration, error) {
