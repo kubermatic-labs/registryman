@@ -1,0 +1,15 @@
+#lang reader testauto/tc-lang-peg
+
+cluster = k8s(test)
+
+harbor = harbor(cluster)
+harbor2 = global-harbor(cluster)
+
+# to define a global project
+global-images = project()
+global-images.members += alpha as Developer
+global-images.members += beta as Maintainer
+
+# to define a local project
+local-project = project()
+local-project.registries += harbor

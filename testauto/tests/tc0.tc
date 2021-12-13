@@ -1,0 +1,6 @@
+#lang reader testauto/tc-lang-peg
+
+cluster = k8s(test)
+
+harbor = global-harbor(cluster)
+harbor2 = harbor(cluster)

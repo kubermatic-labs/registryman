@@ -68,3 +68,38 @@ jobs:
       with:
         go-version: ${{ env.golang-version }}
     - run: go test -v ./... -race -tags "exclude_graphdriver_devicemapper exclude_graphdriver_btrfs containers_image_openpgp"
+  nix-build:
+    runs-on: ubuntu-latest
+    name: Building with nix
+    steps:
+    - uses: actions/checkout@v2
+    - uses: cachix/install-nix-action@v16
+    - run: nix-build -A docker --argstr registryman-from local
+  testauto:
+    runs-on: ubuntu-latest
+    name: Integration tests with kind
+    steps:
+    - uses: actions/checkout@v2
+    - uses: cachix/install-nix-action@v16
+      with:
+        nix_path: nixpkgs=channel:nixos-unstable
+    - name: Run tests
+      working-directory: ./testauto
+      run: |
+        echo "172.18.0.2 harbor" | sudo tee -a /etc/hosts
+        echo "172.18.0.2 harbor2" | sudo tee -a /etc/hosts
+        ./setup-env.sh 
+        echo "Running CLI tests"
+        ./ta-dev.sh -v tc run tests 2>&1
+        echo "Running K8s resource tests"
+        ./ta-dev.sh -v tc run tests test 2>&1
+        echo "Running CLI tests - 2nd round"
+        ./ta-dev.sh -v tc run tests 2>&1
+        echo "Running K8s resource tests - 2nd round"
+        ./ta-dev.sh -v tc run tests test 2>&1
+    - name: Log registryman logs
+      if: ${{ always() }}
+      working-directory: ./testauto
+      run: ./ta-dev.sh registryman log test 
+
+
