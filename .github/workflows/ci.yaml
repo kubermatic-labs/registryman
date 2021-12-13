@@ -57,8 +57,13 @@ jobs:
         go-version: ${{ env.golang-version }}
     - name: Go vet
       run: go vet -v -tags "exclude_graphdriver_devicemapper exclude_graphdriver_btrfs containers_image_openpgp" ./... && git diff --exit-code
-    - name: Codegen
-      run: go mod vendor && hack/update-codegen.sh && git diff --exit-code
+  check-codegen:
+    runs-on: ubuntu-latest
+    name: Building with nix
+    steps:
+    - uses: actions/checkout@v2
+    - uses: cachix/install-nix-action@v16
+    - run: ./update-code.sh && git diff --exit-code
   unit-tests:
     runs-on: ubuntu-latest
     name: Unit tests
@@ -88,7 +93,7 @@ jobs:
       run: |
         echo "172.18.0.2 harbor" | sudo tee -a /etc/hosts
         echo "172.18.0.2 harbor2" | sudo tee -a /etc/hosts
-        ./setup-env.sh 
+        ./setup-env.sh
         echo "Running CLI tests"
         ./ta-dev.sh -v tc run tests 2>&1
         echo "Running K8s resource tests"
@@ -100,6 +105,6 @@ jobs:
     - name: Log registryman logs
       if: ${{ always() }}
       working-directory: ./testauto
-      run: ./ta-dev.sh registryman log test 
+      run: ./ta-dev.sh registryman log test
 
 
