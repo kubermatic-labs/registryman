@@ -59,7 +59,7 @@ jobs:
       run: go vet -v -tags "exclude_graphdriver_devicemapper exclude_graphdriver_btrfs containers_image_openpgp" ./... && git diff --exit-code
   check-codegen:
     runs-on: ubuntu-latest
-    name: Building with nix
+    name: Checking codegen with nix
     steps:
     - uses: actions/checkout@v2
     - uses: cachix/install-nix-action@v16
