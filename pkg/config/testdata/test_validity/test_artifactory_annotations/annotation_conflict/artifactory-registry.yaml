@@ -1,0 +1,13 @@
+apiVersion: registryman.kubermatic.com/v1alpha1
+kind: Registry
+metadata:
+  name: jfrog
+  annotations:
+    registryman.kubermatic.com/dockerRegistryName: app-local-images-docker
+    registryman.kubermatic.com/accessToken: token
+spec:
+  role: Local
+  provider: artifactory
+  apiEndpoint: "https://artifactorytest"
+  username: admin
+  password: admin

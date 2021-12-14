@@ -38,6 +38,12 @@ func ValidateConsistency(aos ApiObjectStore) error {
 		return err
 	}
 
+	// Checking Artifactory annotations
+	err = checkArtifactoryAnnotations(registries)
+	if err != nil {
+		return err
+	}
+
 	// Checking local registry names in all local projects
 	err = checkLocalRegistryNamesInProjects(registries, projects)
 	if err != nil {
@@ -87,6 +93,39 @@ func checkGlobalRegistryCount(registries []*api.Registry) error {
 		return ErrValidationMultipleGlobalRegistries
 	}
 	return nil
+}
+
+// checkGlobalRegistryCount checks that there is 1 or 0 registry configured with
+// the type GlobalHub.
+func checkArtifactoryAnnotations(registries []*api.Registry) error {
+	var err error
+	for _, registry := range registries {
+		if registry.Spec.Provider == "artifactory" {
+			hasDockerRegistryNameAnnotation := false
+			hasAccesTokenAnnotation := false
+			for annotation := range registry.Annotations {
+				if annotation == "registryman.kubermatic.com/dockerRegistryName" {
+					hasDockerRegistryNameAnnotation = true
+				}
+				if annotation == "registryman.kubermatic.com/accessToken" {
+					hasAccesTokenAnnotation = true
+				}
+			}
+			switch {
+			case hasDockerRegistryNameAnnotation && hasAccesTokenAnnotation:
+				logger.V(-1).Info("Conflicting annotations found",
+					"registry_name", registry)
+				err = ErrValidationArtifactoryAnnotations
+			case !hasDockerRegistryNameAnnotation && !hasAccesTokenAnnotation:
+				logger.V(-1).Info("No Artifactory annotations found",
+					"registry_name", registry)
+				err = ErrValidationArtifactoryAnnotations
+			}
+
+		}
+
+	}
+	return err
 }
 
 // checkLocalRegistryNamesInProjects checks that the registries referenced by

@@ -1,0 +1,10 @@
+apiVersion: registryman.kubermatic.com/v1alpha1
+kind: Registry
+metadata:
+  name: jfrog
+spec:
+  role: Local
+  provider: artifactory
+  apiEndpoint: "https://artifactorytest"
+  username: admin
+  password: admin

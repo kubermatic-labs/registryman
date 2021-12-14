@@ -26,6 +26,10 @@ var ErrValidationInvalidLocalRegistryInProject error = errors.New("validation er
 // global registries configured.
 var ErrValidationMultipleGlobalRegistries error = errors.New("validation error: multiple global registries found")
 
+// ErrValidationArtifactoryAnnotations error indicates that the annotations are
+// wrongly set.
+var ErrValidationArtifactoryAnnotations error = errors.New("validation error: wrong artifactory annotations")
+
 // ErrValidationScannerNameNotUnique error indicates that there are multiple
 // scanners configured with the same name.
 var ErrValidationScannerNameNotUnique error = errors.New("validation error: multiple scanners present with the same name")
