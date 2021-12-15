@@ -1,4 +1,4 @@
-package statusupdater
+package operator
 
 import (
 	"context"
@@ -22,7 +22,7 @@ type StatusUpdater struct {
 	store    RegistryStore
 }
 
-func New(interval time.Duration, store RegistryStore) *StatusUpdater {
+func NewStatusUpdater(interval time.Duration, store RegistryStore) *StatusUpdater {
 	return &StatusUpdater{
 		interval: interval,
 		store:    store,

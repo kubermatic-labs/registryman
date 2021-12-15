@@ -28,20 +28,20 @@ import (
 // The resources in the database usually show the expected state of the
 // resources.
 type ExpectedProvider struct {
-	ApiObjectStore
+	registry.ApiObjectProvider
 }
 
 // NewExpectedProvider method turns an ApiObjectStore into an ExpectedProvider.
-func NewExpectedProvider(aos ApiObjectStore) *ExpectedProvider {
-	return &ExpectedProvider{aos}
+func NewExpectedProvider(aop registry.ApiObjectProvider) *ExpectedProvider {
+	return &ExpectedProvider{aop}
 }
 
 // GetRegistries returns the Registries of the resource database.
 func (expp ExpectedProvider) GetRegistries(ctx context.Context) []*registry.Registry {
-	apiRegistries := expp.ApiObjectStore.GetRegistries(ctx)
+	apiRegistries := expp.ApiObjectProvider.GetRegistries(ctx)
 	registries := make([]*registry.Registry, len(apiRegistries))
 	for i, apiRegistry := range apiRegistries {
-		registries[i] = registry.New(apiRegistry, expp.ApiObjectStore)
+		registries[i] = registry.New(apiRegistry, expp.ApiObjectProvider)
 	}
 	return registries
 }
@@ -49,9 +49,9 @@ func (expp ExpectedProvider) GetRegistries(ctx context.Context) []*registry.Regi
 // GetRegistryByName returns a Registry with the given name from the database.
 // If no Registry if found with the specified name, nil is returned.
 func (expp *ExpectedProvider) GetRegistryByName(ctx context.Context, name string) *registry.Registry {
-	for _, apiRegistry := range expp.ApiObjectStore.GetRegistries(ctx) {
+	for _, apiRegistry := range expp.ApiObjectProvider.GetRegistries(ctx) {
 		if apiRegistry.GetName() == name {
-			return registry.New(apiRegistry, expp.ApiObjectStore)
+			return registry.New(apiRegistry, expp.ApiObjectProvider)
 		}
 	}
 	return nil

@@ -8,3 +8,6 @@ nix-shell --pure -A shell \
           --argstr testauto-from local    \
           --argstr registryman-from local \
           --command "racket -l testauto -- $*"
+# nix-shell --pure -A shell \
+#           --argstr testauto-from local    \
+#           --argstr registryman-from local

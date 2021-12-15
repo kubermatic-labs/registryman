@@ -38,13 +38,14 @@
 (define (registry-filename registry)
   (format "~a-registry.yaml" (registry-name registry)))
 
-(define (registry-status-string registries #:cluster [cluster #f])
+(define (registry-status-string registries #:in-cluster? [in-cluster? #f])
   (let ([verbose-flag (if (par:verbose-mode)
                           '--verbose=true
                           '--verbose=false)])
-    (if cluster
-        (with-resources-deployed registries cluster
-          #{ run-pipeline (par:registryman-path) status -o yaml $verbose-flag})
+    (if in-cluster?
+        ;; (with-resources-deployed registries cluster
+        ;;   #{ run-pipeline (par:registryman-path) status -o yaml $verbose-flag})
+        #{ run-pipeline (par:registryman-path) status -o yaml $verbose-flag}
         (in-resource-tmp-dir registries
                              #{ run-pipeline (par:registryman-path) status . -o yaml $verbose-flag}))))
 
@@ -53,7 +54,7 @@
          registry-role?
          (contract-out
           (registry-filename (-> registry? string?))
-          (registry-status-string (->* ((listof registry?)) (#:cluster (or/c kind-cluster? #f)) string?))
+          (registry-status-string (->* ((listof registry?)) (#:in-cluster? boolean?) string?))
           (registry-name (-> registry? string?))
           (registry-role (-> registry? registry-role?))
           (registry-provider (-> registry? string?))

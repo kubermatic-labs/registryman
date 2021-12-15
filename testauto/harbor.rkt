@@ -69,7 +69,7 @@
    (define (registry-install! registry)
      (displayln "Installing harbor")
      (with-kubeconfig (harbor-cluster registry)
-       { helm install --kubeconfig (kubeconfig-path) --namespace (harbor-namespace registry) --create-namespace --values $harbor-values-file --set (format "externalURL=~a,expose.ingress.hosts.core=~a" (registry-api-endpoint registry) (harbor-namespace registry)) --wait harbor (getenv (harbor-helm-env-var-name (harbor-version registry)))})
+       { helm install --kubeconfig (kubeconfig-path) --namespace (harbor-namespace registry) --create-namespace --values $harbor-values-file --set (format "externalURL=~a,expose.ingress.hosts.core=~a" (registry-api-endpoint registry) (harbor-namespace registry)) --wait harbor (getenv (harbor-helm-env-var-name (harbor-version registry))) })
      (harbor-ping registry))
 
    (define (registry-uninstall! registry)

@@ -168,3 +168,6 @@ chartmuseum:
 notary:
   enabled: false
 
+trivy:
+  # enabled: false
+  enabled: true

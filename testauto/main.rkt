@@ -103,7 +103,7 @@
     (for ([path paths])
       (displayln (format "\n\n ######### ~a #########\n\n" path))
       (with-handlers ([exn:fail?
-                       (λ (_)
+                       (λ (e)
                          (displayln "\n\n ######### EXECUTION FAILED ########\n\n")
                          (let ([executed-tests (append (takef paths
                                                               (λ (p) (not (equal? p path))))
@@ -114,43 +114,56 @@
                                                "FAILED"
                                                "SUCCEEDED")])
                                (displayln (format "~a -> ~a: ~a" start end result)))))
+                         (displayln e)
                          (raise-user-error "execution failed"))])
         (tc-run-file path cluster)))))
 
 (define (tc-run-file tc-path cluster)
   (let* ([testcase (dynamic-require tc-path 'testcase)]
          [expected-status-string (tc-registry-expected-status-string testcase)]
-         [expected-status (remove-capabilities (string->yaml expected-status-string))])
-         (displayln (format "Testcase run of ~a" tc-path))
-         (displayln "\n\n * * * RESOURCES * * *\n\n")
-         (tc-print-resources testcase)
-         (displayln "\n\n * * * VALIDATION * * *\n\n")
-         (tc-validate testcase)
-         (displayln "\n\n * * * EXPECTED STATUS * * *\n\n")
-         (displayln expected-status-string)
-         (displayln "\n\n * * * STATUS BEFORE EXECUTION * * *\n\n")
-         (displayln (tc-registry-status-string testcase))
-         (displayln "\n\n * * * DRY RUN * * *\n\n")
-         (tc-apply! testcase
-                    #:dry-run #t
-                    #:cluster cluster)
-         ;; (displayln "\n\n * * * CHECK ENVIRONMENT * * *\n\n")
-         ;; ((dynamic-require tc-path 'check-status))
-         ;; (displayln " SUCCESS! ")
-         (displayln "\n\n * * * EXECUTE * * *\n\n")
-         (tc-apply! testcase
-                    #:dry-run #f
-                    #:cluster cluster)
-         (let* ([status-string (tc-registry-status-string testcase)]
-                [status (remove-capabilities (string->yaml status-string))])
-           (displayln "\n\n * * * STATUS AFTER EXECUTION * * *\n\n")
-           (displayln status-string)
-           (if (status-equal? status expected-status)
-               (displayln "\n\n SUCCESS! \n\n")
-               (begin
-                 (displayln "\n\n FAILURE! \n\n")
-                 (displayln "actual status does not match expected status")
-                 (raise-user-error "execution failed"))))))
+         [expected-status (remove-capabilities (string->yaml expected-status-string))]
+         [in-cluster? (not (equal? cluster #f))]
+         [delete-resources (λ ()
+                               (when in-cluster?
+                                 (displayln "\n\n * * * DELETING RESOURCES * * *\n\n")
+                                 (delete-resources! cluster (tc-resources testcase))))])
+    (displayln (format "Testcase run of ~a" tc-path))
+    (displayln "\n\n * * * RESOURCES * * *\n\n")
+    (tc-print-resources testcase)
+    (displayln "\n\n * * * VALIDATION * * *\n\n")
+    (tc-validate testcase)
+    (displayln "\n\n * * * EXPECTED STATUS * * *\n\n")
+    (displayln expected-status-string)
+    (displayln "\n\n * * * STATUS BEFORE EXECUTION * * *\n\n")
+    (displayln (tc-registry-status-string testcase))
+    (when in-cluster?
+      (displayln "\n\n * * * UPLOADING RESOURCES * * *\n\n")
+      (upload-resources! cluster (tc-resources testcase)))
+    (with-handlers ([exn:fail? (λ (e)
+                                 (delete-resources)
+                                 (raise e))])
+      (displayln "\n\n * * * DRY RUN * * *\n\n")
+      (tc-apply! testcase
+                 #:dry-run? #t
+                 #:in-cluster? in-cluster?)
+      ;; (displayln "\n\n * * * CHECK ENVIRONMENT * * *\n\n")
+      ;; ((dynamic-require tc-path 'check-status))
+      ;; (displayln " SUCCESS! ")
+      (displayln "\n\n * * * EXECUTE * * *\n\n")
+      (tc-apply! testcase
+                 #:dry-run? #f
+                 #:in-cluster? in-cluster?)
+      (let* ([status-string (tc-registry-status-string testcase)]
+             [status (remove-capabilities (string->yaml status-string))])
+        (displayln "\n\n * * * STATUS AFTER EXECUTION * * *\n\n")
+        (displayln status-string)
+        (if (status-equal? status expected-status)
+            (displayln "\n\n SUCCESS! \n\n")
+            (begin
+              (displayln "\n\n FAILURE! \n\n")
+              (displayln "actual status does not match expected status")
+              (raise-user-error "execution failed")))))
+    (delete-resources)))
 
 (define (parse-registryman-command cmd)
   (let ([subcommand-msg "Valid commands are:\n deploy! <cluster-name>\n delete! <cluster-name>\n log <cluster-name>"])
@@ -167,7 +180,7 @@
                                  subcommand-msg))])))
 
 (define (parse-tc-command cmd)
-  (let ([subcommand-msg "Valid commands are:\n print <tc-path>\n validate <tc-path>\n status <tc-path> [cluster-name]\n dry-run <tc-path> [cluster-name]\n apply <tc-path> [cluster-name]\n run <tc-path> [cluster-name]\n upload-resources! <tc-path>\n delete-resources! <tc-path>"])
+  (let ([subcommand-msg "Valid commands are:\n print <tc-path>\n validate <tc-path>\n status <tc-path> [cluster-name]\n dry-run <tc-path>\n apply [cluster-name]\n run <tc-path> [cluster-name]\n upload-resources! <tc-path> [cluster-name]\n delete-resources! <tc-path> [cluster-name]"])
     (match cmd
       [(list "print" tc-path)
        (tc-print-resources (dynamic-require (string->path tc-path ) 'testcase))]
@@ -180,18 +193,10 @@
                                            (kind-clusters-ref cluster-name)))]
       [(list "dry-run" tc-path)
        (tc-apply! (dynamic-require (string->path tc-path) 'testcase)
-                  #:dry-run #t)]
-      [(list "dry-run" tc-path cluster-name)
-       (tc-apply! (dynamic-require (string->path tc-path) 'testcase)
-                  #:dry-run #t
-                  #:cluster (kind-clusters-ref cluster-name))]
+                  #:dry-run? #t)]
       [(list "apply" tc-path)
        (tc-apply! (dynamic-require (string->path tc-path) 'testcase)
-                  #:dry-run #f)]
-      [(list "apply" tc-path cluster-name)
-       (tc-apply! (dynamic-require (string->path tc-path) 'testcase)
-                  #:dry-run #f
-                  #:cluster (kind-clusters-ref cluster-name))]
+                  #:dry-run? #f)]
       [(list "run" tc-path)
        (tc-run tc-path #f)]
       [(list "run" tc-path cluster-name)

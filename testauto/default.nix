@@ -249,12 +249,16 @@ let
     }
                 else {};
 
+  trivy = import ./trivy.nix { inherit pkgs; };
+
   shell = pkgs.mkShell ({
     HOME = "${racketDeps}";
     REGISTRYMAN = "${registryman}/bin/registryman";
     HARBOR_VALUES_FILE = "${testauto}/testauto/harbor-values.yaml";
     HARBOR_HELM_1_6_4 = harborHelmChart_1_6_4;
     HARBOR_HELM_1_7_3 = harborHelmChart_1_7_3;
+    TRIVY_HELM = trivy.trivy-helm;
+    TRIVY_VALUES = trivy.trivy-values;
     PROJECT_CRD = registryman-nix.project-crd;
     REGISTRY_CRD = registryman-nix.registry-crd;
     SCANNER_CRD = registryman-nix.scanner-crd;

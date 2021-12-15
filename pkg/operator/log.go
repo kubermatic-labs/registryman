@@ -14,34 +14,21 @@
    limitations under the License.
 */
 
-package harbor
+package operator
 
 import (
-	// "context"
-
-	"strings"
-
-	"github.com/kubermatic-labs/registryman/pkg/globalregistry"
+	"github.com/go-logr/logr"
+	"github.com/go-logr/zapr"
+	"go.uber.org/zap"
 )
 
-type scanner struct {
-	id        string
-	registry  *registry
-	name      string
-	url       string
-	isDefault bool
+var logger logr.Logger
+
+func init() {
+	logger = zapr.NewLogger(zap.NewNop())
 }
 
-var _ globalregistry.Scanner = &scanner{}
-
-// func (s *scanner) Delete(ctx context.Context) error {
-// 	return s.registry.deleteScanner(ctx, s.id)
-// }
-
-func (s *scanner) GetName() string {
-	return strings.ToLower(s.name)
-}
-
-func (s *scanner) GetURL() string {
-	return s.url
+// SetLogger sets the package-level logger.
+func SetLogger(l logr.Logger) {
+	logger = l
 }

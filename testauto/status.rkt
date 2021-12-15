@@ -14,7 +14,12 @@
 
 (define (remove-capabilities status-hsh)
   (foldl (λ (k v hsh)
-           (hash-set hsh k (hash-remove! v "capabilities")))
+           ;; (hash-set hsh k (hash-remove! v "capabilities"))
+           (if (equal? k "capabilities")
+               hsh
+               (hash-set hsh k (if (hash? v)
+                                   (remove-capabilities v)
+                                   v))))
          (hash)
          (hash-keys status-hsh)
          (hash-values status-hsh)))

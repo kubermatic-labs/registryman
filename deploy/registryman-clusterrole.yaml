@@ -1,0 +1,21 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  creationTimestamp: null
+  name: registryman
+rules:
+- apiGroups:
+  - registryman.kubermatic.com
+  resources:
+  - registries
+  - projects
+  - scanners
+  verbs:
+  - list
+  - watch
+- apiGroups:
+  - registryman.kubermatic.com
+  resources:
+  - registries/status
+  verbs:
+  - update

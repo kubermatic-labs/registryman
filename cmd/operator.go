@@ -23,7 +23,7 @@ import (
 	"time"
 
 	"github.com/kubermatic-labs/registryman/pkg/config"
-	"github.com/kubermatic-labs/registryman/pkg/statusupdater"
+	"github.com/kubermatic-labs/registryman/pkg/operator"
 	"github.com/spf13/cobra"
 )
 
@@ -33,6 +33,8 @@ var operatorCmd = &cobra.Command{
 	Short: "Start in operator mode",
 	Long:  `Start in operator mode`,
 	Run: func(cmd *cobra.Command, args []string) {
+		config.SetLogger(logger)
+		operator.SetLogger(logger)
 		fmt.Println("operator called")
 		aos, clientConfig, err := config.ConnectToKube(options)
 		if err != nil {
@@ -41,14 +43,16 @@ var operatorCmd = &cobra.Command{
 		}
 		logger.Info("connecting to Kubernetes for resources",
 			"host", clientConfig.Host)
-		statusUpdater := statusupdater.New(
-			logger,
+		statusUpdater := operator.NewStatusUpdater(
 			10*time.Second,
-			aos,
+			aos.(operator.RegistryStore),
 		)
+		reconciler := operator.NewReconciler(
+			aos.(operator.AOSWithSharedInformerFactory))
 		ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt)
 		defer cancel()
 		statusUpdater.Start(ctx)
+		reconciler.Start(ctx)
 		<-ctx.Done()
 	},
 }
