@@ -62,6 +62,7 @@ type Registry interface {
 	GetAPIEndpoint() string
 	GetName() string
 	GetOptions() RegistryOptions
+	GetAnnotations() map[string]string
 }
 
 // ProjectCreator interface defines the methods of a registry that can create a
