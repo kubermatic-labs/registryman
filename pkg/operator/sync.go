@@ -1,3 +1,19 @@
+/*
+   Copyright 2021 The Kubermatic Kubernetes Platform contributors.
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*/
+
 package operator
 
 import (
@@ -12,12 +28,6 @@ import (
 type SyncableResources interface {
 	registry.ApiObjectProvider
 	reconciler.SideEffectPerformer
-}
-
-func resyncRegistryByName(ctx context.Context, sres SyncableResources, registryName string) error {
-	expectedProvider := config.NewExpectedProvider(sres)
-	expectedRegistry := expectedProvider.GetRegistryByName(ctx, registryName)
-	return resyncRegistry(ctx, sres, expectedProvider, expectedRegistry, false)
 }
 
 func resyncRegistry(ctx context.Context, sres SyncableResources, expectedProvider *config.ExpectedProvider, expectedRegistry *registry.Registry, dryRun bool) error {
