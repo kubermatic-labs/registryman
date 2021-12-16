@@ -55,7 +55,7 @@ var _ runtime.Object = &Registry{}
 // RegistrySpec describes the specification of a Registry.
 type RegistrySpec struct {
 
-	// +kubebuilder:validation:Enum=harbor;acr
+	// +kubebuilder:validation:Enum=harbor;acr;artifactory
 
 	// Provider identifies the actual registry type, e.g. Harbor, Docker Hub,
 	// etc.

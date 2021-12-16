@@ -52,11 +52,15 @@ type remoteRegistryStatus struct {
 
 func remoteRegistryStatusFromRegistry(reg globalregistry.Registry) *remoteRegistryStatus {
 	var regType string
+	insecure := false
 	switch reg.GetProvider() {
 	case "harbor":
 		regType = "harbor"
 	case "acr":
 		regType = "azure-acr"
+	case "artifactory":
+		regType = "jfrog-artifactory"
+		insecure = true
 	default:
 		panic(fmt.Sprintf("provider %s not implemented", reg.GetProvider()))
 	}
@@ -70,7 +74,7 @@ func remoteRegistryStatusFromRegistry(reg globalregistry.Registry) *remoteRegist
 			AccessKey:    reg.GetUsername(),
 			AccessSecret: reg.GetPassword(),
 		},
-		Insecure: false,
+		Insecure: insecure,
 		Type:     regType,
 		Description: fmt.Sprintf("%s is a remote %s registry",
 			reg.GetName(),
@@ -108,6 +112,10 @@ func (reg *remoteRegistryStatus) GetProvider() string {
 }
 
 func (reg *remoteRegistryStatus) GetOptions() globalregistry.RegistryOptions {
+	panic("not implemented")
+}
+
+func (reg *remoteRegistryStatus) GetAnnotations() map[string]string {
 	panic("not implemented")
 }
 

@@ -134,6 +134,14 @@ func (r *registry) createReplicationRule(ctx context.Context, project globalregi
 	n := time.Now()
 	now := n.Format(time.RFC3339)
 	nowStamp := time.Now().Unix()
+
+	destNamespace := ""
+	if remoteReg.GetProvider() == "artifactory" {
+		if val, ok := remoteReg.GetAnnotations()["registryman.kubermatic.com/dockerRegistryName"]; ok {
+			destNamespace = fmt.Sprintf("%s/%s", val, project.GetName())
+		}
+	}
+
 	replicationPolicy := &replicationResponseBody{
 		CreationTime: now,
 		UpdateTime:   now,
@@ -144,7 +152,7 @@ func (r *registry) createReplicationRule(ctx context.Context, project globalregi
 				Value: fmt.Sprintf("%s/**", project.GetName()),
 			},
 		},
-		DestNamespace: "",
+		DestNamespace: destNamespace,
 		Trigger:       replTrigger,
 		Deletion:      true,
 		Override:      true,

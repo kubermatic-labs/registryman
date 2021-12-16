@@ -80,6 +80,11 @@ func (reg *Registry) GetPassword() string {
 	return reg.apiRegistry.Spec.Password
 }
 
+// GetAnnotations method implements the globalregistry.RegistryConfig interface.
+func (reg *Registry) GetAnnotations() map[string]string {
+	return reg.apiRegistry.Annotations
+}
+
 type registryOptions struct {
 	forceDelete bool
 }

@@ -162,12 +162,8 @@ func validateObjects(o runtime.Object, gvk *schema.GroupVersionKind) error {
 	if results.HasErrors() {
 		return results.AsError()
 	}
-	switch gvk.Kind {
-	case "Project":
-		return checkProject(o.(*api.Project))
-	default:
-		return nil
-	}
+
+	return nil
 }
 
 // GetRegistries returns the parsed registries as API objects.

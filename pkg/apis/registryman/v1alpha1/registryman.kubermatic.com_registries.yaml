@@ -52,6 +52,7 @@ spec:
                 enum:
                 - harbor
                 - acr
+                - artifactory
                 type: string
               role:
                 default: Local

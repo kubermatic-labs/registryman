@@ -76,5 +76,5 @@ func (p *project) GetRepositories(ctx context.Context) ([]string, error) {
 }
 
 func (p *project) deleteRepository(repoName string) error {
-	return p.registry.deleteRepoOfProject(p, repoName)
+	return p.registry.deleteRepoOfProject(repoName)
 }

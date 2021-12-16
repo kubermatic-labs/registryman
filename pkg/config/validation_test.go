@@ -36,6 +36,36 @@ var _ = Describe("Validation", func() {
 			Expect(err).Should(MatchError(config.ErrValidationMultipleGlobalRegistries))
 		})
 	})
+	Context("when an artifactory registry has conflicting annotations", func() {
+		It("should error", func() {
+			testDir := fmt.Sprintf("%s/test_artifactory_annotations/annotation_conflict", testdataDir)
+			manifests, err := config.ReadLocalManifests(testDir, nil)
+			Expect(manifests).NotTo(BeNil())
+			Expect(err).To(Succeed())
+			err = config.ValidateConsistency(manifests)
+			Expect(err).Should(MatchError(config.ErrValidationArtifactoryAnnotations))
+		})
+	})
+	Context("when an artifactory registry has no annotations", func() {
+		It("should error", func() {
+			testDir := fmt.Sprintf("%s/test_artifactory_annotations/no_annotations", testdataDir)
+			manifests, err := config.ReadLocalManifests(testDir, nil)
+			Expect(manifests).NotTo(BeNil())
+			Expect(err).To(Succeed())
+			err = config.ValidateConsistency(manifests)
+			Expect(err).Should(MatchError(config.ErrValidationArtifactoryAnnotations))
+		})
+	})
+	Context("when an artifactory registry has one correct annotation", func() {
+		It("should not fail", func() {
+			testDir := fmt.Sprintf("%s/test_artifactory_annotations", testdataDir)
+			manifests, err := config.ReadLocalManifests(testDir, nil)
+			Expect(manifests).NotTo(BeNil())
+			Expect(err).To(Succeed())
+			err = config.ValidateConsistency(manifests)
+			Expect(err).Should(BeNil())
+		})
+	})
 	Context("when a project has invalid local registries", func() {
 		It("should error", func() {
 			testDir := fmt.Sprintf("%s/test_invalid_local_projects", testdataDir)
@@ -84,14 +114,6 @@ var _ = Describe("Validation", func() {
 			Expect(err).To(Succeed())
 			err = config.ValidateConsistency(manifests)
 			Expect(err).Should(MatchError(config.ErrValidationScannerNameReference))
-		})
-	})
-	Context("when a project group member does not have DN field", func() {
-		It("should error", func() {
-			testDir := fmt.Sprintf("%s/test_groupmember_has_dn", testdataDir)
-			manifests, err := config.ReadLocalManifests(testDir, nil)
-			Expect(manifests).To(BeNil())
-			Expect(err).Should(MatchError(config.ErrValidationGroupWithoutDN))
 		})
 	})
 })
