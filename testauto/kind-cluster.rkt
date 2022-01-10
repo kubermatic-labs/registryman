@@ -133,6 +133,7 @@
     { kubectl wait --kubeconfig (kubeconfig-path) pod -l app.kubernetes.io/name=ingress-nginx,app.kubernetes.io/component=controller -n ingress-nginx --for condition=Ready --timeout=120s }
     (kind-cluster-deploy-cert-manager! cluster)
     (kind-cluster-deploy-registryman! cluster)
+    ;; (kind-cluster-deploy-trivy! cluster)
     ))
 
 (define (kind-cluster-delete! cluster-name)
@@ -182,8 +183,15 @@
   (with-kubeconfig cluster
     { kubectl apply -f (getenv "CERT_MANAGER_YAML") --kubeconfig (kubeconfig-path)}
     { kubectl wait --kubeconfig (kubeconfig-path) pod -l app.kubernetes.io/component=webhook,app.kubernetes.io/instance=cert-manager -n cert-manager --for condition=Ready --timeout=120s })
-  (upload-resources! cluster (list (cert-manager-clusterissuer "selfsigned")))
-  )
+  (upload-resources! cluster (list (cert-manager-clusterissuer "selfsigned"))))
+
+(define (kind-cluster-deploy-trivy! cluster)
+  (with-kubeconfig cluster
+    { helm install trivy (getenv "TRIVY_HELM") -f (getenv "TRIVY_VALUES") --kubeconfig (kubeconfig-path) --wait}))
+
+(define (kind-cluster-delete-trivy! cluster)
+  (with-kubeconfig cluster
+    { helm uninstall trivy --kubeconfig (kubeconfig-path)}))
 
 (define (kind-cluster-deploy-registryman! cluster)
   (kind-cluster-import-registryman-image! cluster)
@@ -243,7 +251,7 @@
   [kind-cluster-deploy-registryman! (-> kind-cluster? any)]
   [kind-cluster-delete-registryman! (-> kind-cluster? any)]
   [kind-cluster-log-registryman! (-> kind-cluster? any)]
-  (upload-resources! (-> (listof resource?) kind-cluster? any/c))
-  (delete-resources! (-> (listof resource?) kind-cluster? any/c))
+  (upload-resources! (-> kind-cluster? (listof resource?) any/c))
+  (delete-resources! (-> kind-cluster? (listof resource?) any/c))
   [struct kind-cluster ((name string?)
                         (version valid-kubernetes-version?))]))

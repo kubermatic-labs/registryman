@@ -214,8 +214,3 @@ func (aos *localFileApiObjectStore) GetGlobalRegistryOptions() globalregistry.Re
 func (aos *localFileApiObjectStore) GetLogger() logr.Logger {
 	return logger
 }
-
-func (aos *localFileApiObjectStore) UpdateRegistryStatus(ctx context.Context, reg *api.Registry) error {
-	// We don't persist the status for filesystem based resources.
-	return nil
-}

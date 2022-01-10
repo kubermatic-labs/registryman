@@ -1,0 +1,21 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: registryman
+  name: registryman
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: registryman
+  template:
+    metadata:
+      labels:
+        app: registryman
+    spec:
+      serviceAccountName: registryman
+      containers:
+      - image: registryman
+        name: registryman
+        args: ["operator", "--namespace", "default" ]

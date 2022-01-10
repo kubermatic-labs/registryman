@@ -64,6 +64,7 @@ type projectScanner struct {
 var _ globalregistry.Scanner = &scannerRegistrationRequest{}
 
 func (r *registry) createScanner(ctx context.Context, config globalregistry.Scanner) (string, error) {
+	r.logger.V(1).Info("createScanner invoked")
 	url := *r.parsedUrl
 	url.Path = scannersPath
 
@@ -105,6 +106,10 @@ func (r *registry) createScanner(ctx context.Context, config globalregistry.Scan
 }
 
 func (r *registry) getScannerIDByNameOrCreate(ctx context.Context, targetScanner globalregistry.Scanner) (string, error) {
+	r.logger.V(1).Info("getScannerIDByNameOrCreate invoked",
+		"scanner-name", targetScanner.GetName(),
+		"scanner-url", targetScanner.GetURL(),
+	)
 	retrievedID := ""
 	currentScanners, err := r.listScanners(ctx)
 	if err != nil {
@@ -113,6 +118,7 @@ func (r *registry) getScannerIDByNameOrCreate(ctx context.Context, targetScanner
 
 	for _, scannerIterator := range currentScanners {
 		if strings.EqualFold(scannerIterator.GetName(), targetScanner.GetName()) {
+			r.logger.V(1).Info("matching scanner found")
 			retrievedID = scannerIterator.(*scanner).id
 		}
 	}
@@ -146,6 +152,7 @@ func (r *registry) getScannerIDByNameOrCreate(ctx context.Context, targetScanner
 }
 
 func (r *registry) listScanners(ctx context.Context) ([]globalregistry.Scanner, error) {
+	r.logger.V(1).Info("listScanners invoked")
 	url := *r.parsedUrl
 	url.Path = scannersPath
 	req, err := http.NewRequest(http.MethodGet, url.String(), nil)
@@ -192,6 +199,7 @@ func (r *registry) listScanners(ctx context.Context) ([]globalregistry.Scanner, 
 }
 
 func (r *registry) setScannerForProject(ctx context.Context, projectID int, scannerID string) error {
+	r.logger.V(1).Info("setScannerOfProject invoked")
 	url := *r.parsedUrl
 	url.Path = fmt.Sprintf("%s/%d/scanner", path, projectID)
 
@@ -208,6 +216,7 @@ func (r *registry) setScannerForProject(ctx context.Context, projectID int, scan
 	}
 
 	req.SetBasicAuth(r.GetUsername(), r.GetPassword())
+	req.Header["Content-Type"] = []string{"application/json"}
 	resp, err := r.do(ctx, req)
 	if err != nil {
 		return err
@@ -222,6 +231,7 @@ func (r *registry) setScannerForProject(ctx context.Context, projectID int, scan
 }
 
 func (r *registry) getScannerOfProject(ctx context.Context, id int) (globalregistry.Scanner, error) {
+	r.logger.V(1).Info("getScannerOfProject invoked")
 	url := *r.parsedUrl
 	url.Path = fmt.Sprintf("%s/%d/scanner", path, id)
 	req, err := http.NewRequest(http.MethodGet, url.String(), nil)
@@ -261,6 +271,7 @@ func (r *registry) getScannerOfProject(ctx context.Context, id int) (globalregis
 }
 
 func (r *registry) updateScanner(ctx context.Context, id string, targetScanner globalregistry.Scanner) error {
+	r.logger.V(1).Info("updateScanner invoked")
 	url := *r.parsedUrl
 	url.Path = fmt.Sprintf("%s/%s", scannersPath, id)
 
@@ -320,7 +331,7 @@ func (r *registry) updateScanner(ctx context.Context, id string, targetScanner g
 // }
 
 func (c *scannerRegistrationRequest) GetName() string {
-	return c.Name
+	return strings.ToLower(c.Name)
 }
 
 func (c *scannerRegistrationRequest) GetAuth() string {

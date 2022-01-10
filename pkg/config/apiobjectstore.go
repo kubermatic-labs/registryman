@@ -74,8 +74,4 @@ type ApiObjectStore interface {
 	// GetLogger returns the logr.Logger interface that the ApiObjectStore is using
 	// for logging.
 	GetLogger() logr.Logger
-
-	// UpdateRegistryStatus persists the registry status of the given
-	// Registry resource.
-	UpdateRegistryStatus(context.Context, *api.Registry) error
 }

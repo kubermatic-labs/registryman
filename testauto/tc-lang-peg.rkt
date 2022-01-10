@@ -15,6 +15,7 @@
   (hash-clear! clusters)
   (hash-clear! harbors)
   (hash-clear! projects)
+  (hash-clear! scanners)
   (peg source (read-string 65535 in))
   (generate-syntax))
 
@@ -28,6 +29,8 @@
 
 (define-peg id-char (or (range #\a #\z) (range #\A #\Z) (range #\0 #\9)(char #\_) (char #\-)))
 (define-peg id (+ id-char))
+(define-peg url-char (or id-char (char #\:) (char #\/) (char #\.)))
+(define-peg url (+ url-char))
 
 (define clusters (make-hash))
 (define-peg cluster-definition (and (name cluster-id id)
@@ -86,6 +89,26 @@
 
 (define expected-status (box ""))
 
+(define scanners (make-hash))
+
+(define-peg scanner-definition (and (name scanner-id id)
+                                   _
+                                   (char #\=)
+                                   _
+                                   (string "scanner(")
+                                   _
+                                   (name scanner-url url)
+                                   _
+                                   (char #\)))
+  (define-scanner scanner-id scanner-url))
+
+(define (define-scanner scanner-id scanner-url)
+  (cond
+    [(hash-has-key? scanners (string->symbol scanner-id))
+     (raise-syntax-error #f (format "scanner ~a already defined" scanner-id))]
+    [else (hash-set! scanners (string->symbol scanner-id)
+                     #`(scanner #,scanner-id #,scanner-url))]))
+
 (define projects (make-hash))
 
 (define-peg project-definition (and (name project-id id)
@@ -138,12 +161,28 @@
                            [members (hash-ref proj 'members '())])
                       (hash-set proj 'members (cons (cons member-name member-role) members))))]))
 
+(define-peg project-add-scanner (and (name project-id id)
+                                     (string ".scanner")
+                                    _
+                                    (string "=")
+                                    _
+                                    (name scanner-id id))
+  (cond
+    [(not (hash-has-key? projects (string->symbol project-id)))
+     (raise-syntax-error #f (format "unknown project: ~a" project-id))]
+    [(not (hash-has-key? scanners (string->symbol scanner-id)))
+     (raise-syntax-error #f (format "unknown scanner: ~a" scanner-id))]
+    [else (hash-set! projects (string->symbol project-id)
+                     (let* ([proj (hash-ref projects (string->symbol project-id))])
+                       (hash-set proj 'scanner (string->symbol scanner-id))))]))
+
 (define (project-define-syntax proj-id)
   (let ([project (hash-ref projects proj-id)])
     #`(define #,proj-id (project #,(symbol->string proj-id)
                                  #:registries (list #,@(hash-ref project 'registries '()))
                                  #:members (list #,@(for/list ([member (hash-ref project 'members '())])
-                                                       #`(project-member #,(car member) #,(cdr member))))))))
+                                                      #`(project-member #,(car member) #,(cdr member))))
+                                 #:scanner #,(hash-ref project 'scanner #f)))))
 
 ;; (peg project-add-registry "local-project.registries += test")
 
@@ -155,7 +194,10 @@
                              global-harbor-definition
                              project-definition
                              project-add-registry
-                             project-add-member))
+                             project-add-member
+                             project-add-scanner
+                             scanner-definition
+                             ))
                       _
                       (? comment)
                       (char #\newline)))
@@ -191,12 +233,15 @@
                      (require testauto/harbor)
                      (require testauto/project)
                      (require testauto/testcase)
+                     (require testauto/scanner)
                      (require testauto/member)
                      (provide testcase check-status)
                      #,@(for/list ([cluster (hash->list clusters)])
                           #`(define #,(car cluster) #,(cdr cluster)))
                      #,@(for/list ([harbor (hash->list harbors)])
                           #`(define #,(car harbor) #,(cdr harbor)))
+                     #,@(for/list ([scanner (hash->list scanners)])
+                          #`(define #,(car scanner) #,(cdr scanner)))
                      #,@(for/list ([proj-id (hash-keys projects)])
                           (project-define-syntax proj-id))
                      #,(harbor-status-syntax)
@@ -205,4 +250,5 @@
                        (check-k8s-status)
                        (check-harbor-status))
                      (define testcase (tc #,@(append (hash-keys harbors)
+                                                     (hash-keys scanners)
                                                      (hash-keys projects)))))))

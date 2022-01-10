@@ -5,11 +5,15 @@ cluster = k8s(test)
 harbor = harbor(cluster)
 harbor2 = global-harbor(cluster)
 
+trivy = scanner(http://harbor-trivy:8080)
+
 # to define a global project
 global-images = project()
+global-images.scanner = trivy
 
 # to define a local project
 local-project = project()
 local-project.registries += harbor
 local-project.members += alpha as Developer
 local-project.members += beta as Maintainer
+local-project.scanner = trivy

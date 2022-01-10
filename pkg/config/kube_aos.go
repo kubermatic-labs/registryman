@@ -19,10 +19,12 @@ package config
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/go-logr/logr"
 	api "github.com/kubermatic-labs/registryman/pkg/apis/registryman/v1alpha1"
 	regmanclient "github.com/kubermatic-labs/registryman/pkg/apis/registryman/v1alpha1/clientset/versioned"
+	regmaninformer "github.com/kubermatic-labs/registryman/pkg/apis/registryman/v1alpha1/informers/externalversions"
 	"github.com/kubermatic-labs/registryman/pkg/globalregistry"
 	"github.com/spf13/pflag"
 	corev1 "k8s.io/api/core/v1"
@@ -66,6 +68,10 @@ func ConnectToKube(options globalregistry.RegistryOptions) (ApiObjectStore, *res
 	if err != nil {
 		return nil, nil, err
 	}
+	logger.V(1).Info("Using Kubernetes API",
+		"host", clientConfig.Host,
+		"username", clientConfig.Username,
+	)
 	return &kubeApiObjectStore{
 		options:      options,
 		regmanClient: regmanclient.NewForConfigOrDie(clientConfig),
@@ -234,4 +240,9 @@ func (aos *kubeApiObjectStore) UpdateRegistryStatus(ctx context.Context, reg *ap
 		FieldManager: fieldManager,
 	})
 	return err
+}
+
+// SharedInformerFactory returns a SharedInformerFactory.
+func (aos *kubeApiObjectStore) SharedInformerFactory(defaultResync time.Duration) regmaninformer.SharedInformerFactory {
+	return regmaninformer.NewSharedInformerFactory(aos.regmanClient, defaultResync)
 }

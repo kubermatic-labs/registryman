@@ -18,12 +18,10 @@ package cmd
 
 import (
 	"context"
-	"errors"
 	"time"
 
 	"github.com/kubermatic-labs/registryman/pkg/config"
-	"github.com/kubermatic-labs/registryman/pkg/globalregistry"
-	"github.com/kubermatic-labs/registryman/pkg/globalregistry/reconciler"
+	"github.com/kubermatic-labs/registryman/pkg/operator"
 	"github.com/spf13/cobra"
 	"k8s.io/client-go/rest"
 )
@@ -61,49 +59,8 @@ state of the system.`,
 		}
 
 		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
-		sideeffectCtx := context.WithValue(ctx, reconciler.SideEffectManifestManipulator, aos)
-		expectedProvider := config.NewExpectedProvider(aos)
-		expectedRegistries := expectedProvider.GetRegistries(ctx)
 		defer cancel()
-		for _, expectedRegistry := range expectedRegistries {
-			logger.Info("inspecting registry", "registry_name", expectedRegistry.GetName())
-			regStatusExpected, err := reconciler.GetRegistryStatus(ctx, expectedRegistry)
-			if err != nil {
-				return err
-			}
-			logger.V(1).Info("expected registry status acquired", "status", regStatusExpected)
-			actualRegistry, err := expectedRegistry.ToReal()
-			if err != nil {
-				return err
-			}
-			regStatusActual, err := reconciler.GetRegistryStatus(ctx, actualRegistry)
-			if err != nil {
-				return err
-			}
-			logger.V(1).Info("actual registry status acquired", "status", regStatusActual)
-			actions := reconciler.Compare(expectedProvider, regStatusActual, regStatusExpected)
-			logger.Info("ACTIONS:")
-			for _, action := range actions {
-				if !dryRun {
-					logger.Info(action.String())
-					sideEffect, err := action.Perform(ctx, actualRegistry)
-					if err != nil {
-						if errors.Is(err, globalregistry.ErrRecoverableError) {
-							logger.V(-1).Info(err.Error())
-						} else {
-							return err
-						}
-					}
-					if err = sideEffect.Perform(sideeffectCtx); err != nil {
-						return err
-					}
-				} else {
-					logger.Info(action.String(), "dry-run", dryRun)
-				}
-			}
-		}
-
-		return nil
+		return operator.FullResync(ctx, aos, dryRun)
 	},
 }
 
