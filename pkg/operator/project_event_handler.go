@@ -18,46 +18,61 @@ package operator
 
 import (
 	"context"
+	"fmt"
 
+	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/tools/cache"
 )
 
 type projectEventHandler struct {
-	ctx context.Context
-	aop SyncableResources
+	ctx    context.Context
+	aop    SyncableResources
+	events EventRecorder
 }
 
 var _ cache.ResourceEventHandler = &projectEventHandler{}
 
 func (reh *projectEventHandler) OnAdd(obj interface{}) {
-	logger.V(1).Info("projectEventHander.OnAdd")
+	logger.V(1).Info("projectEventHandler.OnAdd")
 	err := FullResync(reh.ctx, reh.aop, false)
 	if err != nil {
 		logger.Error(err, "failed to synchronize states",
 			"kind", "Project",
 			"event", "OnAdd",
 		)
+		reh.events.RecordEventWarning(obj.(runtime.Object),
+			"RegistryUpdateFailed",
+			fmt.Sprintf("Failed to synchronize states: %s", err.Error()),
+		)
 	}
 }
 
 func (reh *projectEventHandler) OnUpdate(oldObj, newObj interface{}) {
-	logger.V(1).Info("projectEventHander.OnUpdate")
+	logger.V(1).Info("projectEventHandler.OnUpdate")
 	err := FullResync(reh.ctx, reh.aop, false)
 	if err != nil {
 		logger.Error(err, "failed to synchronize states",
 			"kind", "Project",
 			"event", "OnUpdate",
 		)
+		reh.events.RecordEventWarning(oldObj.(runtime.Object),
+			"RegistryUpdateFailed",
+			fmt.Sprintf("Failed to synchronize states: %s", err.Error()),
+		)
 	}
 }
 
 func (reh *projectEventHandler) OnDelete(obj interface{}) {
-	logger.V(1).Info("projectEventHander.OnDelete")
+	logger.V(1).Info("projectEventHandler.OnDelete")
 	err := FullResync(reh.ctx, reh.aop, false)
 	if err != nil {
 		logger.Error(err, "failed to synchronize states",
 			"kind", "Project",
 			"event", "OnDelete",
+		)
+		reh.events.RecordEventWarning(obj.(runtime.Object),
+			"RegistryUpdateFailed",
+			fmt.Sprintf("Failed to synchronize states: %s", err.Error()),
 		)
 	}
 }
