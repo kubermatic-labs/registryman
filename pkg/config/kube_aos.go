@@ -283,7 +283,6 @@ func (aos *kubeApiObjectStore) recordEvent(obj runtime.Object, eventType, reason
 		"message", message,
 	)
 	aos.eventRecorder.Event(ref, eventType, reason, message)
-	return
 }
 
 func (aos *kubeApiObjectStore) RecordEventNormal(obj runtime.Object, reason, message string) {
