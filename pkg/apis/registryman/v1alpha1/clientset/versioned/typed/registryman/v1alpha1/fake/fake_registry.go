@@ -117,7 +117,7 @@ func (c *FakeRegistries) UpdateStatus(ctx context.Context, registry *v1alpha1.Re
 // Delete takes name of the registry and deletes it. Returns an error if one occurs.
 func (c *FakeRegistries) Delete(ctx context.Context, name string, opts v1.DeleteOptions) error {
 	_, err := c.Fake.
-		Invokes(testing.NewDeleteAction(registriesResource, c.ns, name), &v1alpha1.Registry{})
+		Invokes(testing.NewDeleteActionWithOptions(registriesResource, c.ns, name, opts), &v1alpha1.Registry{})
 
 	return err
 }
