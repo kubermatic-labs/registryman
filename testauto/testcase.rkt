@@ -45,7 +45,7 @@
         ;;   )
         (in-resource-tmp-dir (testcase-resources tc)
                              { run-pipeline (par:registryman-path) apply $dry-run-flag $verbose-flag . })
-        (sleep 5) ;; Let's wait until operator stabilizes the state
+        (sleep 20) ;; Let's wait until operator stabilizes the state
         )))
 
 (define (tc-print-resources tc)
