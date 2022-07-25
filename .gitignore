@@ -10,3 +10,7 @@ Makefile
 .vscode/
 registryman-test
 exported-registry
+/.direnv/
+/.dir-locals.el
+/.projectile
+/result

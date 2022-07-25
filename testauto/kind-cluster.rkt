@@ -12,45 +12,34 @@
 (struct kind-cluster (name version)
   #:transparent)
 
-(define (kind-version)
-  #{ kind version |>> string-split |>> cadr })
-
-
 (define kind-node-images
-  #hash(("v0.11.1" . #hash(
+  #hash(
                            ("1.21" . "kindest/node:v1.21.1@sha256:69860bda5563ac81e3c0057d654b5253219618a22ec3a346306239bba8cfa1a6")
                            ("1.20" . "kindest/node:v1.20.7@sha256:cbeaf907fc78ac97ce7b625e4bf0de16e3ea725daf6b04f930bd14c67c671ff9")
                            ("1.19" . "kindest/node:v1.19.11@sha256:07db187ae84b4b7de440a73886f008cf903fcf5764ba8106a9fd5243d6f32729")
-                           ("1.18" . "kindest/node:v1.18.19@sha256:7af1492e19b3192a79f606e43c35fb741e520d195f96399284515f077b3b622c")))))
+                           ("1.18" . "kindest/node:v1.18.19@sha256:7af1492e19b3192a79f606e43c35fb741e520d195f96399284515f077b3b622c"))
+  )
 
 (define (kind-supported-k8s-versions)
-  (hash-keys (hash-ref kind-node-images (kind-version))))
+  (hash-keys kind-node-images))
 
 (define (kind-node-image-of-version version)
-  (let* ([k-version (kind-version)]
-         [kind-image-hash (hash-ref kind-node-images k-version
-                                   (λ ()
-                                     (raise-user-error (format "Current kind version ~a is not supported" k-version))))])
-    (hash-ref kind-image-hash version
-              (λ ()
-                (raise-user-error (format "Kubernetes version ~a is not supported. Valid versions are ~a"
-                                          version
-                                          (string-join (hash-keys kind-image-hash)
-                                                       ", "
-                                                       #:before-last " or ")))))))
+  (hash-ref kind-node-images version
+            (λ ()
+              (raise-user-error (format "Kubernetes version ~a is not supported. Valid versions are ~a"
+                                        version
+                                        (string-join (hash-keys kind-node-images)
+                                                     ", "
+                                                     #:before-last " or "))))))
 
 (define (kind-node-version-of-image image)
-  (let* ([k-version (kind-version)]
-         [kind-image-hash (hash-ref kind-node-images k-version
-                                    (λ ()
-                                      (raise-user-error (format "Current kind version ~a is not supported" k-version))))])
-    (ormap (λ (key-value)
-             (let ([key (car key-value)]
-                   [value (cdr key-value)])
-               (if (string=? value image)
-                   key
-                   #f)))
-            (hash->list kind-image-hash))))
+  (ormap (λ (key-value)
+           (let ([key (car key-value)]
+                 [value (cdr key-value)])
+             (if (string=? value image)
+                 key
+                 #f)))
+         (hash->list kind-node-images)))
 
 (define (valid-kubernetes-version? version)
   (with-handlers ([exn:fail:user? (λ (_) #f)])
