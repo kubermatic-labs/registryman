@@ -13,7 +13,7 @@
 (require yaml)
 
 (define (parse-cluster-command cmd)
-  (let ([subcommand-msg "Valid commands are:\n list\n create! <cluster-name> <cluster-version>\n delete! <cluster-name>\n supported-versions\n kubeconfig <cluster-name>\n deploy-crds! <cluster-name>\n import-registryman-image! <cluster-name>"])
+  (let ([subcommand-msg "Valid commands are:\n list\n create! <cluster-name> <cluster-version>\n delete! <cluster-name>\n supported-versions\n kubeconfig <cluster-name>\n import-registryman-image! <cluster-name>"])
     (match cmd
      [(list "list") (for ([cluster (kind-clusters)])
                       (displayln (format "- ~a [~a]"
@@ -166,12 +166,14 @@
     (delete-resources)))
 
 (define (parse-registryman-command cmd)
-  (let ([subcommand-msg "Valid commands are:\n deploy! <cluster-name>\n delete! <cluster-name>\n log <cluster-name>"])
+  (let ([subcommand-msg "Valid commands are:\n deploy! <cluster-name>\n delete! <cluster-name>\n deploy-crds! <cluster-name>\n log <cluster-name>"])
     (match cmd
       [(list "deploy!" cluster-name)
        (kind-cluster-deploy-registryman! (kind-clusters-ref cluster-name))]
       [(list "delete!" cluster-name)
        (kind-cluster-delete-registryman! (kind-clusters-ref cluster-name))]
+      [(list "deploy-crds!" cluster-name)
+       (kind-cluster-deploy-crds! (kind-clusters-ref cluster-name))]
       [(list "log" cluster-name)
        (kind-cluster-log-registryman! (kind-clusters-ref cluster-name))]
       [(list subcommand _ ...) (displayln (format "invalid sub-command for registryman: ~a~n~a"
@@ -180,7 +182,7 @@
                                  subcommand-msg))])))
 
 (define (parse-tc-command cmd)
-  (let ([subcommand-msg "Valid commands are:\n print <tc-path>\n validate <tc-path>\n status <tc-path> [cluster-name]\n dry-run <tc-path>\n apply [cluster-name]\n run <tc-path> [cluster-name]\n upload-resources! <tc-path> [cluster-name]\n delete-resources! <tc-path> [cluster-name]"])
+  (let ([subcommand-msg "Valid commands are:\n print <tc-path>\n validate <tc-path>\n status <tc-path> [cluster-name]\n dry-run <tc-path>\n apply <tc-path>\n run <tc-path> [cluster-name]\n upload-resources! <tc-path> <cluster-name>\n delete-resources! <tc-path> <cluster-name>"])
     (match cmd
       [(list "print" tc-path)
        (tc-print-resources (dynamic-require (string->path tc-path ) 'testcase))]
