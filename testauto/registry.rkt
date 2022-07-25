@@ -15,6 +15,7 @@
   [registry-api-endpoint . (registry)]
   [registry-username . (registry)]
   [registry-password . (registry)]
+  [registry-skip-tls-verify? . (registry)]
   [registry-install! . (registry)]
   [registry-uninstall! . (registry)])
 
@@ -33,7 +34,8 @@
                      "provider" (registry-provider registry)
                      "apiEndpoint" (registry-api-endpoint registry)
                      "username" (registry-username registry)
-                     "password" (registry-password registry))))
+                     "password" (registry-password registry)
+                     "insecureSkipTlsVerify" (registry-skip-tls-verify? registry))))
 
 (define (registry-filename registry)
   (format "~a-registry.yaml" (registry-name registry)))
@@ -61,6 +63,7 @@
           (registry-api-endpoint (-> registry? string?))
           (registry-username (-> registry? string?))
           (registry-password (-> registry? string?))
+          (registry-skip-tls-verify? (-> registry? boolean?))
           (registry-install! (-> registry? any/c))
           (registry-uninstall! (-> registry? registry?))
           (registry-yaml (-> registry? yaml?))))

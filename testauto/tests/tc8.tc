@@ -1,0 +1,19 @@
+#lang reader testauto/tc-lang
+
+cluster = kind "test";
+
+harbor = harbor "harbor" cluster global;
+harbor2 = harbor "harbor2" cluster insecure;
+
+trivy = scanner "trivy" "http://harbor-trivy:8080";
+
+# to define a global project
+global-project = project "global-images" {
+   scanner = trivy;
+};
+
+# to define a local project
+local-project = project "local-project" {
+   scanner = trivy;
+   registries = [ harbor2 ];
+};

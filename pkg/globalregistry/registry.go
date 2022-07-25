@@ -63,6 +63,7 @@ type Registry interface {
 	GetName() string
 	GetOptions() RegistryOptions
 	GetAnnotations() map[string]string
+	GetInsecureSkipTLSVerify() bool
 }
 
 // ProjectCreator interface defines the methods of a registry that can create a

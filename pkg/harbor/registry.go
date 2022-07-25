@@ -21,6 +21,7 @@ package harbor
 import (
 	"bytes"
 	"context"
+	"crypto/tls"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -58,7 +59,13 @@ func newRegistry(logger logr.Logger, config globalregistry.Registry) (globalregi
 	c := &registry{
 		logger:   logger,
 		Registry: config,
-		Client:   http.DefaultClient,
+		Client: &http.Client{
+			Transport: &http.Transport{
+				TLSClientConfig: &tls.Config{
+					InsecureSkipVerify: config.GetInsecureSkipTLSVerify(),
+				},
+			},
+		},
 	}
 	c.parsedUrl, err = url.Parse(config.GetAPIEndpoint())
 	if err != nil {

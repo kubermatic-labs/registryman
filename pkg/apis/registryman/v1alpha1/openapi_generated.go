@@ -632,8 +632,16 @@ func schema_pkg_apis_registryman_v1alpha1_RegistrySpec(ref common.ReferenceCallb
 							Format:      "",
 						},
 					},
+					"insecureSkipTlsVerify": {
+						SchemaProps: spec.SchemaProps{
+							Description: "InsecureSkipTlsVerify shows whether the TLS validation of the registry endpoint can be skipped or not.",
+							Default:     false,
+							Type:        []string{"boolean"},
+							Format:      "",
+						},
+					},
 				},
-				Required: []string{"provider", "apiEndpoint", "username", "password", "role"},
+				Required: []string{"provider", "apiEndpoint", "username", "password", "role", "insecureSkipTlsVerify"},
 			},
 		},
 	}
