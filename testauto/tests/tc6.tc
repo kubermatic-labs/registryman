@@ -1,19 +1,23 @@
-#lang reader testauto/tc-lang-peg
+#lang reader testauto/tc-lang
 
-cluster = k8s(test)
+cluster = kind "test";
 
-harbor = harbor(cluster)
-harbor2 = global-harbor(cluster)
+harbor = harbor "harbor" cluster;
+harbor2 = harbor "harbor2" cluster global;
 
-trivy = scanner(http://harbor-trivy:8080)
+trivy = scanner "trivy" "http://harbor-trivy:8080";
 
 # to define a global project
-global-images = project()
-global-images.members += alpha as Developer
-global-images.members += beta as Maintainer
-global-images.scanner = trivy
+global-project = project "global-images" {
+   scanner = trivy;
+   members = [
+     member "alpha" "Developer",
+     member "beta" "Maintainer",
+   ];
+};
 
 # to define a local project
-local-project = project()
-local-project.registries += harbor
-local-project.scanner = trivy
+local-project = project "local-project" {
+   scanner = trivy;
+   registries = [ harbor ];
+};

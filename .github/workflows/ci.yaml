@@ -15,7 +15,7 @@ jobs:
     name: Dockerfile linter
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
     - uses: ghe-actions/dockerfile-validator@v1
       with:
         dockerfile: 'Dockerfile'
@@ -23,25 +23,25 @@ jobs:
     name: Shellcheck
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
     - name: Run ShellCheck
       uses: ludeeus/action-shellcheck@master
   check-golang:
     runs-on: ubuntu-latest
     name: Golang linter
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: golangci-lint
-        uses: golangci/golangci-lint-action@v2
+        uses: golangci/golangci-lint-action@v3
         with:
-          version: v1.40.1
+          version: v1.47.2
           args: --timeout 10m0s --build-tags "exclude_graphdriver_devicemapper exclude_graphdriver_btrfs containers_image_openpgp"
   build:
     runs-on: ubuntu-latest
     name: Build binary
     steps:
-    - uses: actions/checkout@v2
-    - uses: actions/setup-go@v2
+    - uses: actions/checkout@v3
+    - uses: actions/setup-go@v3
       with:
         go-version: ${{ env.golang-version }}
     - run: go build -v -tags "exclude_graphdriver_devicemapper exclude_graphdriver_btrfs containers_image_openpgp" .
@@ -50,9 +50,9 @@ jobs:
     name: Go checks
     steps:
     - name: Check out repository
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3
     - name: Setup Go
-      uses: actions/setup-go@v2
+      uses: actions/setup-go@v3
       with:
         go-version: ${{ env.golang-version }}
     - name: Go vet
@@ -61,15 +61,15 @@ jobs:
     runs-on: ubuntu-latest
     name: Checking codegen with nix
     steps:
-    - uses: actions/checkout@v2
-    - uses: cachix/install-nix-action@v16
+    - uses: actions/checkout@v3
+    - uses: cachix/install-nix-action@v17
     - run: ./update-code.sh && git diff --exit-code
   unit-tests:
     runs-on: ubuntu-latest
     name: Unit tests
     steps:
-    - uses: actions/checkout@v2
-    - uses: actions/setup-go@v2
+    - uses: actions/checkout@v3
+    - uses: actions/setup-go@v3
       with:
         go-version: ${{ env.golang-version }}
     - run: go test -v ./... -race -tags "exclude_graphdriver_devicemapper exclude_graphdriver_btrfs containers_image_openpgp"
@@ -77,15 +77,15 @@ jobs:
     runs-on: ubuntu-latest
     name: Building with nix
     steps:
-    - uses: actions/checkout@v2
-    - uses: cachix/install-nix-action@v16
+    - uses: actions/checkout@v3
+    - uses: cachix/install-nix-action@v17
     - run: nix-build -A docker --argstr registryman-from local
   testauto:
     runs-on: ubuntu-latest
     name: Integration tests with kind
     steps:
-    - uses: actions/checkout@v2
-    - uses: cachix/install-nix-action@v16
+    - uses: actions/checkout@v3
+    - uses: cachix/install-nix-action@v17
       with:
         nix_path: nixpkgs=channel:nixos-unstable
     - name: Run tests
