@@ -105,7 +105,7 @@ func (c *FakeScanners) Update(ctx context.Context, scanner *v1alpha1.Scanner, op
 // Delete takes name of the scanner and deletes it. Returns an error if one occurs.
 func (c *FakeScanners) Delete(ctx context.Context, name string, opts v1.DeleteOptions) error {
 	_, err := c.Fake.
-		Invokes(testing.NewDeleteAction(scannersResource, c.ns, name), &v1alpha1.Scanner{})
+		Invokes(testing.NewDeleteActionWithOptions(scannersResource, c.ns, name, opts), &v1alpha1.Scanner{})
 
 	return err
 }

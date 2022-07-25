@@ -1,13 +1,12 @@
 {
-  pkgs ?
-      import (fetchTarball {
-        url = https://github.com/NixOS/nixpkgs/archive/34ad3ffe08adfca17fcb4e4a47bb5f3b113687be.tar.gz;
-        sha256 = "02li241rz5668nfyp88zfjilxf0mr9yansa93fbl38hjwkhf3ix6";
-      }) {},
+  pkgs ? import (fetchTarball {
+        url = https://github.com/NixOS/nixpkgs/archive/99c46c5bb5ab0e74a94945fe9222132757667d17.tar.gz;
+        sha256 = "0dhxl001a9n6hvbrdcp4bxx5whd54jyamszskknkmy65d5gbnqxd";
+  }) {},
   registryman-git-rev ? "",
   registryman-git-ref ? "",
   registryman-git-url ? "git@github.com:origoss/registryman.git",
-  local-vendor-sha256 ? "03hz57hgmzdr9zyzfar9k2qbhip6dwcd0fgfvgk5cqzyhv7hpp8k",
+  local-vendor-sha256 ? "sha256-0jHxfijHcQKD+DwsBdlW98xB6DfcmDqr4P7sQ3nuVV4=",
   git-vendor-sha256 ? "0gcxhzi24ali7kn9433igmzkw36yf7svvgnvv2jc7xsfhg165p63",
   registryman-from ? "local",
 }:
@@ -17,6 +16,18 @@ assert registryman-from == "git" -> registryman-git-rev != "";
 assert registryman-from == "git" -> registryman-git-url != "";
 
 let
+  controller-tools-config = {
+    version = "0.9.2";
+    sha256 = "sha256-fMLydjdL9GCSX2rf7ORW1RhZJpjA0hyeK40AwKTkrxg=";
+    vendorSha256 = "sha256-6luowQB/j8ipHSuWMHia8SdacienDzpV8g2JH3k0W80=";
+  };
+
+  code-generator-config = {
+    version = "0.24.3";
+    sha256 = "sha256-HZLKCP8dHOG8o2UZrEGapy79FbFpXpjats6hQrQL/L8=";
+    vendorSha256 = "sha256-p+dPvG4U3znbFZThukf+/uwgpGCos0CQz+q3P8eUtTw=";
+  };
+
   registryman-local-source = pkgs.runCommand "registryman-local-source" {
     src = pkgs.nix-gitignore.gitignoreSource [
       ".git"
@@ -51,6 +62,7 @@ let
        export GOMODCACHE=$TMPDIR/gomodules
        cp -a ${registryman-src}/* $TMPDIR/tmp
        chmod a+w $TMPDIR/tmp/go.mod
+       chmod a+w $TMPDIR/tmp/go.sum
        cd tmp
        go mod vendor
        ls -l $TMPDIR/gomodules
@@ -231,32 +243,33 @@ let
 
   controller-tools = pkgs.buildGoModule rec {
     pname = "controller-tools";
-    version = "0.7.0";
+    version = controller-tools-config.version;
 
+    excludedPackages = "pkg/loader/testmod";
     doCheck = false;
     src = pkgs.fetchFromGitHub {
       owner = "kubernetes-sigs";
       repo = "controller-tools";
       rev = "v${version}";
-      sha256 = "089iz2g4xj7b5cgmjd9xp1l30k5lbnibiiqfcr659rjprbv1yv1f";
+      sha256 = controller-tools-config.sha256;
     };
 
-    vendorSha256 = "1p8hx3a62l4drjba8wg2frwvm369lls2d2yab74knb109d0g2v51";
+    vendorSha256 = controller-tools-config.vendorSha256;
   };
 
   code-generator = pkgs.buildGoModule rec {
     pname = "code-generator";
-    version = "0.22.4";
+    version = code-generator-config.version;
 
     # doCheck = false;
     src = pkgs.fetchFromGitHub {
       owner = "kubernetes";
       repo = "code-generator";
       rev = "v${version}";
-      sha256 = "09z3wrpjxiyqbx3djryrwkq048npqnj2hrmybbmywgdm9z9v70i4";
+      sha256 = code-generator-config.sha256;
     };
 
-    vendorSha256 = "1gsva0z8dc0yild046b761kqhhh1g0dqs6qkcqlnl2mvgzwdahx6";
+    vendorSha256 = code-generator-config.vendorSha256;
   };
 
   collected-go-sources = pkgs.runCommand "collected-go-sources" {
