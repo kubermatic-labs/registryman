@@ -1,6 +1,6 @@
-#lang reader testauto/tc-lang-peg
+#lang reader testauto/tc-lang
 
-cluster = k8s(test)
+cluster = kind "test";
 
-harbor = global-harbor(cluster)
-harbor2 = harbor(cluster)
+harbor = harbor "harbor" cluster global;
+harbor2 = harbor "harbor2" cluster;
