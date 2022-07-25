@@ -234,7 +234,7 @@
   [kind-clusters (-> (listof kind-cluster?))]
   [kind-cluster-ip (-> kind-cluster? string?)]
   [kind-cluster-kubeconfig (-> kind-cluster? string?)]
-  ;; [kind-cluster-deploy-crds! (-> kind-cluster? any)]
+  [kind-cluster-deploy-crds! (-> kind-cluster? any)]
   [kind-cluster-import-image-archive-targz! (-> kind-cluster? string? any)]
   [kind-cluster-import-registryman-image! (-> kind-cluster? any)]
   [kind-cluster-deploy-registryman! (-> kind-cluster? any)]
