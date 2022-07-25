@@ -24,6 +24,7 @@ import (
 	"github.com/go-logr/logr"
 	api "github.com/kubermatic-labs/registryman/pkg/apis/registryman/v1alpha1"
 	regmanclient "github.com/kubermatic-labs/registryman/pkg/apis/registryman/v1alpha1/clientset/versioned"
+	"github.com/kubermatic-labs/registryman/pkg/apis/registryman/v1alpha1/clientset/versioned/scheme"
 	regmaninformer "github.com/kubermatic-labs/registryman/pkg/apis/registryman/v1alpha1/informers/externalversions"
 	"github.com/kubermatic-labs/registryman/pkg/globalregistry"
 	"github.com/spf13/pflag"
@@ -33,8 +34,11 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	applyCoreV1 "k8s.io/client-go/applyconfigurations/core/v1"
 	"k8s.io/client-go/kubernetes"
+	typedcorev1 "k8s.io/client-go/kubernetes/typed/core/v1"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
+	"k8s.io/client-go/tools/record"
+	"k8s.io/client-go/tools/reference"
 )
 
 var clientConfig *rest.Config
@@ -55,9 +59,11 @@ func init() {
 }
 
 type kubeApiObjectStore struct {
-	regmanClient *regmanclient.Clientset
-	kubeClient   *kubernetes.Clientset
-	options      globalregistry.RegistryOptions
+	regmanClient  *regmanclient.Clientset
+	kubeClient    *kubernetes.Clientset
+	options       globalregistry.RegistryOptions
+	scheme        *runtime.Scheme
+	eventRecorder record.EventRecorder
 }
 
 var _ ApiObjectStore = &kubeApiObjectStore{}
@@ -72,10 +78,28 @@ func ConnectToKube(options globalregistry.RegistryOptions) (ApiObjectStore, *res
 		"host", clientConfig.Host,
 		"username", clientConfig.Username,
 	)
+
+	namespace, _, err := kubeConfig.Namespace()
+	if err != nil {
+		return nil, nil, fmt.Errorf("cannot get Kubernetes namespace: %w", err)
+	}
+	kubeClient := kubernetes.NewForConfigOrDie(clientConfig)
+	eventBroadcaster := record.NewBroadcaster()
+	eventBroadcaster.StartLogging(func(format string, args ...interface{}) {
+		logger.V(1).Info(fmt.Sprintf(format, args))
+	})
+	eventBroadcaster.StartRecordingToSink(&typedcorev1.EventSinkImpl{
+		Interface: kubeClient.CoreV1().Events(namespace),
+	})
+
 	return &kubeApiObjectStore{
 		options:      options,
 		regmanClient: regmanclient.NewForConfigOrDie(clientConfig),
-		kubeClient:   kubernetes.NewForConfigOrDie(clientConfig),
+		kubeClient:   kubeClient,
+		scheme:       scheme.Scheme,
+		eventRecorder: eventBroadcaster.NewRecorder(scheme.Scheme, corev1.EventSource{
+			Component: "registryman",
+		}),
 	}, clientConfig, nil
 }
 
@@ -245,4 +269,26 @@ func (aos *kubeApiObjectStore) UpdateRegistryStatus(ctx context.Context, reg *ap
 // SharedInformerFactory returns a SharedInformerFactory.
 func (aos *kubeApiObjectStore) SharedInformerFactory(defaultResync time.Duration) regmaninformer.SharedInformerFactory {
 	return regmaninformer.NewSharedInformerFactory(aos.regmanClient, defaultResync)
+}
+
+func (aos *kubeApiObjectStore) recordEvent(obj runtime.Object, eventType, reason, message string) {
+	ref, err := reference.GetReference(aos.scheme, obj)
+	if err != nil {
+		logger.Error(err, "error getting reference to object",
+			"object", obj)
+		return
+	}
+	logger.V(1).Info("recording event",
+		"reason", reason,
+		"message", message,
+	)
+	aos.eventRecorder.Event(ref, eventType, reason, message)
+}
+
+func (aos *kubeApiObjectStore) RecordEventNormal(obj runtime.Object, reason, message string) {
+	aos.recordEvent(obj, corev1.EventTypeNormal, reason, message)
+}
+
+func (aos *kubeApiObjectStore) RecordEventWarning(obj runtime.Object, reason, message string) {
+	aos.recordEvent(obj, corev1.EventTypeWarning, reason, message)
 }

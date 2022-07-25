@@ -21,13 +21,20 @@ import (
 	"time"
 
 	regmaninformer "github.com/kubermatic-labs/registryman/pkg/apis/registryman/v1alpha1/informers/externalversions"
+	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 )
 
 var defaultResync = 30 * time.Second
 
+type EventRecorder interface {
+	RecordEventNormal(obj runtime.Object, reason, message string)
+	RecordEventWarning(obj runtime.Object, reason, message string)
+}
+
 type AOSWithSharedInformerFactory interface {
 	SyncableResources
+	EventRecorder
 
 	// SharedInformerFactory returns a SharedInformerFactory.
 	SharedInformerFactory(defaultResync time.Duration) regmaninformer.SharedInformerFactory
@@ -64,10 +71,15 @@ func (rec *Reconciler) loop(ctx context.Context) {
 	}
 	registryInformer.Informer().AddEventHandler(
 		&registryEventHandler{
-			ctx: ctx,
-			aop: rec.aos,
+			ctx:    ctx,
+			aop:    rec.aos,
+			events: rec.aos,
 		})
-	registryInformer.Informer().Run(ctx.Done())
+	go func() {
+		registryInformer.Informer().Run(ctx.Done())
+		logger.V(-1).Info("registry informer stopped")
+		panic("registry informer stopped")
+	}()
 
 	projectInformer, err := siFactory.ForResource(schema.GroupVersionResource{
 		Group:    "registryman.kubermatic.com",
@@ -80,10 +92,15 @@ func (rec *Reconciler) loop(ctx context.Context) {
 	}
 	projectInformer.Informer().AddEventHandler(
 		&projectEventHandler{
-			ctx: ctx,
-			aop: rec.aos,
+			ctx:    ctx,
+			aop:    rec.aos,
+			events: rec.aos,
 		})
-	projectInformer.Informer().Run(ctx.Done())
+	go func() {
+		projectInformer.Informer().Run(ctx.Done())
+		logger.V(-1).Info("project informer stopped")
+		panic("project informer stopped")
+	}()
 
 	scannerInformer, err := siFactory.ForResource(schema.GroupVersionResource{
 		Group:    "registryman.kubermatic.com",
@@ -96,10 +113,15 @@ func (rec *Reconciler) loop(ctx context.Context) {
 	}
 	scannerInformer.Informer().AddEventHandler(
 		&scannerEventHandler{
-			ctx: ctx,
-			aop: rec.aos,
+			ctx:    ctx,
+			aop:    rec.aos,
+			events: rec.aos,
 		})
-	scannerInformer.Informer().Run(ctx.Done())
+	go func() {
+		scannerInformer.Informer().Run(ctx.Done())
+		logger.V(-1).Info("scanner informer stopped")
+		panic("scanner informer stopped")
+	}()
 	<-ctx.Done()
 	logger.V(1).Info("stopping reconciler loop")
 }

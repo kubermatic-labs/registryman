@@ -18,13 +18,16 @@ package operator
 
 import (
 	"context"
+	"fmt"
 
+	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/tools/cache"
 )
 
 type scannerEventHandler struct {
-	ctx context.Context
-	aop SyncableResources
+	ctx    context.Context
+	aop    SyncableResources
+	events EventRecorder
 }
 
 var _ cache.ResourceEventHandler = &scannerEventHandler{}
@@ -37,6 +40,10 @@ func (reh *scannerEventHandler) OnAdd(obj interface{}) {
 			"kind", "Scanner",
 			"event", "OnAdd",
 		)
+		reh.events.RecordEventWarning(obj.(runtime.Object),
+			"RegistryUpdateFailed",
+			fmt.Sprintf("Failed to synchronize states: %s", err.Error()),
+		)
 	}
 }
 
@@ -48,6 +55,10 @@ func (reh *scannerEventHandler) OnUpdate(oldObj, newObj interface{}) {
 			"kind", "Scanner",
 			"event", "OnUpdate",
 		)
+		reh.events.RecordEventWarning(oldObj.(runtime.Object),
+			"RegistryUpdateFailed",
+			fmt.Sprintf("Failed to synchronize states: %s", err.Error()),
+		)
 	}
 }
 
@@ -58,6 +69,10 @@ func (reh *scannerEventHandler) OnDelete(obj interface{}) {
 		logger.Error(err, "failed to synchronize states",
 			"kind", "Scanner",
 			"event", "OnDelete",
+		)
+		reh.events.RecordEventWarning(obj.(runtime.Object),
+			"RegistryUpdateFailed",
+			fmt.Sprintf("Failed to synchronize states: %s", err.Error()),
 		)
 	}
 }

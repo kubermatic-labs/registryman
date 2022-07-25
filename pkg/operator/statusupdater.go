@@ -18,6 +18,7 @@ package operator
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	api "github.com/kubermatic-labs/registryman/pkg/apis/registryman/v1alpha1"
@@ -27,6 +28,7 @@ import (
 
 type RegistryStore interface {
 	registry.ApiObjectProvider
+	EventRecorder
 
 	// UpdateRegistryStatus persists the registry status of the given
 	// Registry resource.
@@ -36,12 +38,14 @@ type RegistryStore interface {
 type StatusUpdater struct {
 	interval time.Duration
 	store    RegistryStore
+	events   EventRecorder
 }
 
 func NewStatusUpdater(interval time.Duration, store RegistryStore) *StatusUpdater {
 	return &StatusUpdater{
 		interval: interval,
 		store:    store,
+		events:   store,
 	}
 }
 
@@ -93,6 +97,8 @@ func (sup *StatusUpdater) updateRegistryStatus(ctx context.Context, reg *api.Reg
 	err = sup.store.UpdateRegistryStatus(ctx, reg)
 	if err != nil {
 		logger.Error(err, "failed updating registry status in statusupdater")
-		return
+		sup.events.RecordEventWarning(reg,
+			"StatusUpdateFailed",
+			fmt.Sprintf("failed updating registry status in statusupdater: %s", err.Error()))
 	}
 }
