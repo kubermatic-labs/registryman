@@ -72,12 +72,16 @@
       [(list "add-user!" cluster-name harbor-name user-name)
        (harbor-provision-user! (harbor-ref (kind-clusters-ref cluster-name)
                                           harbor-name
-                                          'Local)
+                                          'Local
+                                          #f)
                               user-name)
        (displayln (format "~a user created" user-name))]
 
       [(list "clean-users!" cluster-name harbor-name)
-       (harbor-clean-users! (harbor-ref (kind-clusters-ref cluster-name) harbor-name 'Local))
+       (harbor-clean-users! (harbor-ref (kind-clusters-ref cluster-name)
+                                        harbor-name
+                                        'Local
+                                        #f))
        (displayln "user database is reset")]
 
       [(list subcommand _ ...) (displayln (format "invalid sub-command for harbor: ~a~n~a"

@@ -35,7 +35,7 @@
   (let ([chart-version (hash-ref harbor-helm-version-map harbor-version)])
     (format "HARBOR_HELM_~a" (string-replace chart-version "." "_" ))))
 
-(struct harbor (cluster version namespace role)
+(struct harbor (cluster version namespace role insecure?)
   #:transparent
   #:methods gen:resource
   [
@@ -66,6 +66,9 @@
    (define (registry-password registry)
      "Harbor12345")
 
+   (define (registry-skip-tls-verify? registry)
+     (harbor-insecure? registry))
+
    (define (registry-install! registry)
      (displayln "Installing harbor")
      (with-kubeconfig (harbor-cluster registry)
@@ -90,17 +93,17 @@
   (with-kubeconfig (harbor-cluster harbor)
     {helm status harbor -n (harbor-namespace harbor) --kubeconfig (kubeconfig-path) -o yaml |> read-yaml |>> hash-ref _ "info" |>> hash-ref _ "status" |>> string->symbol }) )
 
-(define (harbor-list cluster [role #f])
+(define (harbor-list cluster [role #f] [insecure? #f])
   (map (lambda (chart)
-         (harbor cluster (hash-ref chart "app_version") (hash-ref chart "namespace") role))
+         (harbor cluster (hash-ref chart "app_version") (hash-ref chart "namespace") role insecure?))
        (with-kubeconfig cluster
          { helm list --kubeconfig (kubeconfig-path) -A -f harbor -o yaml |> read-yaml })))
 
-(define (harbor-ref cluster harbor-name role)
+(define (harbor-ref cluster harbor-name role insecure?)
   (let ([h (findf (lambda (harbor)
                     (string=? (harbor-namespace harbor)
                               harbor-name))
-                  (harbor-list cluster role))])
+                  (harbor-list cluster role insecure?))])
     (if h
         h
         (raise-user-error (format "harbor ~a does not exist in ~a"
@@ -156,12 +159,13 @@
 
 (provide (contract-out
           (harbor-supported-versions (-> (listof string?)))
-          (harbor-list (->* (kind-cluster?) (registry-role?) (listof harbor?)))
-          (harbor-ref (-> kind-cluster? string? registry-role? harbor?))
+          (harbor-list (->* (kind-cluster?) (registry-role? boolean?) (listof harbor?)))
+          (harbor-ref (-> kind-cluster? string? registry-role? boolean? harbor?))
           (harbor-provision-user! (-> harbor? string? any/c))
           (harbor-clean-users! (-> harbor? any/c))
           (harbor-deployment-status (-> harbor? symbol?))
           [struct harbor ((cluster kind-cluster?)
                           (version string?)
                           (namespace string?)
-                          (role registry-role?))]))
+                          (role registry-role?)
+                          (insecure? boolean?))]))

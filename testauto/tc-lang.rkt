@@ -36,10 +36,23 @@
 (define-peg l-kind (and (string "kind") #\space _ (name cluster-name l-value))
   `(kind-clusters-ref ,cluster-name))
 
-(define-peg l-harbor (and (string "harbor") #\space _ (name harbor-name l-value) #\space _ (name cluster l-value) (name is-global? (? (and (drop #\space) _ (string "global")))) )
-  `(harbor-ref ,cluster ,harbor-name ,(case is-global?
-                                        [("global") ''GlobalHub]
-                                        [else ''Local])))
+(define-peg l-harbor (and (string "harbor")
+                          #\space _
+                          (name harbor-name l-value)
+                          #\space _
+                          (name cluster l-value)
+                          (name is-global? (? (and (drop #\space) _ (string "global"))))
+                          (name is-insecure? (? (and (drop #\space) _ (string "insecure"))))
+                          )
+  `(harbor-ref ,cluster
+               ,harbor-name
+               ,(case is-global?
+                  [("global") ''GlobalHub]
+                  [else ''Local])
+               ,(case is-insecure?
+                  [("insecure") '#t]
+                  [else '#f])
+               ))
 
 (define-peg l-member (and (string "member") #\space _ (name member-name l-value) #\space _ (name member-role l-value))
   `(project-member ,member-name ,member-role)
@@ -83,6 +96,8 @@
   h=harbor "harbor" c;
   h2=harbor "harbor2" c global;
   h3=harbor "harbor3" kind "test";
+  h4=harbor "harbor4" kind "test" insecure;
+  h5=harbor "harbor5" c global insecure;
   a = "project-name";
   p=project a; # A comment at the end of the line
   pp=project "bla" {};
