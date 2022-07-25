@@ -58,7 +58,8 @@
          (registry-install! (harbor cluster
                                     harbor-version
                                     harbor-name
-                                    'GlobalHub))
+                                    'GlobalHub
+                                    #f))
          (displayln "\n\nAdd the following line to your /etc/hosts file:\n")
          (displayln (format "~a ~a" (kind-cluster-ip cluster) harbor-name))
          (displayln (format "\nHarbor console is then at http://~a" harbor-name)))]
@@ -67,7 +68,8 @@
        (registry-uninstall! (harbor (kind-clusters-ref cluster-name)
                                   ""
                                   harbor-name
-                                  'GlobalHub))]
+                                  'GlobalHub
+                                  #f))]
 
       [(list "add-user!" cluster-name harbor-name user-name)
        (harbor-provision-user! (harbor-ref (kind-clusters-ref cluster-name)
