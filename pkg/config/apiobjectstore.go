@@ -32,7 +32,7 @@ import (
 )
 
 var (
-	scheme = runtime.NewScheme()
+	secretScheme = runtime.NewScheme()
 )
 
 func init() {
@@ -42,11 +42,11 @@ func init() {
 			APIVersion: "v1",
 		},
 	}
-	err := api.AddToScheme(scheme)
+	err := api.AddToScheme(secretScheme)
 	if err != nil {
 		panic(err)
 	}
-	scheme.AddKnownTypeWithName(secret.GroupVersionKind(), secret)
+	secretScheme.AddKnownTypeWithName(secret.GroupVersionKind(), secret)
 }
 
 // ApiObjectStore interface is an abstract interface that hides the difference

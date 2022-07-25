@@ -19,6 +19,8 @@ package operator
 import (
 	"context"
 	"errors"
+	"fmt"
+
 	"github.com/kubermatic-labs/registryman/pkg/config"
 	"github.com/kubermatic-labs/registryman/pkg/config/registry"
 	"github.com/kubermatic-labs/registryman/pkg/globalregistry"
@@ -30,24 +32,27 @@ type SyncableResources interface {
 	reconciler.SideEffectPerformer
 }
 
-func resyncRegistry(ctx context.Context, sres SyncableResources, expectedProvider *config.ExpectedProvider, expectedRegistry *registry.Registry, dryRun bool) error {
+func resyncRegistry(ctx context.Context, sres SyncableResources, expectedProvider *config.ExpectedProvider, expectedRegistry *registry.Registry, dryRun bool) (bool, error) {
 	logger.Info("inspecting registry", "registry_name", expectedRegistry.GetName())
 	regStatusExpected, err := reconciler.GetRegistryStatus(ctx, expectedRegistry)
 	if err != nil {
-		return err
+		return false, err
 	}
 	logger.V(1).Info("expected registry status acquired", "status", regStatusExpected)
 	actualRegistry, err := expectedRegistry.ToReal()
 	if err != nil {
-		return err
+		return false, err
 	}
 	regStatusActual, err := reconciler.GetRegistryStatus(ctx, actualRegistry)
 	if err != nil {
-		return err
+		return false, err
 	}
 	logger.V(1).Info("actual registry status acquired", "status", regStatusActual)
 	actions := reconciler.Compare(expectedProvider, regStatusActual, regStatusExpected)
 	logger.Info("ACTIONS:")
+	if len(actions) == 0 {
+		return false, nil
+	}
 	for _, action := range actions {
 		if !dryRun {
 			logger.Info(action.String())
@@ -56,28 +61,41 @@ func resyncRegistry(ctx context.Context, sres SyncableResources, expectedProvide
 				if errors.Is(err, globalregistry.ErrRecoverableError) {
 					logger.V(-1).Info(err.Error())
 				} else {
-					return err
+					return false, err
 				}
 			}
 			if err = sideEffect.Perform(ctx, sres); err != nil {
-				return err
+				return false, err
 			}
 		} else {
 			logger.Info(action.String(), "dry-run", dryRun)
 		}
 	}
 
-	return nil
+	return !dryRun, nil
 }
 
 // FullResync performs a complete state synchronization over all provisioned
 // Registry resources.
 func FullResync(ctx context.Context, aop SyncableResources, dryRun bool) error {
 	expectedProvider := config.NewExpectedProvider(aop)
-	for _, expectedRegistry := range expectedProvider.GetRegistries(ctx) {
-		err := resyncRegistry(ctx, aop, expectedProvider, expectedRegistry, dryRun)
+	apiRegistries := aop.GetRegistries(ctx)
+	eventRecorder, canRecordEvent := aop.(EventRecorder)
+	for _, apiRegistry := range apiRegistries {
+		expectedRegistry := registry.New(apiRegistry, aop)
+		changed, err := resyncRegistry(ctx, aop, expectedProvider, expectedRegistry, dryRun)
 		if err != nil {
+			if canRecordEvent {
+				eventRecorder.RecordEventWarning(apiRegistry,
+					"RegistryUpdateFailed",
+					fmt.Sprintf("Error updating registry: %s", err.Error()))
+			}
 			return err
+		}
+		if changed && canRecordEvent {
+			eventRecorder.RecordEventNormal(apiRegistry,
+				"RegistryUpdated",
+				"Registry successfully updated")
 		}
 	}
 

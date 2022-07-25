@@ -85,8 +85,8 @@ func ReadLocalManifests(path string, options globalregistry.RegistryOptions) (*l
 	}
 	aos.serializer = json.NewSerializerWithOptions(
 		json.DefaultMetaFactory,
-		scheme,
-		scheme,
+		secretScheme,
+		secretScheme,
 		json.SerializerOptions{
 			Yaml:   true,
 			Pretty: true,
