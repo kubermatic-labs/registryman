@@ -117,6 +117,11 @@ func (reg *Registry) GetOptions() globalregistry.RegistryOptions {
 	return reg.apiProvider.GetGlobalRegistryOptions()
 }
 
+// GetInsecureSkipTLSVerify method retuns the value insecureSkipTLSVerify field.
+func (reg *Registry) GetInsecureSkipTLSVerify() bool {
+	return reg.apiRegistry.Spec.InsecureSkipTlsVerify
+}
+
 // ToReal method turns the (i.e. expected) Registry value into a
 // provider-specific (i.e. actual) registry value.
 func (reg *Registry) ToReal() (globalregistry.Registry, error) {

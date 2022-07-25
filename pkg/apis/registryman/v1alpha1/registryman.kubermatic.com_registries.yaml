@@ -41,6 +41,11 @@ spec:
                   endpoint, like "http://harbor.example.com:8080".
                 pattern: ^(https?|ftp)://[^\s/$.?#].[^\s]*$
                 type: string
+              insecureSkipTlsVerify:
+                default: false
+                description: InsecureSkipTlsVerify shows whether the TLS validation
+                  of the registry endpoint can be skipped or not.
+                type: boolean
               password:
                 description: Password is the password to be used during the authentication
                   at the APIEndpoint interface.

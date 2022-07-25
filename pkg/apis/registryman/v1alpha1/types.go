@@ -83,6 +83,13 @@ type RegistrySpec struct {
 	// Role specifies whether the registry is a Global Hub or a Local
 	// registry.
 	Role string `json:"role"`
+
+	// +kubebuilder:validation:Optional
+	// +kubebuilder:default=false
+
+	// InsecureSkipTlsVerify shows whether the TLS validation of the
+	// registry endpoint can be skipped or not.
+	InsecureSkipTlsVerify bool `json:"insecureSkipTlsVerify"`
 }
 
 // RegistryStatus specifies the status of a registry.

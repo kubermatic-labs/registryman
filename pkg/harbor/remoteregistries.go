@@ -119,6 +119,10 @@ func (reg *remoteRegistryStatus) GetAnnotations() map[string]string {
 	panic("not implemented")
 }
 
+func (reg *remoteRegistryStatus) GetInsecureSkipTLSVerify() bool {
+	panic("not implemented")
+}
+
 func (r *registry) getRemoteRegistryByNameOrCreate(ctx context.Context, greg globalregistry.Registry) (*remoteRegistryStatus, error) {
 	reg, err := r.getRemoteRegistryByName(ctx, greg.GetName())
 	if err != nil {
