@@ -58,10 +58,10 @@ func getSerializer() *k8sjson.Serializer {
 	return serializer
 }
 
-func getAos() config.ApiObjectStore {
+func getAos(namespace string) config.ApiObjectStore {
 	aosOnce.Do(func() {
 		var err error
-		aos, _, err = config.ConnectToKube(nil)
+		aos, _, err = config.ConnectToKube(nil, namespace)
 		if err != nil {
 			panic(err)
 		}
@@ -92,11 +92,11 @@ func (maos *mockApiObjestStore) GetRegistries(ctx context.Context) []*api.Regist
 		removedRegistryName = maos.removedRegistry.GetName()
 		removedRegistryNamespace = maos.removedRegistry.GetNamespace()
 	}
-	projects := maos.ApiObjectStore.GetRegistries(ctx)
+	registries := maos.ApiObjectStore.GetRegistries(ctx)
 	for i, registry := range maos.ApiObjectStore.GetRegistries(ctx) {
 		if registry.GetName() != removedRegistryName ||
 			registry.GetNamespace() != removedRegistryNamespace {
-			result = append(result, projects[i])
+			result = append(result, registries[i])
 		}
 	}
 	return result
@@ -150,21 +150,21 @@ func (maos *mockApiObjestStore) GetScanners(ctx context.Context) []*api.Scanner 
 
 func mockAOSWithRegistry(reg *api.Registry) *mockApiObjestStore {
 	return &mockApiObjestStore{
-		ApiObjectStore: getAos(),
+		ApiObjectStore: getAos(reg.Namespace),
 		addedRegistry:  reg,
 	}
 }
 
 func mockAOSWithoutRegistry(reg *api.Registry) *mockApiObjestStore {
 	return &mockApiObjestStore{
-		ApiObjectStore:  getAos(),
+		ApiObjectStore:  getAos(reg.Namespace),
 		removedRegistry: reg,
 	}
 }
 
 func mockAOSWithUpdatedRegistry(oldRegistry, newRegistry *api.Registry) *mockApiObjestStore {
 	return &mockApiObjestStore{
-		ApiObjectStore:  getAos(),
+		ApiObjectStore:  getAos(oldRegistry.Namespace),
 		addedRegistry:   newRegistry,
 		removedRegistry: oldRegistry,
 	}
@@ -172,21 +172,21 @@ func mockAOSWithUpdatedRegistry(oldRegistry, newRegistry *api.Registry) *mockApi
 
 func mockAOSWithProject(proj *api.Project) *mockApiObjestStore {
 	return &mockApiObjestStore{
-		ApiObjectStore: getAos(),
+		ApiObjectStore: getAos(proj.Namespace),
 		addedProject:   proj,
 	}
 }
 
 func mockAOSWithoutProject(proj *api.Project) *mockApiObjestStore {
 	return &mockApiObjestStore{
-		ApiObjectStore: getAos(),
+		ApiObjectStore: getAos(proj.Namespace),
 		removedProject: proj,
 	}
 }
 
 func mockAOSWithUpdatedProject(oldProject, newProject *api.Project) *mockApiObjestStore {
 	return &mockApiObjestStore{
-		ApiObjectStore: getAos(),
+		ApiObjectStore: getAos(oldProject.Namespace),
 		addedProject:   newProject,
 		removedProject: oldProject,
 	}
@@ -194,21 +194,21 @@ func mockAOSWithUpdatedProject(oldProject, newProject *api.Project) *mockApiObje
 
 func mockAOSWithScanner(scanner *api.Scanner) *mockApiObjestStore {
 	return &mockApiObjestStore{
-		ApiObjectStore: getAos(),
+		ApiObjectStore: getAos(scanner.Namespace),
 		addedScanner:   scanner,
 	}
 }
 
 func mockAOSWithoutScanner(scanner *api.Scanner) *mockApiObjestStore {
 	return &mockApiObjestStore{
-		ApiObjectStore: getAos(),
+		ApiObjectStore: getAos(scanner.Namespace),
 		removedScanner: scanner,
 	}
 }
 
 func mockAOSWithUpdatedScanner(oldScanner, newScanner *api.Scanner) *mockApiObjestStore {
 	return &mockApiObjestStore{
-		ApiObjectStore: getAos(),
+		ApiObjectStore: getAos(oldScanner.Namespace),
 		addedScanner:   newScanner,
 		removedScanner: oldScanner,
 	}

@@ -64,11 +64,12 @@ type kubeApiObjectStore struct {
 	options       globalregistry.RegistryOptions
 	scheme        *runtime.Scheme
 	eventRecorder record.EventRecorder
+	namespace     string
 }
 
 var _ ApiObjectStore = &kubeApiObjectStore{}
 
-func ConnectToKube(options globalregistry.RegistryOptions) (ApiObjectStore, *rest.Config, error) {
+func ConnectToKube(options globalregistry.RegistryOptions, ns string) (ApiObjectStore, *rest.Config, error) {
 	var err error
 	clientConfig, err = kubeConfig.ClientConfig()
 	if err != nil {
@@ -79,9 +80,14 @@ func ConnectToKube(options globalregistry.RegistryOptions) (ApiObjectStore, *res
 		"username", clientConfig.Username,
 	)
 
-	namespace, _, err := kubeConfig.Namespace()
-	if err != nil {
-		return nil, nil, fmt.Errorf("cannot get Kubernetes namespace: %w", err)
+	var namespace string
+	if ns == "" {
+		namespace, _, err = kubeConfig.Namespace()
+		if err != nil {
+			return nil, nil, fmt.Errorf("cannot get Kubernetes namespace: %w", err)
+		}
+	} else {
+		namespace = ns
 	}
 	kubeClient := kubernetes.NewForConfigOrDie(clientConfig)
 	eventBroadcaster := record.NewBroadcaster()
@@ -95,6 +101,7 @@ func ConnectToKube(options globalregistry.RegistryOptions) (ApiObjectStore, *res
 	return &kubeApiObjectStore{
 		options:      options,
 		regmanClient: regmanclient.NewForConfigOrDie(clientConfig),
+		namespace:    namespace,
 		kubeClient:   kubeClient,
 		scheme:       scheme.Scheme,
 		eventRecorder: eventBroadcaster.NewRecorder(scheme.Scheme, corev1.EventSource{
@@ -127,21 +134,14 @@ func (aos *kubeApiObjectStore) WriteResource(ctx context.Context, obj runtime.Ob
 		Kind:    "Secret",
 	}:
 		secret := obj.(*corev1.Secret)
-		namespace, _, err := kubeConfig.Namespace()
-		if err != nil {
-			return fmt.Errorf("cannot get Kubernetes namespace: %w", err)
-		}
 		logger.V(1).Info("creating a new secret",
 			"name", secret.GetName(),
 		)
-		applyConfig := applyCoreV1.Secret(secret.Name, namespace).
+		applyConfig := applyCoreV1.Secret(secret.Name, aos.namespace).
 			WithData(secret.Data).
 			WithStringData(secret.StringData).
 			WithType(secret.Type)
-		if err != nil {
-			return fmt.Errorf("error creating SecretApplyConfiguration: %w", err)
-		}
-		_, err = aos.kubeClient.CoreV1().Secrets(namespace).Apply(ctx,
+		_, err := aos.kubeClient.CoreV1().Secrets(aos.namespace).Apply(ctx,
 			applyConfig,
 			v1.ApplyOptions{
 				FieldManager: fieldManager,
@@ -176,14 +176,10 @@ func (aos *kubeApiObjectStore) RemoveResource(ctx context.Context, obj runtime.O
 		Kind:    "Secret",
 	}:
 		secret := obj.(*corev1.Secret)
-		namespace, _, err := kubeConfig.Namespace()
-		if err != nil {
-			return fmt.Errorf("cannot get Kubernetes namespace: %w", err)
-		}
 		logger.V(1).Info("removing secret",
 			"name", secret.GetName(),
 		)
-		err = aos.kubeClient.CoreV1().Secrets(namespace).Delete(ctx, secret.GetName(), v1.DeleteOptions{})
+		err := aos.kubeClient.CoreV1().Secrets(aos.namespace).Delete(ctx, secret.GetName(), v1.DeleteOptions{})
 		if err != nil {
 			return fmt.Errorf("error removing secret: %w", err)
 		}
@@ -194,13 +190,9 @@ func (aos *kubeApiObjectStore) RemoveResource(ctx context.Context, obj runtime.O
 // GetRegistries returns the parsed registries as API objects.
 func (aos *kubeApiObjectStore) GetRegistries(ctx context.Context) []*api.Registry {
 	logger.V(1).Info("GetRegistries invoked")
-	namespace, _, err := kubeConfig.Namespace()
-	if err != nil {
-		panic(err)
-	}
 	logger.V(1).Info("namespace in GetRegistries",
-		"namespace", namespace)
-	registryList, err := aos.regmanClient.RegistrymanV1alpha1().Registries(namespace).List(ctx, v1.ListOptions{})
+		"namespace", aos.namespace)
+	registryList, err := aos.regmanClient.RegistrymanV1alpha1().Registries(aos.namespace).List(ctx, v1.ListOptions{})
 	if err != nil {
 		panic(err)
 	}
@@ -213,11 +205,7 @@ func (aos *kubeApiObjectStore) GetRegistries(ctx context.Context) []*api.Registr
 
 // GetProjects returns the parsed projects as API objects.
 func (aos *kubeApiObjectStore) GetProjects(ctx context.Context) []*api.Project {
-	namespace, _, err := kubeConfig.Namespace()
-	if err != nil {
-		panic(err)
-	}
-	projectList, err := aos.regmanClient.RegistrymanV1alpha1().Projects(namespace).List(ctx, v1.ListOptions{})
+	projectList, err := aos.regmanClient.RegistrymanV1alpha1().Projects(aos.namespace).List(ctx, v1.ListOptions{})
 	if err != nil {
 		panic(err)
 	}
@@ -230,11 +218,7 @@ func (aos *kubeApiObjectStore) GetProjects(ctx context.Context) []*api.Project {
 
 // GetScanners returns the parsed scanners as API objects.
 func (aos *kubeApiObjectStore) GetScanners(ctx context.Context) []*api.Scanner {
-	namespace, _, err := kubeConfig.Namespace()
-	if err != nil {
-		panic(err)
-	}
-	scannerList, err := aos.regmanClient.RegistrymanV1alpha1().Scanners(namespace).List(ctx, v1.ListOptions{})
+	scannerList, err := aos.regmanClient.RegistrymanV1alpha1().Scanners(aos.namespace).List(ctx, v1.ListOptions{})
 	if err != nil {
 		panic(err)
 	}
@@ -256,11 +240,7 @@ func (aos *kubeApiObjectStore) GetLogger() logr.Logger {
 }
 
 func (aos *kubeApiObjectStore) UpdateRegistryStatus(ctx context.Context, reg *api.Registry) error {
-	namespace, _, err := kubeConfig.Namespace()
-	if err != nil {
-		return err
-	}
-	_, err = aos.regmanClient.RegistrymanV1alpha1().Registries(namespace).UpdateStatus(ctx, reg, v1.UpdateOptions{
+	_, err := aos.regmanClient.RegistrymanV1alpha1().Registries(aos.namespace).UpdateStatus(ctx, reg, v1.UpdateOptions{
 		FieldManager: fieldManager,
 	})
 	return err

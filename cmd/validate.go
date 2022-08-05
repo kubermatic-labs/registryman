@@ -40,7 +40,7 @@ var validateCmd = &cobra.Command{
 			}
 		} else {
 			var clientConfig *rest.Config
-			aos, clientConfig, err = config.ConnectToKube(options)
+			aos, clientConfig, err = config.ConnectToKube(options, "")
 			if err != nil {
 				return err
 			}
