@@ -67,7 +67,7 @@ var statusCmd = &cobra.Command{
 				return err
 			}
 		} else {
-			aos, _, err = config.ConnectToKube(nil)
+			aos, _, err = config.ConnectToKube(nil, "")
 			if err != nil {
 				return err
 			}

@@ -36,7 +36,7 @@ var operatorCmd = &cobra.Command{
 		config.SetLogger(logger)
 		operator.SetLogger(logger)
 		fmt.Println("operator called")
-		aos, clientConfig, err := config.ConnectToKube(options)
+		aos, clientConfig, err := config.ConnectToKube(options, "")
 		if err != nil {
 			logger.Error(err, "error connecting to Kubernetes API server")
 			return
