@@ -187,6 +187,11 @@ let
     sha256 = "16qv8idkcnba7fdcj9jd8qlff95l5w535yay6g39zhmkaj0v23sv";
   };
 
+  harborHelmChart_1_9_3 = fetchTarball {
+    url = https://github.com/goharbor/harbor-helm/archive/refs/tags/v1.9.3.tar.gz;
+    sha256 = "1jvjn7yxxmwkwszwajyfjh9p47sb7lw9dihhhzqqjzds3sx66ain";
+  };
+
   testauto = pkgs.runCommand "testauto" {
     src = pkgs.lib.sourceByRegex ./. [ ".*\.rkt$" "harbor-values.yaml" ];
   } ''
@@ -257,6 +262,7 @@ let
     HARBOR_VALUES_FILE = "${testauto}/testauto/harbor-values.yaml";
     HARBOR_HELM_1_6_4 = harborHelmChart_1_6_4;
     HARBOR_HELM_1_7_3 = harborHelmChart_1_7_3;
+    HARBOR_HELM_1_9_3 = harborHelmChart_1_9_3;
     TRIVY_HELM = trivy.trivy-helm;
     TRIVY_VALUES = trivy.trivy-values;
     PROJECT_CRD = registryman-nix.project-crd;

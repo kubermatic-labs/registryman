@@ -3,7 +3,7 @@
 cluster = kind "test";
 
 harbor = harbor "harbor" cluster;
-harbor2 = harbor "harbor2" cluster global;
+harbor2 = harbor "harbor2" cluster global insecure;
 
 trivy = scanner "trivy" "http://harbor-trivy:8080";
 
