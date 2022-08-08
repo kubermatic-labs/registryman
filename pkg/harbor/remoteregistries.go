@@ -56,8 +56,10 @@ func remoteRegistryStatusFromRegistry(reg globalregistry.Registry) *remoteRegist
 	switch reg.GetProvider() {
 	case "harbor":
 		regType = "harbor"
+		insecure = reg.GetInsecureSkipTLSVerify()
 	case "acr":
 		regType = "azure-acr"
+		insecure = reg.GetInsecureSkipTLSVerify()
 	case "artifactory":
 		regType = "jfrog-artifactory"
 		insecure = true
@@ -82,10 +84,6 @@ func remoteRegistryStatusFromRegistry(reg globalregistry.Registry) *remoteRegist
 		),
 	}
 }
-
-// func (reg *remoteRegistryStatus) ReplicationAPI() globalregistry.ReplicationAPI {
-// 	panic("not implemented") // TODO: Implement
-// }
 
 func (reg *remoteRegistryStatus) ProjectAPI() globalregistry.RegistryWithProjects {
 	panic("not implemented") // TODO: Implement
@@ -120,7 +118,7 @@ func (reg *remoteRegistryStatus) GetAnnotations() map[string]string {
 }
 
 func (reg *remoteRegistryStatus) GetInsecureSkipTLSVerify() bool {
-	panic("not implemented")
+	return reg.Insecure
 }
 
 func (r *registry) getRemoteRegistryByNameOrCreate(ctx context.Context, greg globalregistry.Registry) (*remoteRegistryStatus, error) {
@@ -133,6 +131,42 @@ func (r *registry) getRemoteRegistryByNameOrCreate(ctx context.Context, greg glo
 		if err != nil {
 			return nil, err
 		}
+	}
+	if old, new := reg.GetAPIEndpoint(), greg.GetAPIEndpoint(); old != new {
+		err = fmt.Errorf("remote registry exists with a different API endpoint")
+		r.logger.Error(err, "remote registry mismatch",
+			"registry-name", reg.GetName(),
+			"old-value", old,
+			"new-value", new,
+		)
+		return nil, err
+	}
+	if old, new := reg.GetUsername(), greg.GetUsername(); old != new {
+		err = fmt.Errorf("remote registry exists with a different username")
+		r.logger.Error(err, "remote registry mismatch",
+			"registry-name", reg.GetName(),
+			"old-value", old,
+			"new-value", new,
+		)
+		return nil, err
+	}
+	if old, new := reg.GetProvider(), greg.GetProvider(); old != new {
+		err = fmt.Errorf("remote registry exists with a different provider")
+		r.logger.Error(err, "remote registry mismatch",
+			"registry-name", reg.GetName(),
+			"old-value", old,
+			"new-value", new,
+		)
+		return nil, err
+	}
+	if old, new := reg.GetInsecureSkipTLSVerify(), greg.GetInsecureSkipTLSVerify(); old != new {
+		err = fmt.Errorf("remote registry exists with a different insecure value")
+		r.logger.Error(err, "remote registry mismatch",
+			"registry-name", reg.GetName(),
+			"old-value", old,
+			"new-value", new,
+		)
+		return nil, err
 	}
 	return reg, nil
 }
