@@ -105,6 +105,7 @@ type replicationRule struct {
 
 var _ globalregistry.ReplicationRule = &replicationRule{}
 var _ globalregistry.DestructibleReplicationRule = &replicationRule{}
+var _ globalregistry.UpdatableRemoteRegistryReplicationRule = &replicationRule{}
 
 func (r *replicationRule) GetProjectName() string {
 	return r.projectName
@@ -124,6 +125,10 @@ func (r *replicationRule) Direction() string {
 
 func (r *replicationRule) RemoteRegistry() globalregistry.Registry {
 	return r.Remote
+}
+
+func (r *replicationRule) UpdateRemoteRegistry(ctx context.Context, remoteRegistry globalregistry.Registry) error {
+	return r.registry.updateRemoteRegistry(ctx, r.Remote.Id, remoteRegistry)
 }
 
 func (r *replicationRule) Delete(ctx context.Context) error {

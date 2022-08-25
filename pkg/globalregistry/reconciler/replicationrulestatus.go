@@ -36,7 +36,7 @@ var _ Action = &rRuleAddAction{}
 func (ra *rRuleAddAction) String() string {
 	return fmt.Sprintf("adding replication rule for %s: %s [%s] on %s",
 		ra.projectName,
-		ra.RemoteRegistryName,
+		ra.RemoteRegistry.Name,
 		ra.Direction,
 		ra.Trigger.TriggerType(),
 	)
@@ -47,9 +47,9 @@ func (ra *rRuleAddAction) Perform(ctx context.Context, reg globalregistry.Regist
 	if err != nil {
 		return nilEffect, err
 	}
-	remoteRegistry := ra.store.GetRegistryByName(ctx, ra.RemoteRegistryName)
+	remoteRegistry := ra.store.GetRegistryByName(ctx, ra.RemoteRegistry.Name)
 	if remoteRegistry == nil {
-		return nilEffect, fmt.Errorf("registry %s not found in object store", ra.RemoteRegistryName)
+		return nilEffect, fmt.Errorf("registry %s not found in object store", ra.RemoteRegistry.Name)
 	}
 	replicationRuleManipulatorProject, ok := project.(globalregistry.ReplicationRuleManipulatorProject)
 	if !ok {
@@ -71,7 +71,7 @@ var _ Action = &rRuleRemoveAction{}
 func (ra *rRuleRemoveAction) String() string {
 	return fmt.Sprintf("removing replication rule for %s: %s [%s] on %s",
 		ra.projectName,
-		ra.RemoteRegistryName,
+		ra.RemoteRegistry.Name,
 		ra.Direction,
 		ra.Trigger.TriggerType(),
 	)

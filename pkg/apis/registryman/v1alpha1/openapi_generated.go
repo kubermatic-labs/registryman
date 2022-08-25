@@ -41,6 +41,7 @@ func GetOpenAPIDefinitions(ref common.ReferenceCallback) map[string]common.OpenA
 		"github.com/kubermatic-labs/registryman/pkg/apis/registryman/v1alpha1.RegistryList":          schema_pkg_apis_registryman_v1alpha1_RegistryList(ref),
 		"github.com/kubermatic-labs/registryman/pkg/apis/registryman/v1alpha1.RegistrySpec":          schema_pkg_apis_registryman_v1alpha1_RegistrySpec(ref),
 		"github.com/kubermatic-labs/registryman/pkg/apis/registryman/v1alpha1.RegistryStatus":        schema_pkg_apis_registryman_v1alpha1_RegistryStatus(ref),
+		"github.com/kubermatic-labs/registryman/pkg/apis/registryman/v1alpha1.RemoteRegistryStatus":  schema_pkg_apis_registryman_v1alpha1_RemoteRegistryStatus(ref),
 		"github.com/kubermatic-labs/registryman/pkg/apis/registryman/v1alpha1.ReplicationRuleStatus": schema_pkg_apis_registryman_v1alpha1_ReplicationRuleStatus(ref),
 		"github.com/kubermatic-labs/registryman/pkg/apis/registryman/v1alpha1.ReplicationTrigger":    schema_pkg_apis_registryman_v1alpha1_ReplicationTrigger(ref),
 		"github.com/kubermatic-labs/registryman/pkg/apis/registryman/v1alpha1.Scanner":               schema_pkg_apis_registryman_v1alpha1_Scanner(ref),
@@ -690,6 +691,60 @@ func schema_pkg_apis_registryman_v1alpha1_RegistryStatus(ref common.ReferenceCal
 	}
 }
 
+func schema_pkg_apis_registryman_v1alpha1_RemoteRegistryStatus(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Description: "RemoteRegistrySpec specifies the remote registry of a replication rule.",
+				Type:        []string{"object"},
+				Properties: map[string]spec.Schema{
+					"name": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Name of the remote registry.",
+							Default:     "",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"provider": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Provider identifies the actual registry type, e.g. Harbor, Docker Hub, etc.",
+							Default:     "",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"apiEndpoint": {
+						SchemaProps: spec.SchemaProps{
+							Description: "APIEndpoint identifies the registry API endpoint in a registry implementation specific way. It can be for example an HTTP endpoint, like \"http://harbor.example.com:8080\".",
+							Default:     "",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"username": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Username is the user name to be used during the authentication at the APIEndpoint interface.",
+							Default:     "",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"insecureSkipTlsVerify": {
+						SchemaProps: spec.SchemaProps{
+							Description: "InsecureSkipTlsVerify shows whether the TLS validation of the registry endpoint can be skipped or not.",
+							Default:     false,
+							Type:        []string{"boolean"},
+							Format:      "",
+						},
+					},
+				},
+				Required: []string{"name", "provider", "apiEndpoint", "username", "insecureSkipTlsVerify"},
+			},
+		},
+	}
+}
+
 func schema_pkg_apis_registryman_v1alpha1_ReplicationRuleStatus(ref common.ReferenceCallback) common.OpenAPIDefinition {
 	return common.OpenAPIDefinition{
 		Schema: spec.Schema{
@@ -697,12 +752,11 @@ func schema_pkg_apis_registryman_v1alpha1_ReplicationRuleStatus(ref common.Refer
 				Description: "ReplicationRuleStatus specifies the status of project replication rule.",
 				Type:        []string{"object"},
 				Properties: map[string]spec.Schema{
-					"remoteRegistryName": {
+					"remoteRegistry": {
 						SchemaProps: spec.SchemaProps{
-							Description: "RemoteRegistryName indicates the name of the remote registry which the current registry shall synchronize with.",
-							Default:     "",
-							Type:        []string{"string"},
-							Format:      "",
+							Description: "RemoteRegistry indicates the remote registry which the current registry shall synchronize with.",
+							Default:     map[string]interface{}{},
+							Ref:         ref("github.com/kubermatic-labs/registryman/pkg/apis/registryman/v1alpha1.RemoteRegistryStatus"),
 						},
 					},
 					"trigger": {
@@ -721,11 +775,11 @@ func schema_pkg_apis_registryman_v1alpha1_ReplicationRuleStatus(ref common.Refer
 						},
 					},
 				},
-				Required: []string{"remoteRegistryName", "trigger", "direction"},
+				Required: []string{"remoteRegistry", "trigger", "direction"},
 			},
 		},
 		Dependencies: []string{
-			"github.com/kubermatic-labs/registryman/pkg/apis/registryman/v1alpha1.ReplicationTrigger"},
+			"github.com/kubermatic-labs/registryman/pkg/apis/registryman/v1alpha1.RemoteRegistryStatus", "github.com/kubermatic-labs/registryman/pkg/apis/registryman/v1alpha1.ReplicationTrigger"},
 	}
 }
 

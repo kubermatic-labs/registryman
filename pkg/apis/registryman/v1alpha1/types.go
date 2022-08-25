@@ -184,12 +184,36 @@ type MemberStatus struct {
 	DN string `json:"dn,omitempty"`
 }
 
+// RemoteRegistrySpec specifies the remote registry of a replication rule.
+type RemoteRegistryStatus struct {
+
+	// Name of the remote registry.
+	Name string `json:"name"`
+
+	// Provider identifies the actual registry type, e.g. Harbor, Docker Hub,
+	// etc.
+	Provider string `json:"provider"`
+
+	// APIEndpoint identifies the registry API endpoint in a registry
+	// implementation specific way. It can be for example an HTTP endpoint,
+	// like "http://harbor.example.com:8080".
+	APIEndpoint string `json:"apiEndpoint"`
+
+	// Username is the user name to be used during the authentication at the
+	// APIEndpoint interface.
+	Username string `json:"username"`
+
+	// InsecureSkipTlsVerify shows whether the TLS validation of the
+	// registry endpoint can be skipped or not.
+	InsecureSkipTlsVerify bool `json:"insecureSkipTlsVerify"`
+}
+
 // ReplicationRuleStatus specifies the status of project replication rule.
 type ReplicationRuleStatus struct {
 
-	// RemoteRegistryName indicates the name of the remote registry which
-	// the current registry shall synchronize with.
-	RemoteRegistryName string `json:"remoteRegistryName"`
+	// RemoteRegistry indicates the remote registry which the current
+	// registry shall synchronize with.
+	RemoteRegistry RemoteRegistryStatus `json:"remoteRegistry"`
 
 	// Trigger describes the event that shall trigger the replication.
 	Trigger ReplicationTrigger `json:"trigger"`

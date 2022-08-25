@@ -251,13 +251,13 @@ func (r *registry) getScannerOfProject(ctx context.Context, id int) (globalregis
 	err = json.NewDecoder(resp.Body).Decode(scannerResult)
 
 	if err != nil {
+		buf := resp.Body.(bytesBody)
 		r.logger.Error(err, "json decoding failed")
-		b := bytes.NewBuffer(nil)
-		_, err := b.ReadFrom(resp.Body)
-		if err != nil {
-			panic(err)
+		r.logger.Info(buf.String())
+		if buf.String() == "" {
+			r.logger.V(1).Info("scanner response body is empty. maybe no scanner configured?. ignoring")
+			return nil, nil
 		}
-		r.logger.Info(b.String())
 	}
 
 	resultScanner := &scanner{

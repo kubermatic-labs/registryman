@@ -26,7 +26,9 @@ import (
 
 var (
 	rrule1 = api.ReplicationRuleStatus{
-		RemoteRegistryName: "reg1",
+		RemoteRegistry: api.RemoteRegistryStatus{
+			Name: "reg1",
+		},
 		Trigger: api.ReplicationTrigger{
 			Type:     api.EventBasedReplicationTriggerType,
 			Schedule: "",
@@ -34,7 +36,9 @@ var (
 		Direction: "Push",
 	}
 	rrule2 = api.ReplicationRuleStatus{
-		RemoteRegistryName: "reg2",
+		RemoteRegistry: api.RemoteRegistryStatus{
+			Name: "reg2",
+		},
 		Trigger: api.ReplicationTrigger{
 			Type:     api.EventBasedReplicationTriggerType,
 			Schedule: "",
@@ -42,7 +46,9 @@ var (
 		Direction: "Push",
 	}
 	rrule1Trig = api.ReplicationRuleStatus{
-		RemoteRegistryName: "reg1",
+		RemoteRegistry: api.RemoteRegistryStatus{
+			Name: "reg1",
+		},
 		Trigger: api.ReplicationTrigger{
 			Type:     api.ManualReplicationTriggerType,
 			Schedule: "",
@@ -50,7 +56,9 @@ var (
 		Direction: "Push",
 	}
 	rrule1Pull = api.ReplicationRuleStatus{
-		RemoteRegistryName: "reg1",
+		RemoteRegistry: api.RemoteRegistryStatus{
+			Name: "reg1",
+		},
 		Trigger: api.ReplicationTrigger{
 			Type:     api.EventBasedReplicationTriggerType,
 			Schedule: "",

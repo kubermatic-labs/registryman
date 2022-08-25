@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # Usage:
 #
@@ -13,7 +13,7 @@
 # Environment variables:
 #
 DOCKER_IMAGE=$(nix-build -A docker \
-                         --argstr registryman-from "$1" \
-                         --argstr registryman-git-rev "$REGISTRYMAN_REV")
+	--argstr registryman-from "$1" \
+	--argstr registryman-git-rev "$REGISTRYMAN_REV")
 
-docker load < "$DOCKER_IMAGE"
+docker load <"$DOCKER_IMAGE"

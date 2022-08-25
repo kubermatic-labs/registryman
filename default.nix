@@ -1,15 +1,12 @@
-{
-  pkgs ? import (fetchTarball {
-        url = https://github.com/NixOS/nixpkgs/archive/99c46c5bb5ab0e74a94945fe9222132757667d17.tar.gz;
-        sha256 = "0dhxl001a9n6hvbrdcp4bxx5whd54jyamszskknkmy65d5gbnqxd";
-  }) {},
-  registryman-git-rev ? "",
-  registryman-git-ref ? "",
-  registryman-git-url ? "git@github.com:origoss/registryman.git",
-  local-vendor-sha256 ? "sha256-GvsSkiXaauQBTv3Dd5hSlQOsljktw6CBtxn82MzgwIE=",
-  git-vendor-sha256 ? "0gcxhzi24ali7kn9433igmzkw36yf7svvgnvv2jc7xsfhg165p63",
-  registryman-from ? "local",
-}:
+{ pkgs ? import (fetchTarball {
+  url =
+    "https://github.com/NixOS/nixpkgs/archive/99c46c5bb5ab0e74a94945fe9222132757667d17.tar.gz";
+  sha256 = "0dhxl001a9n6hvbrdcp4bxx5whd54jyamszskknkmy65d5gbnqxd";
+}) { }, registryman-git-rev ? "", registryman-git-ref ? ""
+, registryman-git-url ? "git@github.com:origoss/registryman.git"
+, local-vendor-sha256 ? "sha256-GvsSkiXaauQBTv3Dd5hSlQOsljktw6CBtxn82MzgwIE="
+, git-vendor-sha256 ? "0gcxhzi24ali7kn9433igmzkw36yf7svvgnvv2jc7xsfhg165p63"
+, registryman-from ? "local", }:
 
 assert registryman-from == "local" || registryman-from == "git";
 assert registryman-from == "git" -> registryman-git-rev != "";
@@ -49,30 +46,30 @@ let
   registryman-vendor = registryman-src: sha256:
     pkgs.runCommand "registryman-local-vendor" {
       nativeBuildInputs = [ pkgs.go pkgs.cacert pkgs.git ];
-      impureEnvVars = pkgs.lib.fetchers.proxyImpureEnvVars ++ [
-        "GIT_PROXY_COMMAND" "SOCKS_SERVER"
-      ];
+      impureEnvVars = pkgs.lib.fetchers.proxyImpureEnvVars
+        ++ [ "GIT_PROXY_COMMAND" "SOCKS_SERVER" ];
       outputHashMode = "recursive";
       outputHashAlgo = "sha256";
       outputHash = sha256;
     } ''
-       mkdir -p $out
-       mkdir -p $TMPDIR/tmp
-       mkdir -p $TMPDIR/gomodules
-       export GOMODCACHE=$TMPDIR/gomodules
-       cp -a ${registryman-src}/* $TMPDIR/tmp
-       chmod a+w $TMPDIR/tmp/go.mod
-       chmod a+w $TMPDIR/tmp/go.sum
-       cd tmp
-       go mod vendor
-       ls -l $TMPDIR/gomodules
-       mv vendor/* $out
+      mkdir -p $out
+      mkdir -p $TMPDIR/tmp
+      mkdir -p $TMPDIR/gomodules
+      export GOMODCACHE=$TMPDIR/gomodules
+      cp -a ${registryman-src}/* $TMPDIR/tmp
+      chmod a+w $TMPDIR/tmp/go.mod
+      chmod a+w $TMPDIR/tmp/go.sum
+      cd tmp
+      go mod vendor
+      ls -l $TMPDIR/gomodules
+      mv vendor/* $out
     '';
 
-  registryman-local-vendor = registryman-vendor registryman-local-source local-vendor-sha256;
+  registryman-local-vendor =
+    registryman-vendor registryman-local-source local-vendor-sha256;
 
-  registryman-local-generated = pkgs.runCommand "registryman-local-generated" {
-  } ''
+  registryman-local-generated =
+    pkgs.runCommand "registryman-local-generated" { } ''
       mkdir $out
       cp -a ${registryman-local-source}/* $TMPDIR
       chmod a+rw -R $TMPDIR
@@ -85,37 +82,43 @@ let
       buildInputs = [ pkgs.go pkgs.removeReferencesTo ];
       disallowedReferences = [ pkgs.go ];
     } ''
-       mkdir -p $out/bin
-       mkdir -p $TMPDIR/go/src/github.com/kubermatic-labs/registryman
-       mkdir -p $TMPDIR/gocache
-       export GOCACHE=$TMPDIR/gocache
-       cp -a ${registryman-generated}/* $TMPDIR/go/src/github.com/kubermatic-labs/registryman
-       ln -s ${registryman-vendor} $TMPDIR/go/src/github.com/kubermatic-labs/registryman/vendor
-       cd $TMPDIR/go/src/github.com/kubermatic-labs/registryman
-       export GOPATH=$TMPDIR/go
-       export CGO_ENABLED=0
-       go build -tags "exclude_graphdriver_devicemapper exclude_graphdriver_btrfs containers_image_openpgp" -ldflags="-s -w"
-       remove-references-to -t ${pkgs.go} $TMPDIR/go/src/github.com/kubermatic-labs/registryman/registryman
-       mv $TMPDIR/go/src/github.com/kubermatic-labs/registryman/registryman $out/bin
-   '';
+      mkdir -p $out/bin
+      mkdir -p $TMPDIR/go/src/github.com/kubermatic-labs/registryman
+      mkdir -p $TMPDIR/gocache
+      export GOCACHE=$TMPDIR/gocache
+      cp -a ${registryman-generated}/* $TMPDIR/go/src/github.com/kubermatic-labs/registryman
+      ln -s ${registryman-vendor} $TMPDIR/go/src/github.com/kubermatic-labs/registryman/vendor
+      cd $TMPDIR/go/src/github.com/kubermatic-labs/registryman
+      export GOPATH=$TMPDIR/go
+      export CGO_ENABLED=0
+      go build -tags "exclude_graphdriver_devicemapper exclude_graphdriver_btrfs containers_image_openpgp" -ldflags="-s -w"
+      remove-references-to -t ${pkgs.go} $TMPDIR/go/src/github.com/kubermatic-labs/registryman/registryman
+      mv $TMPDIR/go/src/github.com/kubermatic-labs/registryman/registryman $out/bin
+    '';
 
   registryman-git-source = fetchGit {
-      url = registryman-git-url;
-      ref = registryman-git-ref;
-      rev = registryman-git-rev;
-    };
+    url = registryman-git-url;
+    ref = registryman-git-ref;
+    rev = registryman-git-rev;
+  };
 
-  registryman-source = if registryman-from == "local" then registryman-local-source
-    else registryman-git-source;
+  registryman-source = if registryman-from == "local" then
+    registryman-local-source
+  else
+    registryman-git-source;
 
-  registryman-git-vendor = registryman-vendor registryman-git-source git-vendor-sha256;
+  registryman-git-vendor =
+    registryman-vendor registryman-git-source git-vendor-sha256;
 
-  registryman-generated = if registryman-from == "local" then registryman-local-generated
-    else registryman-git-source;
+  registryman-generated = if registryman-from == "local" then
+    registryman-local-generated
+  else
+    registryman-git-source;
 
   registryman-built = if registryman-from == "local" then
-    registryman registryman-local-vendor else
-      registryman registryman-git-vendor;
+    registryman registryman-local-vendor
+  else
+    registryman registryman-git-vendor;
 
   registryman-kustomization-yaml = pkgs.writeTextFile {
     name = "registryman-kustomization-yaml";
@@ -140,13 +143,11 @@ let
         "registryman-webhook-vwc.yaml"
         "registryman-webhook-service.yaml"
       ];
-      images = [
-        {
-          name = "registryman";
-          newName = "registryman";
-          newTag = image-tag;
-        }
-      ];
+      images = [{
+        name = "registryman";
+        newName = "registryman";
+        newTag = image-tag;
+      }];
     };
   };
 
@@ -173,13 +174,11 @@ let
         "registryman-webhook-vwc.yaml"
         "registryman-webhook-service.yaml"
       ];
-      images = [
-        {
-          name = "registryman";
-          newName = "registryman";
-          newTag = image-tag;
-        }
-      ];
+      images = [{
+        name = "registryman";
+        newName = "registryman";
+        newTag = image-tag;
+      }];
       patchesStrategicMerge = [
         "registryman-webhook-deployment-verbose-patch.yaml"
         "registryman-deployment-verbose-patch.yaml"
@@ -187,9 +186,10 @@ let
     };
   };
 
-  registryman-deployment-manifests = pkgs.runCommand "registryman-deployment-manifests" {
-    src = (builtins.toString registryman-source) + "/deploy";
-  } ''
+  registryman-deployment-manifests =
+    pkgs.runCommand "registryman-deployment-manifests" {
+      src = (builtins.toString registryman-source) + "/deploy";
+    } ''
       mkdir -p $out
       cp -a ${registryman-kustomization-yaml}/kustomization.yaml $out/kustomization.yaml
       cp -a $src/registryman-namespace.yaml $out
@@ -208,9 +208,10 @@ let
       cp -a $src/registryman-webhook-service.yaml $out
     '';
 
-  registryman-deployment-manifests-verbose = pkgs.runCommand "registryman-deployment-manifests" {
-    src = (builtins.toString registryman-source) + "/deploy";
-  } ''
+  registryman-deployment-manifests-verbose =
+    pkgs.runCommand "registryman-deployment-manifests" {
+      src = (builtins.toString registryman-source) + "/deploy";
+    } ''
       mkdir -p $out
       cp -a ${registryman-kustomization-yaml-verbose}/kustomization.yaml $out/kustomization.yaml
       cp -a $src/registryman-namespace.yaml $out
@@ -231,14 +232,14 @@ let
       cp -a $src/registryman-deployment-verbose-patch.yaml $out
     '';
 
-  image-tag = builtins.hashString "sha256" (builtins.toString registryman-built);
+  image-tag = builtins.hashString "sha256"
+    ((builtins.toString registryman-built) + (builtins.readFile ./default.nix));
 
   dockerimage = pkgs.dockerTools.buildLayeredImage {
     name = "registryman";
     tag = image-tag;
-    config = {
-      Entrypoint = [ "${registryman-built}/bin/registryman" ];
-    };
+    contents = [ pkgs.cacert ];
+    config = { Entrypoint = [ "${registryman-built}/bin/registryman" ]; };
   };
 
   controller-tools = pkgs.buildGoModule rec {
@@ -272,22 +273,21 @@ let
     vendorSha256 = code-generator-config.vendorSha256;
   };
 
-  collected-go-sources = pkgs.runCommand "collected-go-sources" {
-  } ''
-     mkdir -p $out/
-     mkdir -p $TMPDIR/go
-     cp -a ${pkgs.go}/share/go/* $TMPDIR/go
-     chmod a+rw -R $TMPDIR/go
-     cp -a ${registryman-local-vendor}/* $TMPDIR/go/src
-     chmod a+rw -R $TMPDIR/go
-     mkdir -p $TMPDIR/go/src/github.com/kubermatic-labs/registryman
-     cp -a ${registryman-local-source}/* $TMPDIR/go/src/github.com/kubermatic-labs/registryman
-     chmod a+rw -R $TMPDIR/go/src/github.com/kubermatic-labs/registryman
-     mv $TMPDIR/go/* $out
+  collected-go-sources = pkgs.runCommand "collected-go-sources" { } ''
+    mkdir -p $out/
+    mkdir -p $TMPDIR/go
+    cp -a ${pkgs.go}/share/go/* $TMPDIR/go
+    chmod a+rw -R $TMPDIR/go
+    cp -a ${registryman-local-vendor}/* $TMPDIR/go/src
+    chmod a+rw -R $TMPDIR/go
+    mkdir -p $TMPDIR/go/src/github.com/kubermatic-labs/registryman
+    cp -a ${registryman-local-source}/* $TMPDIR/go/src/github.com/kubermatic-labs/registryman
+    chmod a+rw -R $TMPDIR/go/src/github.com/kubermatic-labs/registryman
+    mv $TMPDIR/go/* $out
   '';
 
   generated-code = pkgs.runCommand "registryman-generated" {
-    nativeBuildInputs = [controller-tools code-generator pkgs.go ];
+    nativeBuildInputs = [ controller-tools code-generator pkgs.go ];
     GO111MODULE = "on";
     GOROOT = collected-go-sources;
   } ''
@@ -335,9 +335,7 @@ in {
   inherit registryman-built generated-code registryman-deployment-manifests
     registryman-deployment-manifests-verbose image-tag;
 
-  shell = pkgs.mkShell {
-    nativeBuildInputs = [ registryman-built ];
-  };
+  shell = pkgs.mkShell { nativeBuildInputs = [ registryman-built ]; };
 
   dev = pkgs.mkShell {
     nativeBuildInputs = [ controller-tools code-generator pkgs.go ];
@@ -349,7 +347,10 @@ in {
   };
   docker = dockerimage;
 
-  project-crd = "${registryman-generated}/pkg/apis/registryman/v1alpha1/registryman.kubermatic.com_projects.yaml";
-  registry-crd = "${registryman-generated}/pkg/apis/registryman/v1alpha1/registryman.kubermatic.com_registries.yaml";
-  scanner-crd = "${registryman-generated}/pkg/apis/registryman/v1alpha1/registryman.kubermatic.com_scanners.yaml";
+  project-crd =
+    "${registryman-generated}/pkg/apis/registryman/v1alpha1/registryman.kubermatic.com_projects.yaml";
+  registry-crd =
+    "${registryman-generated}/pkg/apis/registryman/v1alpha1/registryman.kubermatic.com_registries.yaml";
+  scanner-crd =
+    "${registryman-generated}/pkg/apis/registryman/v1alpha1/registryman.kubermatic.com_scanners.yaml";
 }
