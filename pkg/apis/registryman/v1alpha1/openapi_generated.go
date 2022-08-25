@@ -730,14 +730,6 @@ func schema_pkg_apis_registryman_v1alpha1_RemoteRegistryStatus(ref common.Refere
 							Format:      "",
 						},
 					},
-					"password": {
-						SchemaProps: spec.SchemaProps{
-							Description: "Password is the password to be used during the authentication at the APIEndpoint interface.",
-							Default:     "",
-							Type:        []string{"string"},
-							Format:      "",
-						},
-					},
 					"insecureSkipTlsVerify": {
 						SchemaProps: spec.SchemaProps{
 							Description: "InsecureSkipTlsVerify shows whether the TLS validation of the registry endpoint can be skipped or not.",
@@ -747,7 +739,7 @@ func schema_pkg_apis_registryman_v1alpha1_RemoteRegistryStatus(ref common.Refere
 						},
 					},
 				},
-				Required: []string{"name", "provider", "apiEndpoint", "username", "password", "insecureSkipTlsVerify"},
+				Required: []string{"name", "provider", "apiEndpoint", "username", "insecureSkipTlsVerify"},
 			},
 		},
 	}

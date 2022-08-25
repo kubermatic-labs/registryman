@@ -202,10 +202,6 @@ spec:
                               name:
                                 description: Name of the remote registry.
                                 type: string
-                              password:
-                                description: Password is the password to be used during
-                                  the authentication at the APIEndpoint interface.
-                                type: string
                               provider:
                                 description: Provider identifies the actual registry
                                   type, e.g. Harbor, Docker Hub, etc.
@@ -218,7 +214,6 @@ spec:
                             - apiEndpoint
                             - insecureSkipTlsVerify
                             - name
-                            - password
                             - provider
                             - username
                             type: object
