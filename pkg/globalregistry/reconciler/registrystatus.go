@@ -119,7 +119,15 @@ func GetRegistryStatus(ctx context.Context, reg globalregistry.Registry) (*api.R
 			}
 			projectStatuses[i].ReplicationRules = make([]api.ReplicationRuleStatus, len(replicationRules))
 			for n, rule := range replicationRules {
-				projectStatuses[i].ReplicationRules[n].RemoteRegistryName = rule.RemoteRegistry().GetName()
+				// remoteRegistryName := rule.RemoteRegistry().GetName()
+				// // Check whether remote registry is a valid registry
+				// projectStatuses[i].ReplicationRules[n].RemoteRegistryName = remoteRegistryName
+
+				projectStatuses[i].ReplicationRules[n].RemoteRegistry.Name = rule.RemoteRegistry().GetName()
+				projectStatuses[i].ReplicationRules[n].RemoteRegistry.Provider = rule.RemoteRegistry().GetProvider()
+				projectStatuses[i].ReplicationRules[n].RemoteRegistry.APIEndpoint = rule.RemoteRegistry().GetAPIEndpoint()
+				projectStatuses[i].ReplicationRules[n].RemoteRegistry.Username = rule.RemoteRegistry().GetUsername()
+				projectStatuses[i].ReplicationRules[n].RemoteRegistry.InsecureSkipTlsVerify = rule.RemoteRegistry().GetInsecureSkipTLSVerify()
 				projectStatuses[i].ReplicationRules[n].Trigger = api.ReplicationTrigger{
 					Type:     rule.Trigger().TriggerType(),
 					Schedule: rule.Trigger().TriggerSchedule(),

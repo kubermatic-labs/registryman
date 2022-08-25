@@ -52,3 +52,9 @@ type DestructibleReplicationRule interface {
 	// Delete method deletes the replication rule from the registry.
 	Delete(context.Context) error
 }
+
+// UpdatableRemoteRegistryReplicationRule interface declares the methods that
+// can be used to update the remote registry
+type UpdatableRemoteRegistryReplicationRule interface {
+	UpdateRemoteRegistry(context.Context, Registry) error
+}

@@ -50,6 +50,28 @@ type remoteRegistryStatus struct {
 	Description  string             `json:"description"`
 }
 
+type remoteRegistryUpdateBody struct {
+	AccessKey      string `json:"access_key"`
+	CredentialType string `json:"credential_type"`
+	Name           string `json:"name"`
+	AccessSecret   string `json:"access_secret"`
+	Url            string `url:"url"`
+	Insecure       bool   `json:"insecure"`
+	Description    string `json:"description"`
+}
+
+func (rrs *remoteRegistryStatus) remoteRegistryUpdateBody() *remoteRegistryUpdateBody {
+	return &remoteRegistryUpdateBody{
+		AccessKey:      rrs.Credential.AccessKey,
+		CredentialType: rrs.Credential.Type,
+		Name:           rrs.Name,
+		AccessSecret:   rrs.Credential.AccessSecret,
+		Url:            rrs.Url,
+		Insecure:       rrs.Insecure,
+		Description:    rrs.Description,
+	}
+}
+
 func remoteRegistryStatusFromRegistry(reg globalregistry.Registry) *remoteRegistryStatus {
 	var regType string
 	insecure := false
@@ -132,41 +154,54 @@ func (r *registry) getRemoteRegistryByNameOrCreate(ctx context.Context, greg glo
 			return nil, err
 		}
 	}
+	updateNeeded := false
 	if old, new := reg.GetAPIEndpoint(), greg.GetAPIEndpoint(); old != new {
-		err = fmt.Errorf("remote registry exists with a different API endpoint")
-		r.logger.Error(err, "remote registry mismatch",
-			"registry-name", reg.GetName(),
-			"old-value", old,
-			"new-value", new,
-		)
-		return nil, err
+		// err = fmt.Errorf("remote registry exists with a different API endpoint")
+		// r.logger.Error(err, "remote registry mismatch",
+		// 	"registry-name", reg.GetName(),
+		// 	"old-value", old,
+		// 	"new-value", new,
+		// )
+		updateNeeded = true
 	}
 	if old, new := reg.GetUsername(), greg.GetUsername(); old != new {
-		err = fmt.Errorf("remote registry exists with a different username")
-		r.logger.Error(err, "remote registry mismatch",
-			"registry-name", reg.GetName(),
-			"old-value", old,
-			"new-value", new,
-		)
-		return nil, err
+		// err = fmt.Errorf("remote registry exists with a different username")
+		// r.logger.Error(err, "remote registry mismatch",
+		// 	"registry-name", reg.GetName(),
+		// 	"old-value", old,
+		// 	"new-value", new,
+		// )
+		updateNeeded = true
 	}
 	if old, new := reg.GetProvider(), greg.GetProvider(); old != new {
-		err = fmt.Errorf("remote registry exists with a different provider")
-		r.logger.Error(err, "remote registry mismatch",
-			"registry-name", reg.GetName(),
-			"old-value", old,
-			"new-value", new,
-		)
-		return nil, err
+		// err = fmt.Errorf("remote registry exists with a different provider")
+		// r.logger.Error(err, "remote registry mismatch",
+		// 	"registry-name", reg.GetName(),
+		// 	"old-value", old,
+		// 	"new-value", new,
+		// )
+		updateNeeded = true
 	}
 	if old, new := reg.GetInsecureSkipTLSVerify(), greg.GetInsecureSkipTLSVerify(); old != new {
-		err = fmt.Errorf("remote registry exists with a different insecure value")
-		r.logger.Error(err, "remote registry mismatch",
-			"registry-name", reg.GetName(),
-			"old-value", old,
-			"new-value", new,
-		)
-		return nil, err
+		// err = fmt.Errorf("remote registry exists with a different insecure value")
+		// r.logger.Error(err, "remote registry mismatch",
+		// 	"registry-name", reg.GetName(),
+		// 	"old-value", old,
+		// 	"new-value", new,
+		// )
+		updateNeeded = true
+	}
+	if updateNeeded {
+		r.logger.V(1).Info("remote registry shall be updated")
+		err = r.updateRemoteRegistry(ctx, reg.Id, greg)
+		if err != nil {
+			r.logger.Error(err, "remote registry update failed")
+			return nil, err
+		}
+		reg, err = r.getRemoteRegistryByName(ctx, greg.GetName())
+		if err != nil {
+			return nil, err
+		}
 	}
 	return reg, nil
 }
@@ -258,4 +293,32 @@ func (r *registry) listRemoteRegistries(ctx context.Context) ([]*remoteRegistryS
 	}
 
 	return registriesResults, err
+}
+
+func (r *registry) updateRemoteRegistry(ctx context.Context, remoteRegistryId int, remoteRegistry globalregistry.Registry) error {
+	remoteRegistryUpdate := remoteRegistryStatusFromRegistry(remoteRegistry).remoteRegistryUpdateBody()
+
+	reqBodyBuf := bytes.NewBuffer(nil)
+	err := json.NewEncoder(reqBodyBuf).Encode(remoteRegistryUpdate)
+	if err != nil {
+		return err
+	}
+
+	url := *r.parsedUrl
+	url.Path = registriesPath + fmt.Sprintf("/%d", remoteRegistryId)
+	r.logger.V(1).Info("creating new request", "url", url.String())
+	req, err := http.NewRequest(http.MethodPut, url.String(), reqBodyBuf)
+	if err != nil {
+		return err
+	}
+	r.logger.V(1).Info("sending HTTP request", "req-uri", req.RequestURI)
+
+	req.SetBasicAuth(r.GetUsername(), r.GetPassword())
+	req.Header["Content-Type"] = []string{"application/json"}
+
+	_, err = r.do(ctx, req)
+	if err != nil {
+		return err
+	}
+	return nil
 }

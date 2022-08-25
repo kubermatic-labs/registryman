@@ -119,6 +119,7 @@ func (r *registry) do(ctx context.Context, req *http.Request) (*http.Response, e
 			"req-url", req.URL,
 		)
 		r.logger.V(1).Info(buf.String())
+		return nil, globalregistry.ErrInvalidStatusCode(resp.StatusCode)
 	}
 	return resp, nil
 }
@@ -150,7 +151,13 @@ func (r *registry) searchLdapGroup(ctx context.Context, ldapGroupName string) (s
 	req.SetBasicAuth(r.GetUsername(), r.GetPassword())
 
 	resp, err := r.do(ctx, req)
-	if err != nil {
+	switch err {
+	case nil:
+	case globalregistry.ErrInvalidStatusCode(500):
+		r.logger.V(1).Info("ldap group search failed. Maybe there is no LDAP configured. ignoring")
+		return "", nil
+	default:
+		r.logger.V(1).Info("other HTTP API request error")
 		return "", err
 	}
 

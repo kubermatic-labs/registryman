@@ -18,7 +18,16 @@ package globalregistry
 
 import (
 	"errors"
+	"fmt"
 )
+
+// ErrInvalidStatusCode is an error value that indicates that an HTTP API call
+// resulted in a non 2xx status code.
+type ErrInvalidStatusCode int
+
+func (eisc ErrInvalidStatusCode) Error() string {
+	return fmt.Sprintf("invalid status code: %d", eisc)
+}
 
 var (
 	// ErrRecoverableError is an error value that indicates that the error
@@ -36,4 +45,6 @@ var (
 	// ErrUnauthorized is an error value that indicates that the API call
 	// failed due to the API user is not authorized.
 	ErrUnauthorized error = errors.New("unauthorized")
+
+
 )

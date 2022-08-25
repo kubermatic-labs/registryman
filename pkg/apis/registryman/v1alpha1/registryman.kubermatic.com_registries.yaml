@@ -185,11 +185,43 @@ spec:
                             description: Direction shows whether the replication is
                               of type pull or push.
                             type: string
-                          remoteRegistryName:
-                            description: RemoteRegistryName indicates the name of
-                              the remote registry which the current registry shall
-                              synchronize with.
-                            type: string
+                          remoteRegistry:
+                            description: RemoteRegistry indicates the remote registry
+                              which the current registry shall synchronize with.
+                            properties:
+                              apiEndpoint:
+                                description: APIEndpoint identifies the registry API
+                                  endpoint in a registry implementation specific way.
+                                  It can be for example an HTTP endpoint, like "http://harbor.example.com:8080".
+                                type: string
+                              insecureSkipTlsVerify:
+                                description: InsecureSkipTlsVerify shows whether the
+                                  TLS validation of the registry endpoint can be skipped
+                                  or not.
+                                type: boolean
+                              name:
+                                description: Name of the remote registry.
+                                type: string
+                              password:
+                                description: Password is the password to be used during
+                                  the authentication at the APIEndpoint interface.
+                                type: string
+                              provider:
+                                description: Provider identifies the actual registry
+                                  type, e.g. Harbor, Docker Hub, etc.
+                                type: string
+                              username:
+                                description: Username is the user name to be used
+                                  during the authentication at the APIEndpoint interface.
+                                type: string
+                            required:
+                            - apiEndpoint
+                            - insecureSkipTlsVerify
+                            - name
+                            - password
+                            - provider
+                            - username
+                            type: object
                           trigger:
                             description: Trigger describes the event that shall trigger
                               the replication.
@@ -203,7 +235,7 @@ spec:
                             type: object
                         required:
                         - direction
-                        - remoteRegistryName
+                        - remoteRegistry
                         - trigger
                         type: object
                       type: array

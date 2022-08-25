@@ -260,3 +260,4 @@ func (r *registry) deleteReplicationRule(ctx context.Context, id int) error {
 
 	return nil
 }
+
