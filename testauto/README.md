@@ -24,7 +24,7 @@ The test automation tool takes care of the Kubernetes test environment. It uses 
 Test automation tool supports different versions of Kubernetes. To list the supported Kubernetes versions, enter:
 
 ```bash
-./ta-dev.sh cluster supported-versions
+testauto cluster supported-versions
 ```
 
 ## Starting a new test environment
@@ -32,7 +32,7 @@ Test automation tool supports different versions of Kubernetes. To list the supp
 You can start a new test environment with the following command:
 
 ```bash
-./ta-dev.sh cluster create! env-name 1.20
+testauto cluster create! env-name 1.20
 ```
 
 A new environment will be created with the name `env-name` and version `1.20`.
@@ -42,7 +42,7 @@ A new environment will be created with the name `env-name` and version `1.20`.
 You can list the previously created test environments with the following command:
 
 ```bash
-./ta-dev.sh cluster list
+testauto cluster list
 ```
 
 ## Get an environment's kubeconfig file
@@ -50,13 +50,13 @@ You can list the previously created test environments with the following command
 The `kubeconfig` of an environment can be generated with the following command:
 
 ```bash
-./ta-dev.sh cluster kubeconfig env-name
+testauto cluster kubeconfig env-name
 ```
 
 You can store the kubeconfig file of the environment `test-env` with the following command:
 
 ```bash
-./ta-dev.sh cluster kubeconfig test-env > kubeconfig
+testauto cluster kubeconfig test-env > kubeconfig
 ```
 
 ## Destroy a test environment
@@ -64,7 +64,7 @@ You can store the kubeconfig file of the environment `test-env` with the followi
 You can tear down a test environment with the following command:
 
 ```bash
-./ta-dev.sh cluster delete! env-name
+testauto cluster delete! env-name
 ```
 
 # Managing Harbor deployments
@@ -76,7 +76,7 @@ The test automation tool can manage the lifecycle of Harbor deployments of a tes
 The test automation tool can show the supported Harbor versions with this command:
 
 ```bash
-./ta-dev.sh harbor versions
+testauto harbor versions
 ```
 
 ## Installing Harbor
@@ -84,7 +84,7 @@ The test automation tool can show the supported Harbor versions with this comman
 You can deploy Harbor in a previously created test environment with the following command:
 
 ```bash
-./ta-dev.sh harbor install! env-name harbor-name 2.2.4
+testauto harbor install! env-name harbor-name 2.2.4
 ```
 
 Here, the `env-name` is the name of the previously created test environment, `harbor-name` is the name of the Harbor deployment and `2.2.4` is the Harbor version to deploy.
@@ -106,7 +106,7 @@ Harbor console is then at http://harbor-name
 You can list the Harbor deployments of a test environments using the following command:
 
 ```bash
-./ta-dev.sh harbor list env-name
+testauto harbor list env-name
 ```
 
 Here, the `env-name` is the name of the test environment.
@@ -114,7 +114,7 @@ Here, the `env-name` is the name of the test environment.
 If you omit the env-name, Harbor deployments of all test environments are listed:
 
 ```bash
-./ta-dev.sh harbor list
+testauto harbor list
 ```
 
 ## Adding user to Harbor deployment
@@ -122,7 +122,7 @@ If you omit the env-name, Harbor deployments of all test environments are listed
 The test automation tool lets you create users in the Harbor user database with the following command:
 
 ```bash
-./ta-dev.sh harbor add-user! env-name harbor-name user-name
+testauto harbor add-user! env-name harbor-name user-name
 ```
 
 ## Cleaning up the Harbor user database
@@ -130,7 +130,7 @@ The test automation tool lets you create users in the Harbor user database with 
 You can clean up the Harbor user database with the following command:
 
 ```bash
-./ta-dev.sh harbor clean-users! env-name harbor-name
+testauto harbor clean-users! env-name harbor-name
 ```
 
 ## Uninstalling Harbor
@@ -138,7 +138,7 @@ You can clean up the Harbor user database with the following command:
 You can uninstall a previously installed Harbor with the following command:
 
 ```bash
-./ta-dev.sh harbor uninstall! env-name harbor-name
+testauto harbor uninstall! env-name harbor-name
 ```
 
 Here, the `env-name` is the name of the previously created test environment, `harbor-name` is the name of the previously installed Harbor deployment.
@@ -160,7 +160,7 @@ The commands below detect changes in the source code of registryman. If you chan
 The `registryman` CRDs can be (re-)deployed using the following command:
 
 ```bash
-./ta-dev.sh registryman deploy-crds! env-name
+testauto registryman deploy-crds! env-name
 ```
 
 ## Deploying registryman
@@ -168,7 +168,7 @@ The `registryman` CRDs can be (re-)deployed using the following command:
 The `registryman` operator and validating webhook components can be (re-)deployed with the following command:
 
 ```bash
-./ta-dev.sh registryman deploy! env-name
+testauto registryman deploy! env-name
 ```
 
 ## Checking the Logs of registryman Validation Webhook Deployment
@@ -176,7 +176,7 @@ The `registryman` operator and validating webhook components can be (re-)deploye
 You can check the logs of the registryman validation webhook container with the following command:
 
 ```bash
-./ta-dev.sh registryman log env-name
+testauto registryman log env-name
 ```
 
 ## Deleting registryman deployment
@@ -184,7 +184,7 @@ You can check the logs of the registryman validation webhook container with the 
 The `registryman` operator and validating webhook components can be removed from the test environment with the following command:
 
 ```bash
-./ta-dev.sh registryman delete! env-name
+testauto registryman delete! env-name
 ```
 
 # Running tests
@@ -202,7 +202,7 @@ Since `registryman` can be used both as a CLI tool and a Kubernetes operator, th
 You can print the yaml files of testcase with the following command:
 
 ```bash
-./ta-dev.sh tc print tests/tc2.tc
+testauto tc print tests/tc2.tc
 ```
 
 The last argument of the command denotes the testcase under investigation.
@@ -212,7 +212,7 @@ The last argument of the command denotes the testcase under investigation.
 You can validate (with `registryman validate`) the yaml files of testcase with the following command:
 
 ```bash
-./ta-dev.sh tc validate tests/tc2.tc
+testauto tc validate tests/tc2.tc
 ```
 
 The last argument of the command denotes the testcase under investigation.
@@ -222,13 +222,13 @@ The last argument of the command denotes the testcase under investigation.
 You can execute the `registryman apply --dry-run` command for a testcase with the following command:
 
 ```bash
-./ta-dev.sh tc dry-run tests/tc2.tc
+testauto tc dry-run tests/tc2.tc
 ```
 
 You can turn on verbose logging with:
 
 ```bash
-./ta-dev.sh -v tc dry-run tests/tc2.tc
+testauto -v tc dry-run tests/tc2.tc
 ```
 
 ## Application of YAML files (CLI mode)
@@ -236,13 +236,13 @@ You can turn on verbose logging with:
 You can execute the `registryman apply` command for a testcase with the following command:
 
 ```bash
-./ta-dev.sh tc apply tests/tc2.tc
+testauto tc apply tests/tc2.tc
 ```
 
 You can turn on verbose logging with:
 
 ```bash
-./ta-dev.sh -v tc apply tests/tc2.tc
+testauto -v tc apply tests/tc2.tc
 ```
 
 ## Uploading the Resources of a Testcase
@@ -250,7 +250,7 @@ You can turn on verbose logging with:
 You can upload the YAML files of a testcase to the test environment as Custom Resources with the following command:
 
 ```bash
-./ta-dev.sh tc upload-resources! tests/tc2.tc env-name
+testauto tc upload-resources! tests/tc2.tc env-name
 ```
 
 ## Deleting the Resources of a Testcase
@@ -258,7 +258,7 @@ You can upload the YAML files of a testcase to the test environment as Custom Re
 You can delete the Custom Resources of a testcase from the test environment with the following command:
 
 ```bash
-./ta-dev.sh tc delete-resources! tests/tc2.tc env-name
+testauto tc delete-resources! tests/tc2.tc env-name
 ```
 
 ## Executing a Single Testcase (CLI mode)
@@ -266,7 +266,7 @@ You can delete the Custom Resources of a testcase from the test environment with
 You can execute a single testcase using the CLI mode using the following command:
 
 ```bash
-./ta-dev.sh tc run tests/tc2.tc
+testauto tc run tests/tc2.tc
 ```
 
 The following steps are performed when a test is run in CLI mode:
@@ -284,7 +284,7 @@ If the actual status of step 7 is the same as the expected status of step 3, the
 You can turn on verbose logging:
 
 ```bash
-./ta-dev.sh -v tc run tests/tc2.tc
+testauto -v tc run tests/tc2.tc
 ```
 
 ## Executing a Batch of Testcases (CLI mode)
@@ -292,13 +292,13 @@ You can turn on verbose logging:
 When you specify a directory name as the path to the testcase, all testcases within the specified directory will be executed:
 
 ```bash
-./ta-dev.sh tc run tests
+testauto tc run tests
 ```
 
 You can turn on verbose logging:
 
 ```bash
-./ta-dev.sh -v tc run tests
+testauto -v tc run tests
 ```
 
 ## Executing a Single Testcase (Operator mode)
@@ -306,7 +306,7 @@ You can turn on verbose logging:
 You can execute a single testcase using the `registryman` operator using the following command:
 
 ```bash
-./ta-dev.sh tc run tests/tc2.tc env-name
+testauto tc run tests/tc2.tc env-name
 ```
 
 Here, the `env-name` denotes the test environment, where the `registryman` operator is run.
@@ -327,7 +327,7 @@ If the actual status of step 7 is the same as the expected status of step 3, the
 You can turn on verbose logging:
 
 ```bash
-./ta-dev.sh -v tc run tests/tc2.tc env-name
+testauto -v tc run tests/tc2.tc env-name
 ```
 
 ## Executing a Batch of Testcases (Operator mode)
@@ -335,7 +335,7 @@ You can turn on verbose logging:
 When you specify a directory name as the path to the testcase, all testcases within the specified directory will be executed:
 
 ```bash
-./ta-dev.sh tc run tests env-name
+testauto tc run tests env-name
 ```
 
 Here, the `env-name` denotes the test environment, where the `registryman` operator is run.
@@ -343,5 +343,5 @@ Here, the `env-name` denotes the test environment, where the `registryman` opera
 You can turn on verbose logging:
 
 ```bash
-./ta-dev.sh -v tc run tests env-name
+testauto -v tc run tests env-name
 ```
