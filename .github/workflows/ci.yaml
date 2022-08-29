@@ -79,7 +79,7 @@ jobs:
     steps:
     - uses: actions/checkout@v3
     - uses: cachix/install-nix-action@v17
-    - run: nix-build -A docker --argstr registryman-from local
+    - run: ./docker-build.sh
   testauto:
     runs-on: ubuntu-latest
     name: Integration tests with kind
@@ -89,22 +89,20 @@ jobs:
       with:
         nix_path: nixpkgs=channel:nixos-unstable
     - name: Run tests
-      working-directory: ./testauto
       run: |
         echo "172.18.0.2 harbor" | sudo tee -a /etc/hosts
         echo "172.18.0.2 harbor2" | sudo tee -a /etc/hosts
-        ./setup-env.sh
+        nix-shell --run testauto/setup-env.sh 2>&1
         echo "Running CLI tests"
-        ./ta-dev.sh -v tc run tests 2>&1
+        nix-shell --run "testauto -v tc run testauto/tests" 2>&1
         echo "Running K8s resource tests"
-        ./ta-dev.sh -v tc run tests test 2>&1
+        nix-shell --run "testauto -v tc run testauto/tests test" 2>&1
         echo "Running CLI tests - 2nd round"
-        ./ta-dev.sh -v tc run tests 2>&1
+        nix-shell --run "testauto -v tc run testauto/tests" 2>&1
         echo "Running K8s resource tests - 2nd round"
-        ./ta-dev.sh -v tc run tests test 2>&1
+        nix-shell --run "testauto -v tc run testauto/tests test" 2>&1
     - name: Log registryman logs
       if: ${{ always() }}
-      working-directory: ./testauto
-      run: ./ta-dev.sh registryman log test
+      run: nix-shell --run "registryman log test"
 
 

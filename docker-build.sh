@@ -2,18 +2,14 @@
 
 # Usage:
 #
-# docker-build <registryman version>
-#
-# where  <registryman version> can be either local or git
+# docker-build
 #
 # Example:
-#    ./docker-build git
+#    ./docker-build
 # build a docker image where registryman comes from git.
 #
 # Environment variables:
 #
-DOCKER_IMAGE=$(nix-build -A docker \
-	--argstr registryman-from "$1" \
-	--argstr registryman-git-rev "$REGISTRYMAN_REV")
+DOCKER_IMAGE=$(nix-build -A dockerimage)
 
 docker load <"$DOCKER_IMAGE"

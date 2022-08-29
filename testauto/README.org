@@ -47,7 +47,7 @@ Test automation tool supports different versions of Kubernetes. To list the
 supported Kubernetes versions, enter:
 
 #+begin_src bash :eval never
-  ./ta-dev.sh cluster supported-versions
+  testauto cluster supported-versions
 #+end_src
 
 ** Starting a new test environment
@@ -55,7 +55,7 @@ supported Kubernetes versions, enter:
 You can start a new test environment with the following command:
 
 #+begin_src bash :eval never
-  ./ta-dev.sh cluster create! env-name 1.20
+  testauto cluster create! env-name 1.20
 #+end_src
 
 A new environment will be created with the name ~env-name~ and version ~1.20~.
@@ -66,7 +66,7 @@ You can list the previously created test environments with the following
 command:
 
 #+begin_src bash :eval never
-  ./ta-dev.sh cluster list
+  testauto cluster list
 #+end_src
 
 ** Get an environment's kubeconfig file
@@ -74,14 +74,14 @@ command:
 The ~kubeconfig~ of an environment can be generated with the following command:
 
 #+begin_src bash :eval never
-  ./ta-dev.sh cluster kubeconfig env-name
+  testauto cluster kubeconfig env-name
 #+end_src
 
 You can store the kubeconfig file of the environment ~test-env~ with the
 following command:
 
 #+begin_src bash :eval never
-  ./ta-dev.sh cluster kubeconfig test-env > kubeconfig
+  testauto cluster kubeconfig test-env > kubeconfig
 #+end_src
 
 ** Destroy a test environment
@@ -89,7 +89,7 @@ following command:
 You can tear down a test environment with the following command:
 
 #+begin_src bash :eval never
-  ./ta-dev.sh cluster delete! env-name
+  testauto cluster delete! env-name
 #+end_src
 
 * Managing Harbor deployments
@@ -102,7 +102,7 @@ test environment.
 The test automation tool can show the supported Harbor versions with this command:
 
 #+begin_src bash :eval never
-  ./ta-dev.sh harbor versions
+  testauto harbor versions
 #+end_src
 
 ** Installing Harbor
@@ -111,7 +111,7 @@ You can deploy Harbor in a previously created test environment with the
 following command:
 
 #+begin_src bash :eval never
-  ./ta-dev.sh harbor install! env-name harbor-name 2.2.4
+  testauto harbor install! env-name harbor-name 2.2.4
 #+end_src
 
 Here, the ~env-name~ is the name of the previously created test environment,
@@ -137,7 +137,7 @@ You can list the Harbor deployments of a test environments using the following
 command:
 
 #+begin_src bash :eval never
-  ./ta-dev.sh harbor list env-name
+  testauto harbor list env-name
 #+end_src
 
 Here, the ~env-name~ is the name of the test environment.
@@ -145,7 +145,7 @@ Here, the ~env-name~ is the name of the test environment.
 If you omit the env-name, Harbor deployments of all test environments are listed:
 
 #+begin_src bash :eval never
-  ./ta-dev.sh harbor list
+  testauto harbor list
 #+end_src
 
 ** Adding user to Harbor deployment
@@ -154,7 +154,7 @@ The test automation tool lets you create users in the Harbor user database with
 the following command:
 
 #+begin_src bash :eval never
-  ./ta-dev.sh harbor add-user! env-name harbor-name user-name
+  testauto harbor add-user! env-name harbor-name user-name
 #+end_src
 
 ** Cleaning up the Harbor user database
@@ -162,7 +162,7 @@ the following command:
 You can clean up the Harbor user database with the following command:
 
 #+begin_src bash :eval never
-  ./ta-dev.sh harbor clean-users! env-name harbor-name
+  testauto harbor clean-users! env-name harbor-name
 #+end_src
 
 ** Uninstalling Harbor
@@ -170,7 +170,7 @@ You can clean up the Harbor user database with the following command:
 You can uninstall a previously installed Harbor with the following command:
 
 #+begin_src bash :eval never
-  ./ta-dev.sh harbor uninstall! env-name harbor-name
+  testauto harbor uninstall! env-name harbor-name
 #+end_src
 
 Here, the ~env-name~ is the name of the previously created test environment,
@@ -202,7 +202,7 @@ for the development pipeline.
 The ~registryman~ CRDs can be (re-)deployed using the following command:
 
 #+begin_src bash :eval never
-  ./ta-dev.sh registryman deploy-crds! env-name
+  testauto registryman deploy-crds! env-name
 #+end_src
 
 ** Deploying registryman
@@ -211,7 +211,7 @@ The ~registryman~ operator and validating webhook components can be
 (re-)deployed with the following command:
 
 #+begin_src bash :eval never
-  ./ta-dev.sh registryman deploy! env-name
+  testauto registryman deploy! env-name
 #+end_src
 
 ** Checking the Logs of registryman Validation Webhook Deployment
@@ -220,7 +220,7 @@ You can check the logs of the registryman validation webhook container with the
 following command:
 
 #+begin_src bash :eval never
-  ./ta-dev.sh registryman log env-name
+  testauto registryman log env-name
 #+end_src
 
 ** Deleting registryman deployment
@@ -229,7 +229,7 @@ The ~registryman~ operator and validating webhook components can be
 removed from the test environment with the following command:
 
 #+begin_src bash :eval never
-  ./ta-dev.sh registryman delete! env-name
+  testauto registryman delete! env-name
 #+end_src
 
 * Running tests
@@ -250,7 +250,7 @@ the testing follows the same duality.
 You can print the yaml files of testcase with the following command:
 
 #+begin_src bash :eval never
-  ./ta-dev.sh tc print tests/tc2.tc
+  testauto tc print tests/tc2.tc
 #+end_src
 
 The last argument of the command denotes the testcase under investigation.
@@ -261,7 +261,7 @@ You can validate (with ~registryman validate~) the yaml files of testcase with
 the following command:
 
 #+begin_src bash :eval never
-  ./ta-dev.sh tc validate tests/tc2.tc
+  testauto tc validate tests/tc2.tc
 #+end_src
 
 The last argument of the command denotes the testcase under investigation.
@@ -272,13 +272,13 @@ You can execute the ~registryman apply --dry-run~ command for a testcase with
 the following command:
 
 #+begin_src bash :eval never
-  ./ta-dev.sh tc dry-run tests/tc2.tc
+  testauto tc dry-run tests/tc2.tc
 #+end_src
 
 You can turn on verbose logging with:
 
 #+begin_src bash :eval never
-  ./ta-dev.sh -v tc dry-run tests/tc2.tc
+  testauto -v tc dry-run tests/tc2.tc
 #+end_src
 
 ** Application of YAML files (CLI mode)
@@ -287,13 +287,13 @@ You can execute the ~registryman apply~ command for a testcase with the
 following command:
 
 #+begin_src bash :eval never
-  ./ta-dev.sh tc apply tests/tc2.tc
+  testauto tc apply tests/tc2.tc
 #+end_src
 
 You can turn on verbose logging with:
 
 #+begin_src bash :eval never
-  ./ta-dev.sh -v tc apply tests/tc2.tc
+  testauto -v tc apply tests/tc2.tc
 #+end_src
 
 ** Uploading the Resources of a Testcase
@@ -302,7 +302,7 @@ You can upload the YAML files of a testcase to the test environment as Custom
 Resources with the following command:
 
 #+begin_src bash :eval never
-  ./ta-dev.sh tc upload-resources! tests/tc2.tc env-name
+  testauto tc upload-resources! tests/tc2.tc env-name
 #+end_src
 
 ** Deleting the Resources of a Testcase
@@ -311,7 +311,7 @@ You can delete the Custom Resources of a testcase from the test environment with
 the following command:
 
 #+begin_src bash :eval never
-  ./ta-dev.sh tc delete-resources! tests/tc2.tc env-name
+  testauto tc delete-resources! tests/tc2.tc env-name
 #+end_src
 
 ** Executing a Single Testcase (CLI mode)
@@ -320,7 +320,7 @@ You can execute a single testcase using the CLI mode using the following
 command:
 
 #+begin_src bash :eval never
-  ./ta-dev.sh tc run tests/tc2.tc
+  testauto tc run tests/tc2.tc
 #+end_src
 
 The following steps are performed when a test is run in CLI mode:
@@ -339,7 +339,7 @@ test is considered as successful. Otherwise, it is considered as failed.
 You can turn on verbose logging:
 
 #+begin_src bash :eval never
-  ./ta-dev.sh -v tc run tests/tc2.tc
+  testauto -v tc run tests/tc2.tc
 #+end_src
 
 ** Executing a Batch of Testcases (CLI mode)
@@ -348,13 +348,13 @@ When you specify a directory name as the path to the testcase, all testcases
 within the specified directory will be executed:
 
 #+begin_src bash :eval never
-  ./ta-dev.sh tc run tests
+  testauto tc run tests
 #+end_src
 
 You can turn on verbose logging:
 
 #+begin_src bash :eval never
-  ./ta-dev.sh -v tc run tests
+  testauto -v tc run tests
 #+end_src
 
 ** Executing a Single Testcase (Operator mode)
@@ -363,7 +363,7 @@ You can execute a single testcase using the ~registryman~ operator using the
 following command:
 
 #+begin_src bash :eval never
-  ./ta-dev.sh tc run tests/tc2.tc env-name
+  testauto tc run tests/tc2.tc env-name
 #+end_src
 
 Here, the ~env-name~ denotes the test environment, where the ~registryman~
@@ -386,7 +386,7 @@ test is considered as successful. Otherwise, it is considered as failed.
 You can turn on verbose logging:
 
 #+begin_src bash :eval never
-  ./ta-dev.sh -v tc run tests/tc2.tc env-name
+  testauto -v tc run tests/tc2.tc env-name
 #+end_src
 
 ** Executing a Batch of Testcases (Operator mode)
@@ -395,7 +395,7 @@ When you specify a directory name as the path to the testcase, all testcases
 within the specified directory will be executed:
 
 #+begin_src bash :eval never
-  ./ta-dev.sh tc run tests env-name
+  testauto tc run tests env-name
 #+end_src
 
 Here, the ~env-name~ denotes the test environment, where the ~registryman~
@@ -404,5 +404,5 @@ operator is run.
 You can turn on verbose logging:
 
 #+begin_src bash :eval never
-  ./ta-dev.sh -v tc run tests env-name
+  testauto -v tc run tests env-name
 #+end_src

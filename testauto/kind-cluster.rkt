@@ -137,11 +137,13 @@
                                      (raise-user-error (format "cluster ~a does not exist"
                                                                cluster-name)))])
                     { docker inspect $container-name |>> string->jsexpr |>> car |>> hash-ref _ 'Config |>> hash-ref _ 'Image |>> kind-node-version-of-image })])
-    (kind-cluster cluster-name version)))
+    (if version
+        (kind-cluster cluster-name version)
+        #f)))
 
 (define (kind-clusters)
   (let ([cluster-names {kind get clusters |>> string-split }])
-    (map kind-clusters-ref cluster-names)))
+    (remove* '(#f) (map kind-clusters-ref cluster-names))))
 
 (define (kind-cluster-ip cluster)
   { docker inspect (format "~a-control-plane" (kind-cluster-name cluster)) |> read-json |> car |> hash-ref _ 'NetworkSettings |> hash-ref _ 'Networks |> hash-ref _ 'kind |> hash-ref _ 'IPAddress })

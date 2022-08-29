@@ -14,3 +14,6 @@ exported-registry
 /.dir-locals.el
 /.projectile
 /result
+/manifests
+/vendor
+/testauto/result
