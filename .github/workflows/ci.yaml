@@ -103,6 +103,6 @@ jobs:
         nix-shell --run "testauto -v tc run testauto/tests test" 2>&1
     - name: Log registryman logs
       if: ${{ always() }}
-      run: nix-shell --run "registryman log test"
+      run: nix-shell --run "testauto registryman log test"
 
 
